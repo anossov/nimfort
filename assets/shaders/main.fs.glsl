@@ -10,7 +10,7 @@ uniform vec3 eye;
 
 
 void main() {
-    vec3 lp = vec3(2.0, 1.5, -1.0);
+    vec3 lp = vec3(2.0, 1.5, 1.0);
     vec3 ld = normalize(lp - vec3(posf));
     float diff = max(dot(normalize(n), ld), 0.1);
 

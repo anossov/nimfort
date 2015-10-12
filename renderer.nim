@@ -76,6 +76,7 @@ proc render(r: Renderable, s: var Program) =
 
 proc render*(r: var RenderSystem) = 
   var viewMat = translate(r.view.position)
+  var viewMat = lookAt(r.view.position, zero, yaxis)
   r.shaderMain.use()
   r.shaderMain["eye"].set(r.view.position)
   r.shaderMain["view"].set(viewMat)

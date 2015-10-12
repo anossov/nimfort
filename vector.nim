@@ -26,6 +26,31 @@ proc `-`*[T](v: vec3[T]): vec3[T] =
   result[1] = -v.y
   result[2] = -v.z
 
+proc `-`*[T](a, b: vec3[T]): vec3[T] =
+  result[0] = a.x - b.x
+  result[1] = a.y - b.y
+  result[2] = a.z - b.z
+
+proc `+`*[T](a, b: vec3[T]): vec3[T] =
+  result[0] = a.x + b.x
+  result[1] = a.y + b.y
+  result[2] = a.z + b.z
+
+proc `*`*[T](a, b: vec3[T]): vec3[T] =
+  result[0] = a.x * b.x
+  result[1] = a.y * b.y
+  result[2] = a.z * b.z
+
+
+proc `cross`*[T](a, b: vec3[T]): vec3[T] =
+  result[0] = a.y * b.z - b.y * a.z
+  result[1] = a.z * b.x - b.z * a.x
+  result[2] = a.x * b.y - b.x * a.y
+
+proc `dot`*[T](a, b: vec3[T]): T =
+  var t = a * b
+  result = t.x + t.y + t.z
+
 proc `*`*[T](a: mat4[T], b: vec4[T]): vec4[T] =
   result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3]
   result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3]
@@ -116,6 +141,26 @@ proc orthographic*[T](left, right, bottom, top: T): mat4[T] =
   result[10] = -1
   result[12] = -(right + left) / (right - left)
   result[13] = -(top + bottom) / (top - bottom)
+  result[15] = 1.0
+
+proc lookAt*[T](eye, center, up: vec3[T]): mat4[T] =
+  let
+    f = normalize(center - eye)
+    s = normalize(f.cross(up))
+    u = s.cross(f)
+
+  result[0] = s.x
+  result[1] = s.y
+  result[2] = s.z
+  result[4] = u.x
+  result[5] = u.y
+  result[6] = u.z
+  result[8] = f.x
+  result[9] = f.y
+  result[10] = f.z
+  result[12] = -(s.dot(eye))
+  result[13] = -(u.dot(eye))
+  result[14] = -(f.dot(eye))
   result[15] = 1.0
 
 
