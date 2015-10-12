@@ -41,6 +41,7 @@ var
   time = 0.0
   lastTime = 0.0
   delta = 0.0
+  w = false
 
 while glfw.windowShouldClose(win) == 0:
 
@@ -58,6 +59,9 @@ while glfw.windowShouldClose(win) == 0:
   if glfw.getKey(win, glfw.KEY_Q) == glfw.PRESS:
     glfw.setWindowShouldClose(win, 1)
 
+  if glfw.getKey(win, glfw.KEY_W) == glfw.PRESS:
+    w = not w
+    R.wire(w)
 
 glfw.destroyWindow(win)
 glfw.terminate()

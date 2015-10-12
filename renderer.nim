@@ -93,3 +93,9 @@ proc render*(r: var RenderSystem) =
 
   setLen(r.queue3d, 0)
   setLen(r.queue2d, 0)
+
+proc wire*(r: RenderSystem, yes: bool) = 
+  if yes:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+  else:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
