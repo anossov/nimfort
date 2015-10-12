@@ -14,17 +14,17 @@ type
 
 proc newWorld*(r: RenderSystem): World =
   info("World init start")
-  var data = loadObj("assets/test.obj")
+  var data = loadObj("assets/bird/bird_decoration.obj")
 
   result = World(
     R: r,
-    cube: newMesh(data, newTexture("assets/test.png")),
+    cube: newMesh(data, newTexture("assets/bird/bird_decoration_diffuse1024.png")),
     cubes: newSeq[Transform](),
   )
  
-  result.R.view = newTransform([0.0'f32, 0.0, 2.0], [0.0'f32, 0.0, 0.0], [1.0'f32, 1.0, 1.0])
+  result.R.view = newTransform([0.0'f32, 0.0, 2.0], zero, [1.0'f32, 1.0, 1.0])
 
-  result.cubes.add(newTransform([0.0'f32, 0.0, 0.0], zero, [0.3'f32, 0.3, 0.3]))
+  result.cubes.add(newTransform([0.0'f32, 0.0, 0.0], zero, [0.8'f32, 0.8, 0.8]))
   result.cubes.add(newTransform([-1.0'f32, 0.0, 0.0], zero, [0.1'f32, 0.1, 0.1]))
 
   info("World init end")
