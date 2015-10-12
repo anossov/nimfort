@@ -1,4 +1,5 @@
 import opengl
+import logging
 
 type
   BufferTarget* {.pure.} = enum
@@ -56,15 +57,22 @@ proc createVAO*(): VAO =
   glBindVertexArray(result.id)
 
 
-proc createVBO*(data: var openarray[GLfloat]): Buffer =
+proc createBuffer*[T](data: var openarray[T], target: BufferTarget): Buffer = 
   let u: GLenum = ord BufferUsage.StaticDraw
   
-  result = Buffer(target: BufferTarget.Array)
-  result.target = BufferTarget.Array
+  result = Buffer(target: target)
 
   glGenBuffers(1, addr result.id)
   result.use()
   
   let size = len(data) * sizeof(data[0])
+  
   if size > 0:
     glBufferData(ord result.target, size.GLsizeiptr, addr data[0], u)
+
+
+proc createVBO*[T](data: var openarray[T]): Buffer =
+  result = createBuffer(data, BufferTarget.Array)
+  
+proc createEBO*[T](data: var openarray[T]): Buffer = 
+  result = createBuffer(data, BufferTarget.ElementArray)

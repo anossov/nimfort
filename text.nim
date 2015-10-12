@@ -1,4 +1,5 @@
 import os
+import logging
 import tables
 import hashes
 import strutils
@@ -82,11 +83,9 @@ proc loadFont*(path: string): Font =
     else:
       discard
 
-proc stringVertices(s: string, f: Font, w: var float32): seq[float32] = 
-  let
-    chars = runeLen(s)
-    stride = 24
-  result = newSeq[float32](chars * stride)
+proc stringMesh(s: string, f: Font, w: var float32): MeshData = 
+  result = newMeshData()
+  
   var x = 0.0'f32
   
   var lastrune = Rune(0)
@@ -102,15 +101,20 @@ proc stringVertices(s: string, f: Font, w: var float32): seq[float32] =
     
     x += kern
 
-    for i, f in [
-        x + c.offset[0],             yp - c.size[1], c.pos[0],      c.pos[1] + th,
-        x + c.offset[0],                         yp, c.pos[0],      c.pos[1],
-        x + c.offset[0] + c.size[0],             yp, c.pos[0] + tw, c.pos[1],
-        x + c.offset[0],             yp - c.size[1], c.pos[0],      c.pos[1] + th,
-        x + c.offset[0] + c.size[0],             yp, c.pos[0] + tw, c.pos[1],
-        x + c.offset[0] + c.size[0], yp - c.size[1], c.pos[0] + tw, c.pos[1] + th,
-      ]:
-      result[idx * stride + i] = f
+    result.vertices.add([
+      Vertex(position: [x + c.offset[0],             yp - c.size[1], 0.0], uv: [c.pos[0],      c.pos[1] + th]),
+      Vertex(position: [x + c.offset[0],                         yp, 0.0], uv: [c.pos[0],      c.pos[1]]),
+      Vertex(position: [x + c.offset[0] + c.size[0],             yp, 0.0], uv: [c.pos[0] + tw, c.pos[1]]),
+      Vertex(position: [x + c.offset[0] + c.size[0], yp - c.size[1], 0.0], uv: [c.pos[0] + tw, c.pos[1] + th]),
+    ])
+    result.indices.add([
+      uint32(idx * 4 + 0),
+      uint32(idx * 4 + 1),
+      uint32(idx * 4 + 2),
+      uint32(idx * 4 + 0),
+      uint32(idx * 4 + 2),
+      uint32(idx * 4 + 3),
+    ])
     
     x += c.advance
     lastrune = r
@@ -121,12 +125,12 @@ proc stringVertices(s: string, f: Font, w: var float32): seq[float32] =
 
 proc newText*(s: string, f: Font, color: vec3[float32]): Text = 
   var w: float32
-  var v = stringVertices(s, f, w)
+  var v = stringMesh(s, f, w)
   result = Text(
     s: s,
     font: f,
     color: color,
-    mesh: newMesh(v, f.texture, 4, 0, 0),
+    mesh: newMesh(v, f.texture),
     width: w,
   )
 
@@ -137,8 +141,8 @@ proc update*(t: var Text, s: string) =
   if t.s == "":
     return
   var w: float32
-  var v = stringVertices(s, t.font, w)
-  t.mesh = newMesh(v, t.font.texture, 4, 0, 0)
+  var v = stringMesh(s, t.font, w)
+  t.mesh = newMesh(v, t.font.texture)
   t.width = w
 
 
