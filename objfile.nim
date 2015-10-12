@@ -16,6 +16,8 @@ proc loadObj*(path: string): MeshData =
   
   for line in lines(path):
     var fields = line.split
+    if len(fields) < 1:
+      continue
     case fields[0]:
     of "v":
       p.add([fields[1].tof32, fields[2].tof32, fields[3].tof32])
