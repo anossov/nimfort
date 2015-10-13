@@ -34,17 +34,15 @@ proc vec*(x, y, z, w: float32): vec4 {.inline.} =
   result.w = w
 
 const
-  xaxis* = vec(1.0, 0.0, 0.0)
-  yaxis* = vec(0.0, 1.0, 0.0)
-  zaxis* = vec(0.0, 0.0, 1.0)
-
-proc zeros2*(): vec2 = return
-proc zeros3*(): vec3 = return
-proc zeros4*(): vec4 = return
-
-proc ones2*(): vec2 = result = vec(1.0, 1.0)
-proc ones3*(): vec3 = result = vec(1.0, 1.0, 1.0)
-proc ones4*(): vec4 = result = vec(1.0, 1.0, 1.0, 1.0)
+  xaxis*   = vec(1.0, 0.0, 0.0)
+  yaxis*   = vec(0.0, 1.0, 0.0)
+  zaxis*   = vec(0.0, 0.0, 1.0)
+  zeroes2* = vec(0.0, 0.0)
+  zeroes3* = vec(0.0, 0.0, 0.0)
+  zeroes4* = vec(0.0, 0.0, 0.0, 0.0)
+  ones2*   = vec(1.0, 1.0)
+  ones3*   = vec(1.0, 1.0, 1.0)
+  ones4*   = vec(1.0, 1.0, 1.0, 1.0)
 
 
 proc identity*(): mat4 =
@@ -83,6 +81,15 @@ proc `-`*(a, b: vec3): vec3 =
   result.y = a.y - b.y
   result.z = a.z - b.z
 
+proc `-`*(a: vec2, b: float32): vec2 =
+  result.x = a.x - b
+  result.y = a.y - b
+
+proc `-`*(a: vec3, b: float32): vec3 =
+  result.x = a.x - b
+  result.y = a.y - b
+  result.z = a.z - b
+
 
 proc `+`*(a, b: vec2): vec2 =
   result.x = a.x + b.x
@@ -93,6 +100,15 @@ proc `+`*(a, b: vec3): vec3 =
   result.y = a.y + b.y
   result.z = a.z + b.z
 
+proc `+`*(a: vec2, b: float32): vec2 =
+  result.x = a.x + b
+  result.y = a.y + b
+
+proc `+`*(a: vec3, b: float32): vec3 =
+  result.x = a.x + b
+  result.y = a.y + b
+  result.z = a.z + b
+
 
 proc `*`*(a, b: vec2): vec2 =
   result.x = a.x * b.x
@@ -102,6 +118,15 @@ proc `*`*(a, b: vec3): vec3 =
   result.x = a.x * b.x
   result.y = a.y * b.y
   result.z = a.z * b.z
+
+proc `*`*(a: vec2, b: float32): vec2 =
+  result.x = a.x * b
+  result.y = a.y * b
+
+proc `*`*(a: vec3, b: float32): vec3 =
+  result.x = a.x * b
+  result.y = a.y * b
+  result.z = a.z * b
 
 
 proc `cross`*(a, b: vec3): vec3 =

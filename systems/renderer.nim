@@ -35,7 +35,7 @@ proc updateMatrix*(t: var Transform) =
   let rot = rotate(xaxis, t.rotation.x) * rotate(yaxis, t.rotation.y) * rotate(zaxis, t.rotation.z)
   t.matrix = translate(t.position) * rot * scale(t.scale)
 
-proc newTransform*(p: vec3, r=zeros3(), s=ones3()): Transform = 
+proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform = 
   result.position = p
   result.rotation = r
   result.scale = s
@@ -72,7 +72,7 @@ proc render(r: Renderable, s: var Program) =
   r.mesh.render()
 
 proc render*(r: var RenderSystem) = 
-  var viewMat = lookAt(r.view.position, zeros3(), yaxis)
+  var viewMat = lookAt(r.view.position, zeroes3, yaxis)
   r.shaderMain.use()
   r.shaderMain["eye"].set(r.view.position)
   r.shaderMain["view"].set(viewMat)

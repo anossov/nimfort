@@ -29,12 +29,12 @@ proc newWorld*(time: TimeSystem, r: RenderSystem): World =
     plane: newMesh(pdata, newTexture("assets/test.png"))
   )
  
-  result.R.view = newTransform(vec(0.0, 3.0, 2.0), zeros3(), vec(1.0, 1.0, 1.0))
+  result.R.view = newTransform(vec(0.0, 3.0, 2.0), zeroes3, ones3)
 
-  result.cubes.add(newTransform(vec(0.0, 0.0, 0.0), zeros3(), vec(0.5, 0.5, 0.5)))
-  result.cubes.add(newTransform(vec(-1.0, 0.0, 0.0), zeros3(), vec(0.1, 0.1, 0.1)))
+  result.cubes.add(newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3 * 0.5))
+  result.cubes.add(newTransform(vec(-1.0, 0.0, 0.0), zeroes3, ones3 * 0.1))
 
-  result.planeT = newTransform(vec(0.0, -1.0, 0.0), zeros3(), vec(5.0, 5.0, 5.0))
+  result.planeT = newTransform(vec(0.0, -1.0, 0.0), zeroes3, ones3 * 5)
 
   info("World init end")
 

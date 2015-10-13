@@ -39,6 +39,6 @@ proc update*(gui: GUI) =
   gui.listener.queue.setLen(0)
 
   gui.R.queue2d.add(Renderable(
-    transform: newTransform(vec(30.0, gui.R.window.y, 0.0), zeros3(), vec(0.5, 0.5, 0.5)),
+    transform: newTransform(vec(30.0, gui.R.window.y, 0.0), zeroes3, vec(0.5, 0.5, 0.5)),
     mesh: gui.frametime.mesh
   ))
