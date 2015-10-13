@@ -10,15 +10,52 @@ uniform vec3 eye;
 
 
 void main() {
-    vec3 lp = vec3(2.0, 1.5, 1.0);
-    vec3 ld = normalize(lp - vec3(posf));
-    float diff = max(dot(normalize(n), ld), 0.1);
+  // Ashikhmin-Shirley brdf
+    
+    vec3 Rd = vec3(texture(tex, vec2(uvf.s, 1.0 - uvf.t)));
 
-    vec3 vd = normalize(eye - vec3(posf));
-    vec3 hwd = normalize(ld + vd);
+    vec3 n = normalize(n);
+    vec3 l = normalize(vec3(2.0, 1.5, 1.0));
+    vec3 v = normalize(eye - vec3(posf));
+    vec3 h = normalize(l + v);
+ 
+    vec3 epsilon = vec3(1.0, 0.0, 0.0);
+    vec3 tangent = normalize(cross(n, epsilon));
+    vec3 bitangent = normalize(cross(n, tangent));
+ 
 
-    float spec = pow(max(dot(n, hwd), 0.0), 128);
+    float VdotN = dot(v, n);
+    float LdotN = dot(l, n);
+    float HdotN = dot(h, n);
+    float HdotL = dot(h, l);
+    float HdotT = dot(h, tangent);
+    float HdotB = dot(h, bitangent);
+ 
+    vec3 Rs = vec3(0.3, 0.3, 0.3);
+ 
+    float Nu = 200;
+    float Nv = 32;
+ 
+    
+    vec3 Pd = (28.0 * Rd) / ( 23.0 * 3.14159 );
+    Pd *= (1.0 - Rs);
+    Pd *= (1.0 - pow(1.0 - (LdotN / 2.0), 5.0));
+    Pd *= (1.0 - pow(1.0 - (VdotN / 2.0), 5.0));
+ 
 
-    outColor = (diff + spec) * texture(tex, vec2(uvf.s, 1.0 - uvf.t));
-    outColor.a = 1.0;
+    float ps_num_exp = Nu * HdotT * HdotT + Nv * HdotB * HdotB;
+    ps_num_exp /= (1.0 - HdotN * HdotN);
+ 
+    float Ps_num = sqrt((Nu + 1) * (Nv + 1));
+    Ps_num *= pow( HdotN, ps_num_exp );
+ 
+    float Ps_den = 8.0 * 3.14159 * HdotL;
+    Ps_den *= max( LdotN, VdotN );
+ 
+    vec3 Ps = Rs * (Ps_num / Ps_den);
+    Ps *= (Rs + (1.0 - Rs) * pow(1.0 - HdotL, 5.0));
+ 
+    vec4 amb = vec4(0.04 * Rd, 1.0);
+
+    outColor = max(amb, vec4(2.0 * (Pd + Ps), 1.0));
 }
