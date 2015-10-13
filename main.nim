@@ -1,11 +1,11 @@
 import logging
 import glfw/wrapper as glfw
 
-import renderer
-import gui
-import world
-import timekeeping
-import messaging
+import systems/renderer
+import systems/gui
+import systems/world
+import systems/timekeeping
+import systems/messaging
 
 when defined(profiler) or defined(memProfiler):
   import nimprof
