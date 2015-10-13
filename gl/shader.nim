@@ -111,9 +111,8 @@ proc getUniform*(p: Program, name: string): Uniform =
     stderr.writeln("Could not find uniform: " & name)
 
 proc `[]`*(p: var Program, name: string): Uniform =
-  let u = p.uniforms[name]
-  if u.location != 0:
-    return u
+  if p.uniforms.hasKey(name):
+    return p.uniforms[name]
   p.uniforms[name] = p.getUniform(name)
   return p.uniforms[name]
 
