@@ -46,22 +46,21 @@ proc newMesh*(data: MeshData, texture: Texture): Mesh =
     ebo: createEBO(data.indices),
   )
 
-  let stride = GLsizei(8 * sizeof(GLfloat))
+  let stride = GLsizei(8 * sizeof(float32))
 
   glVertexAttribPointer(0, 3, cGL_FLOAT, NO, stride, nil)
   glEnableVertexAttribArray(0)
-  glVertexAttribPointer(1, 2, cGL_FLOAT, NO, stride, cast[pointer](3 * sizeof(GLfloat)))
+  glVertexAttribPointer(1, 2, cGL_FLOAT, NO, stride, cast[pointer](3 * sizeof(float32)))
   glEnableVertexAttribArray(1)
-  glVertexAttribPointer(2, 3, cGL_FLOAT, NO, stride, cast[pointer](5 * sizeof(GLfloat)))
+  glVertexAttribPointer(2, 3, cGL_FLOAT, NO, stride, cast[pointer](5 * sizeof(float32)))
   glEnableVertexAttribArray(2)
 
 
 proc render*(m: Mesh) =
   m.vao.use()
   m.texture.use()
-  
-  glDrawElements(GL_TRIANGLES, len(m.data.indices).GLsizei, GL_UNSIGNED_INT, nil)
 
+  glDrawElements(GL_TRIANGLES, len(m.data.indices).GLsizei, GL_UNSIGNED_INT, nil)
 
 
 proc deleteBuffers*(m: var Mesh) =

@@ -4,20 +4,13 @@ import vector
 import mesh
 import gl/shader
 
-const
-  xaxis = vec3[GLfloat]([1.0'f32, 0.0, 0.0])
-  yaxis = vec3[GLfloat]([0.0'f32, 1.0, 0.0])
-  zaxis = vec3[GLfloat]([0.0'f32, 0.0, 1.0])
-
-  zero* = vec3[GLfloat]([0.0'f32, 0.0, 0.0])
-  one* = vec3[GLfloat]([1.0'f32, 1.0, 1.0])
 
 type 
   Transform* = object
-    rotation*: vec3[GLfloat]
-    position: vec3[GLfloat]
-    scale: vec3[GLfloat]
-    matrix: mat4[GLfloat]
+    rotation*: vec3
+    position: vec3
+    scale: vec3
+    matrix: mat4
 
   Renderable* = object
     transform*: Transform
@@ -25,9 +18,9 @@ type
 
   RenderSystem* = ref object
     view*: Transform
-    window*: vec2[GLfloat]
-    projection3d: mat4[GLfloat]
-    projection2d: mat4[GLfloat]
+    window*: vec2
+    projection3d: mat4
+    projection2d: mat4
 
     queue3d*: seq[Renderable]
     queue2d*: seq[Renderable]
@@ -39,7 +32,7 @@ proc updateMatrix*(t: var Transform) =
   let rot = rotate(xaxis, t.rotation.x) * rotate(yaxis, t.rotation.y) * rotate(zaxis, t.rotation.z)
   t.matrix = translate(t.position) * rot * scale(t.scale)
 
-proc newTransform*(p: vec3[GLfloat], r=zero, s=one): Transform = 
+proc newTransform*(p: vec3, r=zeros3(), s=ones3()): Transform = 
   result.position = p
   result.rotation = r
   result.scale = s
@@ -60,8 +53,8 @@ proc newRenderSystem*(w, h: float32): RenderSystem =
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glClearColor(0.3, 0.3, 0.3, 1.0)
 
-  result.projection3d = perspective(60.0'f32, w / h, 0.1, 100.0)
-  result.projection2d = orthographic(0.0'f32, w, 0.0, h)
+  result.projection3d = perspective(60.0, w / h, 0.1, 100.0)
+  result.projection2d = orthographic(0.0, w, 0.0, h)
 
   result.queue3d = newSeq[Renderable]()
   result.queue2d = newSeq[Renderable]()
@@ -75,7 +68,7 @@ proc render(r: Renderable, s: var Program) =
   r.mesh.render()
 
 proc render*(r: var RenderSystem) = 
-  var viewMat = lookAt(r.view.position, zero, yaxis)
+  var viewMat = lookAt(r.view.position, zeros3(), yaxis)
   r.shaderMain.use()
   r.shaderMain["eye"].set(r.view.position)
   r.shaderMain["view"].set(viewMat)

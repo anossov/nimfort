@@ -1,6 +1,7 @@
 import opengl
 import vector
 import tables
+import logging
 
 type
   ShaderType* {.pure.} = enum
@@ -116,19 +117,19 @@ proc `[]`*(p: var Program, name: string): Uniform =
   p.uniforms[name] = p.getUniform(name)
   return p.uniforms[name]
 
-proc set*(u: Uniform, f1: GLfloat) =
+proc set*(u: Uniform, f1: float32) =
   glUniform1f(u.location, f1)
 
-proc set*(u: Uniform; f1, f2: GLfloat) =
+proc set*(u: Uniform; f1, f2: float32) =
   glUniform2f(u.location, f1, f2)
 
-proc set*(u: Uniform; f1, f2, f3: GLfloat) = 
+proc set*(u: Uniform; f1, f2, f3: float32) = 
   glUniform3f(u.location, f1, f2, f3)
 
-proc set*(u: Uniform; f1, f2, f3, f4: GLfloat) = 
+proc set*(u: Uniform; f1, f2, f3, f4: float32) = 
   glUniform4f(u.location, f1, f2, f3, f4)
 
-proc set*(u: Uniform, v: vec3[GLfloat]) =
+proc set*(u: Uniform, v: vec3) =
   var v = v
   glUniform3fv(u.location, 1, v.value_ptr)
 

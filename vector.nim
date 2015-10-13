@@ -2,62 +2,94 @@ import opengl
 import math
 
 type
-  vec2*[T] = array[2, T]
-  vec3*[T] = array[3, T]
-  vec4*[T] = array[4, T]
-  mat3*[T] = array[9, T]
-  mat4*[T] = array[16, T]
+  vec2* = array[2, float32]
+  vec3* = array[3, float32]
+  vec4* = array[4, float32]
+  mat3* = array[9, float32]
+  mat4* = array[16, float32]
 
+template x*(v: vec2 | vec3 | vec4): float32 = v[0]
+template y*(v: vec2 | vec3 | vec4): float32 = v[1]
+template z*(v: vec3 | vec4): float32 = v[2]
+template value_ptr*(m: var vec3 | mat4): ptr float32 = addr m[0]
 
-proc identity*[T](): mat4[T] =
+proc vec*(x, y: float32): vec2 {.inline.} = 
+  result[0] = x
+  result[1] = y
+
+proc vec*(x, y, z: float32): vec3 {.inline.} = 
+  result[0] = x
+  result[1] = y
+  result[2] = z
+
+proc vec*(x, y, z, w: float32): vec4 {.inline.} = 
+  result[0] = x
+  result[1] = y
+  result[2] = z
+  result[3] = w
+
+const
+  xaxis* = vec(1.0, 0.0, 0.0)
+  yaxis* = vec(0.0, 1.0, 0.0)
+  zaxis* = vec(0.0, 0.0, 1.0)
+
+proc zeros2*(): vec2 = return
+proc zeros3*(): vec3 = return
+proc zeros4*(): vec4 = return
+
+proc ones2*(): vec2 = result = vec(1.0, 1.0)
+proc ones3*(): vec3 = result = vec(1.0, 1.0, 1.0)
+proc ones4*(): vec4 = result = vec(1.0, 1.0, 1.0, 1.0)
+
+proc identity*(): mat4 =
   result[0] = 1.0
   result[5] = 1.0
   result[10] = 1.0
   result[15] = 1.0
 
-proc normalize*[T](v: vec3[T]): vec3[T] {.inline.} =
+proc normalize*(v: vec3): vec3 {.inline.} =
   let mag = sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
   result[0] = v.x / mag
   result[1] = v.y / mag
   result[2] = v.z / mag
 
-proc `-`*[T](v: vec3[T]): vec3[T] =
+proc `-`*(v: vec3): vec3 =
   result[0] = -v.x
   result[1] = -v.y
   result[2] = -v.z
 
-proc `-`*[T](a, b: vec3[T]): vec3[T] =
+proc `-`*(a, b: vec3): vec3 =
   result[0] = a.x - b.x
   result[1] = a.y - b.y
   result[2] = a.z - b.z
 
-proc `+`*[T](a, b: vec3[T]): vec3[T] =
+proc `+`*(a, b: vec3): vec3 =
   result[0] = a.x + b.x
   result[1] = a.y + b.y
   result[2] = a.z + b.z
 
-proc `*`*[T](a, b: vec3[T]): vec3[T] =
+proc `*`*(a, b: vec3): vec3 =
   result[0] = a.x * b.x
   result[1] = a.y * b.y
   result[2] = a.z * b.z
 
 
-proc `cross`*[T](a, b: vec3[T]): vec3[T] =
+proc `cross`*(a, b: vec3): vec3 =
   result[0] = a.y * b.z - b.y * a.z
   result[1] = a.z * b.x - b.z * a.x
   result[2] = a.x * b.y - b.x * a.y
 
-proc `dot`*[T](a, b: vec3[T]): T =
+proc `dot`*(a, b: vec3): float32 =
   var t = a * b
   result = t.x + t.y + t.z
 
-proc `*`*[T](a: mat4[T], b: vec4[T]): vec4[T] =
+proc `*`*(a: mat4, b: vec4): vec4 =
   result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3]
   result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3]
   result[2] = a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3]
   result[3] = a[3] * b[0] + a[7] * b[1] + a[11] * b[2] + a[15] * b[3]
 
-proc `*`*[T](a: mat4[T], b: mat4[T]): mat4[T] =
+proc `*`*(a: mat4, b: mat4): mat4 =
   result[0]  = a[0] *  b[0] + a[4] *  b[1] +  a[8] *  b[2] + a[12] *  b[3]
   result[1]  = a[1] *  b[0] + a[5] *  b[1] +  a[9] *  b[2] + a[13] *  b[3]
   result[2]  = a[2] *  b[0] + a[6] *  b[1] + a[10] *  b[2] + a[14] *  b[3]
@@ -79,11 +111,11 @@ proc `*`*[T](a: mat4[T], b: mat4[T]): mat4[T] =
   result[15] = a[3] * b[12] + a[7] * b[13] + a[11] * b[14] + a[15] * b[15]
 
 
-proc rotate*[T](axis: vec3[T], angle: T): mat4[T] =
+proc rotate*(axis: vec3, angle: float32): mat4 =
   let
     c = cos(angle)
     s = sin(angle)
-    ic = 1.T - c
+    ic = 1.0 - c
     a = axis.normalize
   
   result[0] = c + a.x * a.x * ic
@@ -98,7 +130,7 @@ proc rotate*[T](axis: vec3[T], angle: T): mat4[T] =
   result[15] = 1.0
 
 
-proc translate*[T](v: vec3[T]): mat4[T] = 
+proc translate*(v: vec3): mat4 = 
   result[0] = 1.0
   result[5] = 1.0
   result[10] = 1.0
@@ -107,26 +139,26 @@ proc translate*[T](v: vec3[T]): mat4[T] =
   result[14] = v.z
   result[15] = 1.0
 
-proc scale*[T](s: T): mat4[T] = 
+proc scale*(s: float32): mat4 = 
   result[0] = s
   result[5] = s
   result[10] = s
   result[15] = 1.0
 
-proc scale*[T](s: vec3[T]): mat4[T] = 
+proc scale*(s: vec3): mat4 = 
   result[0] = s.x
   result[5] = s.y
   result[10] = s.z
   result[15] = 1.0
 
-proc perspective*[T](fov, aspect, near, far: T): mat4[T] =
+proc perspective*(fov, aspect, near, far: float32): mat4 =
   result[5] = 1.0 / tan(fov * PI / 360.0)
   result[0] = result[5] / aspect
   result[10] = (-near - far) / (near - far)
   result[14] = (2.0 * far * near) / (near - far)
   result[11] = 1.0
 
-proc orthographic*[T](left, right, bottom, top, near, far: T): mat4[T] =
+proc orthographic*(left, right, bottom, top, near, far: float32): mat4 =
   result[0] = 2.0 / (right - left)
   result[5] = 2.0 / (top - bottom)
   result[10] = -2.0 / (far - near)
@@ -135,7 +167,7 @@ proc orthographic*[T](left, right, bottom, top, near, far: T): mat4[T] =
   result[14] = -(far + near) / (far - near)
   result[15] = 1.0
 
-proc orthographic*[T](left, right, bottom, top: T): mat4[T] =
+proc orthographic*(left, right, bottom, top: float32): mat4 =
   result[0] = 2.0 / (right - left)
   result[5] = 2.0 / (top - bottom)
   result[10] = -1
@@ -143,7 +175,7 @@ proc orthographic*[T](left, right, bottom, top: T): mat4[T] =
   result[13] = -(top + bottom) / (top - bottom)
   result[15] = 1.0
 
-proc lookAt*[T](eye, center, up: vec3[T]): mat4[T] =
+proc lookAt*(eye, center, up: vec3): mat4 =
   let
     f = normalize(center - eye)
     s = normalize(f.cross(up))
@@ -162,12 +194,3 @@ proc lookAt*[T](eye, center, up: vec3[T]): mat4[T] =
   result[13] = -(u.dot(eye))
   result[14] = -(f.dot(eye))
   result[15] = 1.0
-
-
-template x*[T](v: vec2[T] | vec3[T] | vec4[T]): T = v[0]
-
-template y*[T](v: vec2[T] | vec3[T] | vec4[T]): T = v[1]
-
-template z*[T](v: vec3[T] | vec4[T]): T = v[2]
-
-template value_ptr*[T](m: var vec3[T] | mat4[T]): ptr T = addr m[0]

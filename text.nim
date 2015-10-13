@@ -14,21 +14,21 @@ import mesh
 type
   Char* = object
     id: Rune
-    pos: vec2[float32]
-    size: vec2[float32]
-    offset: vec2[float32]
+    pos: vec2
+    size: vec2
+    offset: vec2
     advance: float32
 
   Font* = ref object
     texture: Texture
-    textureSize: vec2[float32]
+    textureSize: vec2
     chars: array[16384, Char]
     hichars: Table[Rune, Char]
     kerning: Table[array[2, Rune], float32]
 
   Text* = object
     s: string
-    color: vec3[float32]
+    color: vec3
     font: Font
     mesh*: Mesh
     width*: float32
@@ -123,7 +123,7 @@ proc stringMesh(s: string, f: Font, w: var float32): MeshData =
   w = x
 
 
-proc newText*(s: string, f: Font, color: vec3[float32]): Text = 
+proc newText*(s: string, f: Font, color: vec3): Text = 
   var w: float32
   var v = stringMesh(s, f, w)
   result = Text(

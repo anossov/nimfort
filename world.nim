@@ -1,9 +1,9 @@
 import logging
 import renderer
-import cube
 import mesh
 import gl/texture
 import objfile
+import vector
 
 type
   World = ref object
@@ -14,23 +14,24 @@ type
 
 proc newWorld*(r: RenderSystem): World =
   info("World init start")
-  var data = loadObj("assets/bird/bird_decoration.obj")
+  var data = loadObj("assets/cube.obj")
 
   result = World(
     R: r,
-    cube: newMesh(data, newTexture("assets/bird/bird_decoration_diffuse1024.png")),
+    cube: newMesh(data, newTexture("assets/test.png")),
     cubes: newSeq[Transform](),
   )
  
-  result.R.view = newTransform([0.0'f32, 0.0, 2.0], zero, [1.0'f32, 1.0, 1.0])
+  result.R.view = newTransform(vec(0.0, 0.0, 2.0), zeros3(), vec(1.0, 1.0, 1.0))
 
-  result.cubes.add(newTransform([0.0'f32, 0.0, 0.0], zero, [0.8'f32, 0.8, 0.8]))
-  result.cubes.add(newTransform([-1.0'f32, 0.0, 0.0], zero, [0.1'f32, 0.1, 0.1]))
+  result.cubes.add(newTransform(vec(0.0, 0.0, 0.0), zeros3(), vec(0.5, 0.5, 0.5)))
+  result.cubes.add(newTransform(vec(-1.0, 0.0, 0.0), zeros3(), vec(0.1, 0.1, 0.1)))
 
   info("World init end")
 
 proc update*(w: World; time, delta: float) =
   for i, c in mpairs(w.cubes):
-    c.rotation = [time.float32 / (i + 2).float32, time / (i + 2).float32, time / (i + 3).float32]
+    let f = i.float32
+    c.rotation = vec(time / (f + 2.0), time / (f + 2.0), time / (f + 3.0))
     c.updateMatrix()
     w.R.queue3d.add(Renderable(transform: c, mesh: w.cube))

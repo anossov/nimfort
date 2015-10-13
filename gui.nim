@@ -16,7 +16,7 @@ proc newGUI*(r: RenderSystem): GUI =
   result = GUI(
     R: r,
     font: f,
-    frametime: newText("", f, [1.0'f32, 0.5, 0.0]),
+    frametime: newText("", f, vec(1.0, 0.5, 0.0)),
   )
 
 
@@ -29,6 +29,6 @@ proc update*(gui: GUI, time, delta: float) =
   gui.ftCounter += 1
 
   gui.R.queue2d.add(Renderable(
-    transform: newTransform([30.0'f32, gui.R.window.y, 0.0], zero, [0.5'f32, 0.5, 0.5]),
+    transform: newTransform(vec(30.0, gui.R.window.y, 0.0), zeros3(), vec(0.5, 0.5, 0.5)),
     mesh: gui.frametime.mesh
   ))
