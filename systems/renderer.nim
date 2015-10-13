@@ -2,8 +2,10 @@ import logging
 import opengl
 import vector
 import mesh
+import math
 import gl/shader
-import timekeeping
+import systems/timekeeping
+import systems/input
 
 type 
   Transform* = object
@@ -19,7 +21,10 @@ type
   RenderSystem* = ref object
     view*: Transform
     window*: vec2
+
     time: TimeSystem
+    input: InputSystem
+
     projection3d: mat4
     projection2d: mat4
 
@@ -41,13 +46,14 @@ proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform =
   result.scale = s
   result.updateMatrix()
 
-proc newRenderSystem*(time: TimeSystem, w, h: float32): RenderSystem =
+proc newRenderSystem*(time: TimeSystem, input: InputSystem, w, h: float32): RenderSystem =
   loadExtensions()
   info("OpenGL version $1", cast[cstring](glGetString(GL_VERSION)))
 
   result = RenderSystem()
   result.window = [w, h]
   result.time = time
+  result.input = input
 
   glViewport(0, 0, w.GLsizei, h.GLsizei)
   glEnable(GL_DEPTH_TEST)
@@ -59,6 +65,7 @@ proc newRenderSystem*(time: TimeSystem, w, h: float32): RenderSystem =
 
   result.projection3d = perspective(60.0, w / h, 0.1, 100.0)
   result.projection2d = orthographic(0.0, w, 0.0, h)
+  result.view = newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3)
 
   result.queue3d = newSeq[Renderable]()
   result.queue2d = newSeq[Renderable]()
@@ -72,6 +79,19 @@ proc render(r: Renderable, s: var Program) =
   r.mesh.render()
 
 proc render*(r: var RenderSystem) = 
+  var
+    phi = (r.window.x - r.input.cursorPos.x) / 100
+    theta = (r.window.y - r.input.cursorPos.y) / 100
+  
+  if theta < PI * 0.51:
+    theta = PI * 0.51
+  if theta > PI * 1.49:
+    theta = PI * 1.49
+
+  r.view.position.x = sin(phi) * cos(theta) * 3
+  r.view.position.y = sin(theta) * 3
+  r.view.position.z = cos(phi) * cos(theta) * 3
+
   var viewMat = lookAt(r.view.position, zeroes3, yaxis)
   r.shaderMain.use()
   r.shaderMain["eye"].set(r.view.position)

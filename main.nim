@@ -6,6 +6,7 @@ import systems/gui
 import systems/world
 import systems/timekeeping
 import systems/messaging
+import systems/input
 
 when defined(profiler) or defined(memProfiler):
   import nimprof
@@ -27,7 +28,6 @@ glfw.windowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 glfw.windowHint(glfw.OPENGL_FORWARD_COMPAT, 1)
 glfw.windowHint(glfw.OPENGL_DEBUG_CONTEXT, 1)
 glfw.windowHint(glfw.RESIZABLE, 0)
-glfw.windowHint(glfw.REFRESH_RATE, 1000)
 glfw.windowHint(glfw.SAMPLES, 4);
 
 var win = glfw.createWindow(width=windowWidth, height=windowHeight, title=windowTitle, nil, nil)
@@ -37,8 +37,9 @@ glfw.swapInterval(0)
 
 var 
   M = newMessageSystem()
+  I = newInputSystem(M, win)
   T = newTimeSystem(M)
-  R = newRenderSystem(T, windowWidth, windowHeight)
+  R = newRenderSystem(T, I, windowWidth, windowHeight)
   GUI = newGUI(M, T, R)
   W = newWorld(T, R)
 

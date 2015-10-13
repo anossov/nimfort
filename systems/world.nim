@@ -5,46 +5,32 @@ import gl/texture
 import objfile
 import vector
 import timekeeping
+import mersenne
+import times
+import math
 
 type
   World = ref object
     R: RenderSystem
     time: TimeSystem
-    cube: Mesh
-    cubes: seq[Transform]
-    plane: Mesh
-    planeT: Transform
+    things: seq[Renderable]
 
 
 proc newWorld*(time: TimeSystem, r: RenderSystem): World =
   info("World init start")
-  var data = loadObj("assets/cube.obj")
-  var pdata = loadObj("assets/quad.obj")
-
+  var data = loadObj("assets/bird/bird_decoration.obj")
+  var mesh = newMesh(data, newTexture("assets/bird/bird_decoration_diffuse1024.png"))
+  
   result = World(
     R: r,
     time: time,
-    cube: newMesh(data, newTexture("assets/test.png")),
-    cubes: newSeq[Transform](),
-    plane: newMesh(pdata, newTexture("assets/test.png"))
+    things: newSeq[Renderable](),
   )
  
-  result.R.view = newTransform(vec(0.0, 3.0, 2.0), zeroes3, ones3)
-
-  result.cubes.add(newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3 * 0.5))
-  result.cubes.add(newTransform(vec(-1.0, 0.0, 0.0), zeroes3, ones3 * 0.1))
-
-  result.planeT = newTransform(vec(0.0, -1.0, 0.0), zeroes3, ones3 * 5)
+  result.things.add(Renderable(transform: newTransform(zeroes3, zeroes3, ones3), mesh: mesh))
 
   info("World init end")
 
 proc update*(w: World) =
-  for i, c in mpairs(w.cubes):
-    let
-      f = i.float32
-      t = w.time.totalTime
-    c.rotation = vec(t / (f + 2.0), t / (f + 2.0), t / (f + 3.0))
-    c.updateMatrix()
-    w.R.queue3d.add(Renderable(transform: c, mesh: w.cube))
-
-  w.R.queue3d.add(Renderable(transform: w.planeT, mesh: w.plane))
+  for t in w.things:
+    w.R.queue3d.add(t)
