@@ -3,7 +3,7 @@ import opengl
 import vector
 import mesh
 import gl/shader
-
+import timekeeping
 
 type 
   Transform* = object
@@ -19,6 +19,7 @@ type
   RenderSystem* = ref object
     view*: Transform
     window*: vec2
+    time: TimeSystem
     projection3d: mat4
     projection2d: mat4
 
@@ -27,6 +28,8 @@ type
 
     shaderMain: Program
     shaderText: Program
+
+    wire: bool
 
 proc updateMatrix*(t: var Transform) = 
   let rot = rotate(xaxis, t.rotation.x) * rotate(yaxis, t.rotation.y) * rotate(zaxis, t.rotation.z)
@@ -38,12 +41,13 @@ proc newTransform*(p: vec3, r=zeros3(), s=ones3()): Transform =
   result.scale = s
   result.updateMatrix()
 
-proc newRenderSystem*(w, h: float32): RenderSystem =
+proc newRenderSystem*(time: TimeSystem, w, h: float32): RenderSystem =
   loadExtensions()
   info("OpenGL version $1", cast[cstring](glGetString(GL_VERSION)))
 
   result = RenderSystem()
   result.window = [w, h]
+  result.time = time
 
   glViewport(0, 0, w.GLsizei, h.GLsizei)
   glEnable(GL_DEPTH_TEST)
@@ -88,7 +92,10 @@ proc render*(r: var RenderSystem) =
   setLen(r.queue2d, 0)
 
 proc wire*(r: RenderSystem, yes: bool) = 
-  if yes:
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-  else:
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+  if yes != r.wire:
+    if not r.wire:
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+      r.wire = true
+    else:
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+      r.wire = false
