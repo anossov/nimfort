@@ -10,23 +10,28 @@ type
 
 template x*(v: vec2 | vec3 | vec4): float32 = v[0]
 template y*(v: vec2 | vec3 | vec4): float32 = v[1]
-template z*(v: vec3 | vec4): float32 = v[2]
-template value_ptr*(m: var vec3 | mat4): ptr float32 = addr m[0]
+template z*(v: vec3 | vec4): float32        = v[2]
+template w*(v: vec4): float32               = v[3]
+template `x=`*(v: vec2 | vec3 | vec4, f: float32) = v[0] = f
+template `y=`*(v: vec2 | vec3 | vec4, f: float32) = v[1] = f
+template `z=`*(v: vec3 | vec4, f: float32)        = v[2] = f
+template `w=`*(v: vec4, f: float32)               = v[3] = f
+template value_ptr*(m: var vec2 | vec3 | vec4 | mat3 | mat4): ptr float32 = addr m[0]
 
 proc vec*(x, y: float32): vec2 {.inline.} = 
-  result[0] = x
-  result[1] = y
+  result.x = x
+  result.y = y
 
 proc vec*(x, y, z: float32): vec3 {.inline.} = 
-  result[0] = x
-  result[1] = y
-  result[2] = z
+  result.x = x
+  result.y = y
+  result.z = z
 
 proc vec*(x, y, z, w: float32): vec4 {.inline.} = 
-  result[0] = x
-  result[1] = y
-  result[2] = z
-  result[3] = w
+  result.x = x
+  result.y = y
+  result.z = z
+  result.w = w
 
 const
   xaxis* = vec(1.0, 0.0, 0.0)
@@ -41,37 +46,62 @@ proc ones2*(): vec2 = result = vec(1.0, 1.0)
 proc ones3*(): vec3 = result = vec(1.0, 1.0, 1.0)
 proc ones4*(): vec4 = result = vec(1.0, 1.0, 1.0, 1.0)
 
+
 proc identity*(): mat4 =
   result[0] = 1.0
   result[5] = 1.0
   result[10] = 1.0
   result[15] = 1.0
 
+
+proc length*(v: vec3): float32 {.inline.} = sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
+
+
 proc normalize*(v: vec3): vec3 {.inline.} =
-  let mag = sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
-  result[0] = v.x / mag
-  result[1] = v.y / mag
-  result[2] = v.z / mag
+  let mag = v.length
+  result.x = v.x / mag
+  result.y = v.y / mag
+  result.z = v.z / mag
+
+
+proc `-`*(v: vec2): vec2 =
+  result.x = -v.x
+  result.y = -v.y
 
 proc `-`*(v: vec3): vec3 =
-  result[0] = -v.x
-  result[1] = -v.y
-  result[2] = -v.z
+  result.x = -v.x
+  result.y = -v.y
+  result.z = -v.z
+
+
+proc `-`*(a, b: vec2): vec2 =
+  result.x = a.x - b.x
+  result.y = a.y - b.y
 
 proc `-`*(a, b: vec3): vec3 =
-  result[0] = a.x - b.x
-  result[1] = a.y - b.y
-  result[2] = a.z - b.z
+  result.x = a.x - b.x
+  result.y = a.y - b.y
+  result.z = a.z - b.z
+
+
+proc `+`*(a, b: vec2): vec2 =
+  result.x = a.x + b.x
+  result.y = a.y + b.y
 
 proc `+`*(a, b: vec3): vec3 =
-  result[0] = a.x + b.x
-  result[1] = a.y + b.y
-  result[2] = a.z + b.z
+  result.x = a.x + b.x
+  result.y = a.y + b.y
+  result.z = a.z + b.z
+
+
+proc `*`*(a, b: vec2): vec2 =
+  result.x = a.x * b.x
+  result.y = a.y * b.y
 
 proc `*`*(a, b: vec3): vec3 =
-  result[0] = a.x * b.x
-  result[1] = a.y * b.y
-  result[2] = a.z * b.z
+  result.x = a.x * b.x
+  result.y = a.y * b.y
+  result.z = a.z * b.z
 
 
 proc `cross`*(a, b: vec3): vec3 =
@@ -82,6 +112,7 @@ proc `cross`*(a, b: vec3): vec3 =
 proc `dot`*(a, b: vec3): float32 =
   var t = a * b
   result = t.x + t.y + t.z
+
 
 proc `*`*(a: mat4, b: vec4): vec4 =
   result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3]
@@ -139,6 +170,7 @@ proc translate*(v: vec3): mat4 =
   result[14] = v.z
   result[15] = 1.0
 
+
 proc scale*(s: float32): mat4 = 
   result[0] = s
   result[5] = s
@@ -151,12 +183,14 @@ proc scale*(s: vec3): mat4 =
   result[10] = s.z
   result[15] = 1.0
 
+
 proc perspective*(fov, aspect, near, far: float32): mat4 =
   result[5] = 1.0 / tan(fov * PI / 360.0)
   result[0] = result[5] / aspect
   result[10] = (-near - far) / (near - far)
   result[14] = (2.0 * far * near) / (near - far)
   result[11] = 1.0
+
 
 proc orthographic*(left, right, bottom, top, near, far: float32): mat4 =
   result[0] = 2.0 / (right - left)
@@ -194,3 +228,17 @@ proc lookAt*(eye, center, up: vec3): mat4 =
   result[13] = -(u.dot(eye))
   result[14] = -(f.dot(eye))
   result[15] = 1.0
+
+# TODO:
+# determinant
+# inverse
+# reflect
+# refract
+# unproject
+# vector angle
+# point distance
+# vector rotate directly
+# quaternions
+# noise
+# shear?
+# splines?
