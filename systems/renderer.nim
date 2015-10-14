@@ -5,6 +5,7 @@ import mesh
 import math
 import gl/shader
 import systems/timekeeping
+import systems/windowing
 import systems/input
 
 type 
@@ -20,10 +21,7 @@ type
 
   RenderSystem* = ref object
     view*: Transform
-    window*: vec2
-
-    time: TimeSystem
-    input: InputSystem
+    windowSize*: vec2
 
     projection3d: mat4
     projection2d: mat4
@@ -34,11 +32,16 @@ type
     shaderMain: Program
     shaderText: Program
 
-    wire: bool
+    wireOn: bool
+
+
+var Renderer*: RenderSystem
+
 
 proc updateMatrix*(t: var Transform) = 
   let rot = rotate(xaxis, t.rotation.x) * rotate(yaxis, t.rotation.y) * rotate(zaxis, t.rotation.z)
   t.matrix = translate(t.position) * rot * scale(t.scale)
+
 
 proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform = 
   result.position = p
@@ -46,14 +49,17 @@ proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform =
   result.scale = s
   result.updateMatrix()
 
-proc newRenderSystem*(time: TimeSystem, input: InputSystem, w, h: float32): RenderSystem =
+
+proc initRenderSystem*() =
   loadExtensions()
   info("OpenGL version $1", cast[cstring](glGetString(GL_VERSION)))
 
-  result = RenderSystem()
-  result.window = [w, h]
-  result.time = time
-  result.input = input
+  Renderer = RenderSystem()
+  Renderer.windowSize = windowSize()
+
+  let
+    w = Renderer.windowSize.x
+    h = Renderer.windowSize.y
 
   glViewport(0, 0, w.GLsizei, h.GLsizei)
   glEnable(GL_DEPTH_TEST)
@@ -63,25 +69,27 @@ proc newRenderSystem*(time: TimeSystem, input: InputSystem, w, h: float32): Rend
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glClearColor(0.3, 0.3, 0.3, 1.0)
 
-  result.projection3d = perspective(60.0, w / h, 0.1, 100.0)
-  result.projection2d = orthographic(0.0, w, 0.0, h)
-  result.view = newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3)
+  Renderer.projection3d = perspective(60.0, w / h, 0.1, 100.0)
+  Renderer.projection2d = orthographic(0.0, w, 0.0, h)
+  Renderer.view = newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3)
 
-  result.queue3d = newSeq[Renderable]()
-  result.queue2d = newSeq[Renderable]()
+  Renderer.queue3d = newSeq[Renderable]()
+  Renderer.queue2d = newSeq[Renderable]()
 
-  result.shaderMain = createProgram(readFile("assets/shaders/main.vs.glsl"), readFile("assets/shaders/main.fs.glsl"))
-  result.shaderText = createProgram(readFile("assets/shaders/text.vs.glsl"), readFile("assets/shaders/text.fs.glsl"))
+  Renderer.shaderMain = createProgram(readFile("assets/shaders/main.vs.glsl"), readFile("assets/shaders/main.fs.glsl"))
+  Renderer.shaderText = createProgram(readFile("assets/shaders/text.vs.glsl"), readFile("assets/shaders/text.fs.glsl"))
+
 
 proc render(r: Renderable, s: var Program) = 
   var model = r.transform.matrix
   s["model"].set(model)
   r.mesh.render()
 
+
 proc render*(r: var RenderSystem) = 
   var
-    phi = (r.window.x - r.input.cursorPos.x) / 100
-    theta = (r.window.y - r.input.cursorPos.y) / 100
+    phi = (r.windowSize.x - Input.cursorPos.x) / 100
+    theta = (r.windowSize.y - Input.cursorPos.y) / 100
   
   if theta < PI * 0.51:
     theta = PI * 0.51
@@ -111,11 +119,12 @@ proc render*(r: var RenderSystem) =
   setLen(r.queue3d, 0)
   setLen(r.queue2d, 0)
 
+
 proc wire*(r: RenderSystem, yes: bool) = 
-  if yes != r.wire:
-    if not r.wire:
+  if yes != r.wireOn:
+    if not r.wireOn:
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-      r.wire = true
+      r.wireOn = true
     else:
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-      r.wire = false
+      r.wireOn = false

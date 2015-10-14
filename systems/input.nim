@@ -3,14 +3,15 @@ import messaging
 import glfw/wrapper as glfw
 import vector
 
+import systems/windowing
+
+
 type
   InputSystem* = ref object
-    messages: MessageSystem
-    window: GLFWwindow
-
     cursorPos*: vec2
 
-var globalInput: InputSystem
+
+var Input*: InputSystem
 
 
 proc cursorMoved(i: InputSystem; x, y: float) =
@@ -18,14 +19,10 @@ proc cursorMoved(i: InputSystem; x, y: float) =
 
 
 proc cursorCallback(win: GLFWwindow; x, y: cdouble) {.cdecl.} =
-  globalInput.cursorMoved(x, y)
+  Input.cursorMoved(x, y)
 
 
-proc newInputSystem*(m: MessageSystem, win: GLFWwindow): InputSystem =
-  result = InputSystem(
-    messages: m,
-    window: win,
-  )
+proc initInputSystem*() =
+  Input = InputSystem()
   
-  globalInput = result
-  discard glfw.setCursorPosCallback(win, cursorCallback)
+  discard glfw.setCursorPosCallback(Window, cursorCallback)

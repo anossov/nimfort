@@ -1,7 +1,11 @@
 import logging
+
+addHandler(newConsoleLogger(fmtStr=verboseFmtStr))
+
 import glfw/wrapper as glfw
 
-import systems/renderer
+import systems/windowing
+import systems/rendering
 import systems/gui
 import systems/world
 import systems/timekeeping
@@ -11,52 +15,38 @@ import systems/input
 when defined(profiler) or defined(memProfiler):
   import nimprof
 
-addHandler(newConsoleLogger(fmtStr=verboseFmtStr))
 
-const
-  windowWidth = 800
-  windowHeight = 600
-  windowTitle = "Nimfort"
+proc startup*() = 
+  initWindow()
+  initMessageSystem()
+  initInputSystem()
+  initTimeSystem()
+  initRenderSystem()
+  initGUI()
+  initWorld()
 
-if glfw.init() != 1:
-  fatal("Failed to initialize GLFW")
-  quit(0)
 
-glfw.windowHint(glfw.CONTEXT_VERSION_MAJOR, 4)
-glfw.windowHint(glfw.CONTEXT_VERSION_MINOR, 0)
-glfw.windowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-glfw.windowHint(glfw.OPENGL_FORWARD_COMPAT, 1)
-glfw.windowHint(glfw.OPENGL_DEBUG_CONTEXT, 1)
-glfw.windowHint(glfw.RESIZABLE, 0)
-glfw.windowHint(glfw.SAMPLES, 4);
+proc gameloop*() = 
+  while glfw.windowShouldClose(Window) == 0:
+    Time.update()
+    TheWorld.update()
+    UI.update()
 
-var win = glfw.createWindow(width=windowWidth, height=windowHeight, title=windowTitle, nil, nil)
+    Renderer.render()
 
-glfw.makeContextCurrent(win)
-glfw.swapInterval(0)
+    glfw.swapBuffers(Window)
+    glfw.pollEvents()
 
-var 
-  M = newMessageSystem()
-  I = newInputSystem(M, win)
-  T = newTimeSystem(M)
-  R = newRenderSystem(T, I, windowWidth, windowHeight)
-  GUI = newGUI(M, T, R)
-  W = newWorld(T, R)
+    if glfw.getKey(Window, glfw.KEY_W) == glfw.PRESS:
+      Renderer.wire(true)
+    else:
+      Renderer.wire(false)
 
-while glfw.windowShouldClose(win) == 0:
-  T.update()
-  W.update()
-  GUI.update()
 
-  R.render()
+proc shutdown*() =
+  shutdownWindow()
 
-  glfw.swapBuffers(win)
-  glfw.pollEvents()
 
-  if glfw.getKey(win, glfw.KEY_W) == glfw.PRESS:
-    R.wire(true)
-  else:
-    R.wire(false)
-
-glfw.destroyWindow(win)
-glfw.terminate()
+startup()
+gameloop()
+shutdown()

@@ -1,5 +1,7 @@
 import glfw/wrapper as glfw
-import messaging
+
+import systems/messaging
+
 
 type
   TimeSystem* = ref object
@@ -7,16 +9,17 @@ type
     delta*: float
     prevTime: float
 
-    messages: MessageSystem
-
     mksPerFrame*: int
     ftLastUpdate: float
     ftCounter: int
 
-proc newTimeSystem*(m: MessageSystem): TimeSystem =
-  result = TimeSystem(
-    messages: m,
-  )
+
+var Time*: TimeSystem
+
+
+proc initTimeSystem*() =
+  Time = TimeSystem()
+
 
 proc update*(t: TimeSystem) =
   t.totalTime = glfw.getTime()
@@ -27,6 +30,6 @@ proc update*(t: TimeSystem) =
     t.mksPerFrame = int((t.totalTime - t.ftLastUpdate) * 1_000_000 / t.ftCounter.float)
     t.ftLastUpdate = t.totalTime
     t.ftCounter = 0
-    t.messages.emit("frametime")
+    Messages.emit("frametime")
 
   t.ftCounter += 1
