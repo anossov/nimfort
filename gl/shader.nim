@@ -37,9 +37,16 @@ type
 
   Program* = ref object
     id: GLuint
-    uniforms: Table[string, Uniform]
+    
     fs: Shader
     vs: Shader
+
+    projection*: Uniform
+    view*: Uniform
+    model*: Uniform
+    eye*: Uniform
+
+    uniforms: Table[string, Uniform]
 
   Uniform = object
     location: GLint
@@ -82,6 +89,21 @@ proc createShader*(t: ShaderType, src: string): Shader =
     stderr.writeln(result.src[0])
 
 
+proc use*(p: Program) {.inline.} = 
+  glUseProgram(p.id)
+
+proc findUniform*(p: Program, name: string): Uniform =
+  result = Uniform()
+  result.location = glGetUniformLocation(p.id, name)
+  if result.location == -1:
+    stderr.writeln("Could not find uniform: " & name)
+
+proc getUniform*(p: var Program, name: string): Uniform =
+  if p.uniforms.hasKey(name):
+    return p.uniforms[name]
+  p.uniforms[name] = p.findUniform(name)
+  return p.uniforms[name]
+
 proc createProgram*(vs: string, fs: string): Program = 
   result = Program(
     id: glCreateProgram(),
@@ -97,25 +119,14 @@ proc createProgram*(vs: string, fs: string): Program =
   if result.info(ProgramInfo.LinkStatus) == GL_FALSE:
     stderr.writeln(result.infoLog())
 
+  result.use()
+  result.projection = result.getUniform("projection")
+  result.model      = result.getUniform("model")
+  result.view       = result.getUniform("view")
+  result.eye        = result.getUniform("eye")
 
 proc bindFragDataLocation*(p: Program, num: GLuint, name: string) {.inline.} =
   glBindFragDataLocation(p.id, num, name)
-
-
-proc use*(p: Program) {.inline.} = 
-  glUseProgram(p.id)
-
-proc getUniform*(p: Program, name: string): Uniform =
-  result = Uniform()
-  result.location = glGetUniformLocation(p.id, name)
-  if result.location == -1:
-    stderr.writeln("Could not find uniform: " & name)
-
-proc `[]`*(p: var Program, name: string): Uniform =
-  if p.uniforms.hasKey(name):
-    return p.uniforms[name]
-  p.uniforms[name] = p.getUniform(name)
-  return p.uniforms[name]
 
 proc set*(u: Uniform, f1: float32) =
   glUniform1f(u.location, f1)

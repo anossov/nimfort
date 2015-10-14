@@ -88,13 +88,13 @@ proc initRenderSystem*() =
 
 proc render(r: Renderable, s: var Program) = 
   var model = r.transform.matrix
-  s["model"].set(model)
+  s.model.set(model)
   r.mesh.render()
 
 
 proc render*() = 
   var r = Renderer
-  
+
   for m in r.listener.queue:
     case m:
     of "wire-on":
@@ -119,9 +119,9 @@ proc render*() =
 
   var viewMat = lookAt(r.view.position, zeroes3, yaxis)
   r.shaderMain.use()
-  r.shaderMain["eye"].set(r.view.position)
-  r.shaderMain["view"].set(viewMat)
-  r.shaderMain["projection"].set(r.projection3d)
+  r.shaderMain.eye.set(r.view.position)
+  r.shaderMain.view.set(viewMat)
+  r.shaderMain.projection.set(r.projection3d)
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glEnable(GL_DEPTH_TEST)
   for i in r.queue3d:
@@ -129,7 +129,7 @@ proc render*() =
 
   glDisable(GL_DEPTH_TEST)
   r.shaderText.use()
-  r.shaderText["projection"].set(r.projection2d)
+  r.shaderText.projection.set(r.projection2d)
   for i in r.queue2d:
     i.render(r.shaderText)
 
