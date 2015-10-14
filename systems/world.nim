@@ -30,6 +30,6 @@ proc initWorld*() =
   info("World ok")
 
 
-proc update*(w: World) =
-  for t in w.things:
+proc updateWorld*() =
+  for t in TheWorld.things:
     Renderer.queue3d.add(t)

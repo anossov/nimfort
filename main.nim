@@ -27,16 +27,16 @@ proc startup*() =
 proc gameloop*() = 
   var quit = newListener()
   Messages.listen("quit", quit)
-  
+
   while true:
     if len(quit.queue) > 0:
       break
 
-    Time.update()
-    TheWorld.update()
-    UI.update()
+    updateTime()
+    updateWorld()
+    updateUi()
 
-    Renderer.render()
+    render()
 
     updateWindow()
 

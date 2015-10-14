@@ -23,7 +23,8 @@ proc initTimeSystem*() =
   info("Timers ok")
 
 
-proc update*(t: TimeSystem) =
+proc updateTime*() =
+  let t = Time
   t.totalTime = glfw.getTime()
   t.delta = t.totalTime - t.prevTime
   t.prevTime = t.totalTime

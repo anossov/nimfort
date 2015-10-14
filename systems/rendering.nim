@@ -92,7 +92,9 @@ proc render(r: Renderable, s: var Program) =
   r.mesh.render()
 
 
-proc render*(r: var RenderSystem) = 
+proc render*() = 
+  var r = Renderer
+  
   for m in r.listener.queue:
     case m:
     of "wire-on":

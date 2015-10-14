@@ -32,16 +32,16 @@ proc initGUI*()=
   info("UI ok")
 
 
-proc update*(gui: GUI) =
-  for e in gui.listener.queue:
+proc updateUi*() =
+  for e in UI.listener.queue:
     case e:
     of "frametime":
-      gui.frametime.update($Time.mksPerFrame & " μs/frame")
+      UI.frametime.update($Time.mksPerFrame & " μs/frame")
     else:
       discard
-  gui.listener.queue.setLen(0)
+  UI.listener.queue.setLen(0)
 
   Renderer.queue2d.add(Renderable(
     transform: newTransform(vec(30.0, Renderer.windowSize.y, 0.0), zeroes3, vec(0.5, 0.5, 0.5)),
-    mesh: gui.frametime.mesh
+    mesh: UI.frametime.mesh
   ))
