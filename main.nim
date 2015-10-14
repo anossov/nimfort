@@ -2,8 +2,6 @@ import logging
 
 addHandler(newConsoleLogger(fmtStr=verboseFmtStr))
 
-import glfw/wrapper as glfw
-
 import systems/windowing
 import systems/rendering
 import systems/gui
@@ -27,20 +25,20 @@ proc startup*() =
 
 
 proc gameloop*() = 
-  while glfw.windowShouldClose(Window) == 0:
+  var quit = newListener()
+  Messages.listen("quit", quit)
+  
+  while true:
+    if len(quit.queue) > 0:
+      break
+
     Time.update()
     TheWorld.update()
     UI.update()
 
     Renderer.render()
 
-    glfw.swapBuffers(Window)
-    glfw.pollEvents()
-
-    if glfw.getKey(Window, glfw.KEY_W) == glfw.PRESS:
-      Renderer.wire(true)
-    else:
-      Renderer.wire(false)
+    updateWindow()
 
 
 proc shutdown*() =

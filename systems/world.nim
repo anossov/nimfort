@@ -27,7 +27,7 @@ proc initWorld*() =
  
   TheWorld.things.add(Renderable(transform: newTransform(zeroes3, zeroes3, ones3), mesh: mesh))
 
-  info("World init ok")
+  info("World ok")
 
 
 proc update*(w: World) =

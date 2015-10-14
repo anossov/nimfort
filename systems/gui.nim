@@ -1,3 +1,4 @@
+import logging
 import text
 import vector
 
@@ -27,6 +28,8 @@ proc initGUI*()=
   )
 
   Messages.listen("frametime", UI.listener)
+
+  info("UI ok")
 
 
 proc update*(gui: GUI) =

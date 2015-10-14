@@ -1,3 +1,4 @@
+import logging
 import tables
 
 
@@ -22,6 +23,7 @@ proc initMessageSystem*() =
   Messages = MessageSystem(
     listeners: initTable[string, seq[Listener]]()
   )
+  info("Messaging ok")
 
 
 proc listen*(m: var MessageSystem, event: string, listener: Listener) = 

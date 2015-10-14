@@ -1,3 +1,4 @@
+import logging
 import glfw/wrapper as glfw
 
 import systems/messaging
@@ -19,6 +20,7 @@ var Time*: TimeSystem
 
 proc initTimeSystem*() =
   Time = TimeSystem()
+  info("Timers ok")
 
 
 proc update*(t: TimeSystem) =

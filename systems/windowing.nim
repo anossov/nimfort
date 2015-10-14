@@ -1,6 +1,7 @@
 import logging
 import glfw/wrapper as glfw
 import vector
+import systems/messaging
 
 const
   windowWidth = 800
@@ -35,7 +36,18 @@ proc initWindow*() =
   glfw.makeContextCurrent(Window)
   glfw.swapInterval(0)
 
+  info("Window ok: $1x$2", windowWidth, windowHeight)
+
+
+proc updateWindow*() =
+  glfw.swapBuffers(Window)
+  glfw.pollEvents()
+
+  if glfw.windowShouldClose(Window) == 1:
+    Messages.emit("quit")
+
 
 proc shutdownWindow*() =
   glfw.destroyWindow(Window)
   glfw.terminate()
+  info("Window shut down")

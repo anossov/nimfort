@@ -4,6 +4,7 @@ import vector
 import mesh
 import math
 import gl/shader
+import systems/messaging
 import systems/timekeeping
 import systems/windowing
 import systems/input
@@ -32,7 +33,7 @@ type
     shaderMain: Program
     shaderText: Program
 
-    wireOn: bool
+    listener: Listener
 
 
 var Renderer*: RenderSystem
@@ -52,8 +53,7 @@ proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform =
 
 proc initRenderSystem*() =
   loadExtensions()
-  info("OpenGL version $1", cast[cstring](glGetString(GL_VERSION)))
-
+  
   Renderer = RenderSystem()
   Renderer.windowSize = windowSize()
 
@@ -79,6 +79,12 @@ proc initRenderSystem*() =
   Renderer.shaderMain = createProgram(readFile("assets/shaders/main.vs.glsl"), readFile("assets/shaders/main.fs.glsl"))
   Renderer.shaderText = createProgram(readFile("assets/shaders/text.vs.glsl"), readFile("assets/shaders/text.fs.glsl"))
 
+  Renderer.listener = newListener()
+  Messages.listen("wire-on", Renderer.listener)
+  Messages.listen("wire-off", Renderer.listener)
+
+  info("Renderer ok: OpenGL v. $1", cast[cstring](glGetString(GL_VERSION)))
+
 
 proc render(r: Renderable, s: var Program) = 
   var model = r.transform.matrix
@@ -87,6 +93,15 @@ proc render(r: Renderable, s: var Program) =
 
 
 proc render*(r: var RenderSystem) = 
+  for m in r.listener.queue:
+    case m:
+    of "wire-on":
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+    of "wire-off":
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+      discard
+
   var
     phi = (r.windowSize.x - Input.cursorPos.x) / 100
     theta = (r.windowSize.y - Input.cursorPos.y) / 100
@@ -118,13 +133,3 @@ proc render*(r: var RenderSystem) =
 
   setLen(r.queue3d, 0)
   setLen(r.queue2d, 0)
-
-
-proc wire*(r: RenderSystem, yes: bool) = 
-  if yes != r.wireOn:
-    if not r.wireOn:
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-      r.wireOn = true
-    else:
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-      r.wireOn = false
