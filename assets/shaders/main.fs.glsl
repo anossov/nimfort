@@ -1,22 +1,27 @@
 #version 400 core
 
 in vec2 uvf;
-in vec3 n;
-in vec4 posf;
 out vec4 outColor;
 
-uniform sampler2D tex;
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
 uniform vec3 eye;
-
 
 void main() {
   // Ashikhmin-Shirley brdf
     
-    vec3 Rd = vec3(texture(tex, vec2(uvf.s, 1.0 - uvf.t)));
+    vec3 Rd = texture(gAlbedoSpec, uvf).rgb;
+    vec3 n = texture(gNormal, uvf).rgb;
+    vec3 posf = texture(gPosition, uvf).rgb;
 
-    vec3 n = normalize(n);
+    if (n == vec3(0.0, 0.0, 0.0)) {
+      outColor = vec4(0.0, 0.4, 0.5, 1.0);
+      return;
+    }
+
     vec3 l = normalize(vec3(2.0, 1.5, 1.0));
-    vec3 v = normalize(eye - vec3(posf));
+    vec3 v = normalize(eye - posf);
     vec3 h = normalize(l + v);
  
     vec3 epsilon = vec3(1.0, 0.0, 0.0);

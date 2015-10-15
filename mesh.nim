@@ -58,8 +58,6 @@ proc newMesh*(data: MeshData, texture: Texture): Mesh =
 
 proc render*(m: Mesh) =
   m.vao.use()
-  m.texture.use()
-
   glDrawElements(GL_TRIANGLES, len(m.data.indices).GLsizei, GL_UNSIGNED_INT, nil)
 
 

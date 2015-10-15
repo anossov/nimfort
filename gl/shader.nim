@@ -128,6 +128,10 @@ proc createProgram*(vs: string, fs: string): Program =
 proc bindFragDataLocation*(p: Program, num: GLuint, name: string) {.inline.} =
   glBindFragDataLocation(p.id, num, name)
 
+
+proc set*(u: Uniform, i1: int32) =
+  glUniform1i(u.location, i1)
+
 proc set*(u: Uniform, f1: float32) =
   glUniform1f(u.location, f1)
 
