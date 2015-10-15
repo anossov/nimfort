@@ -12,7 +12,7 @@ import vector
 import mesh
 
 type
-  Char* = object
+  Char = object
     id: Rune
     pos: vec2
     size: vec2
@@ -26,10 +26,9 @@ type
     hichars: Table[Rune, Char]
     kerning: Table[array[2, Rune], float32]
 
-  Text* = object
-    s: string
-    color: vec3
-    font: Font
+  TextMesh* = object
+    s*: string
+    font*: Font
     mesh*: Mesh
     width*: float32
 
@@ -123,19 +122,18 @@ proc stringMesh(s: string, f: Font, w: var float32): MeshData =
   w = x
 
 
-proc newText*(s: string, f: Font, color: vec3): Text = 
+proc newTextMesh*(f: Font, s: string): TextMesh = 
   var w: float32
   var v = stringMesh(s, f, w)
-  result = Text(
+  result = TextMesh(
     s: s,
     font: f,
-    color: color,
     mesh: newMesh(v, f.texture),
     width: w,
   )
 
 
-proc update*(t: var Text, s: string) =
+proc update*(t: var TextMesh, s: string) =
   t.s = s
   t.mesh.deleteBuffers()
   if t.s == "":
@@ -144,9 +142,3 @@ proc update*(t: var Text, s: string) =
   var v = stringMesh(s, t.font, w)
   t.mesh = newMesh(v, t.font.texture)
   t.width = w
-
-
-proc render*(t: Text) = 
-  if t.s == "":
-    return
-  t.mesh.render()

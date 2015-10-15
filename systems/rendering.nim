@@ -4,6 +4,7 @@ import vector
 import mesh
 import math
 import gl/shader
+import systems/ecs
 import systems/messaging
 import systems/timekeeping
 import systems/windowing
@@ -16,7 +17,11 @@ type
     scale: vec3
     matrix: mat4
 
-  Renderable* = object
+  Renderable3d* = object of Component
+    transform*: Transform
+    mesh*: Mesh
+
+  Renderable2d* = object of Component
     transform*: Transform
     mesh*: Mesh
 
@@ -27,8 +32,8 @@ type
     projection3d: mat4
     projection2d: mat4
 
-    queue3d*: seq[Renderable]
-    queue2d*: seq[Renderable]
+    queue3d: ComponentStore[Renderable3d]
+    queue2d: ComponentStore[Renderable2d]
 
     shaderMain: Program
     shaderText: Program
@@ -37,6 +42,16 @@ type
 
 
 var Renderer*: RenderSystem
+
+
+proc attach*(e: EntityHandle, r: Renderable3d) =
+  Renderer.queue3d.add(e, r)
+
+proc attach*(e: EntityHandle, r: Renderable2d) =
+  Renderer.queue2d.add(e, r)
+
+proc getRenderable2d*(e: EntityHandle): var Renderable2d =
+  return Renderer.queue2d[e]
 
 
 proc updateMatrix*(t: var Transform) = 
@@ -54,7 +69,10 @@ proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform =
 proc initRenderSystem*() =
   loadExtensions()
   
-  Renderer = RenderSystem()
+  Renderer = RenderSystem(
+    queue3d: newComponentStore[Renderable3d](),
+    queue2d: newComponentStore[Renderable2d](),
+  )
   Renderer.windowSize = windowSize()
 
   let
@@ -73,8 +91,7 @@ proc initRenderSystem*() =
   Renderer.projection2d = orthographic(0.0, w, 0.0, h)
   Renderer.view = newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3)
 
-  Renderer.queue3d = newSeq[Renderable]()
-  Renderer.queue2d = newSeq[Renderable]()
+
 
   Renderer.shaderMain = createProgram(readFile("assets/shaders/main.vs.glsl"), readFile("assets/shaders/main.fs.glsl"))
   Renderer.shaderText = createProgram(readFile("assets/shaders/text.vs.glsl"), readFile("assets/shaders/text.fs.glsl"))
@@ -84,13 +101,6 @@ proc initRenderSystem*() =
   Messages.listen("wire-off", Renderer.listener)
 
   info("Renderer ok: OpenGL v. $1", cast[cstring](glGetString(GL_VERSION)))
-
-
-proc render(r: Renderable, s: var Program) = 
-  var model = r.transform.matrix
-  s.model.set(model)
-  r.mesh.render()
-
 
 proc render*() = 
   var r = Renderer
@@ -124,14 +134,15 @@ proc render*() =
   r.shaderMain.projection.set(r.projection3d)
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glEnable(GL_DEPTH_TEST)
-  for i in r.queue3d:
-    i.render(r.shaderMain)
+  for i in r.queue3d.data:
+    var model = i.transform.matrix
+    r.shaderMain.model.set(model)
+    i.mesh.render()
 
   glDisable(GL_DEPTH_TEST)
   r.shaderText.use()
   r.shaderText.projection.set(r.projection2d)
-  for i in r.queue2d:
-    i.render(r.shaderText)
-
-  setLen(r.queue3d, 0)
-  setLen(r.queue2d, 0)
+  for i in r.queue2d.data:
+    var model = i.transform.matrix
+    r.shaderText.model.set(model)
+    i.mesh.render()

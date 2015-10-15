@@ -1,8 +1,10 @@
+import tables
 import logging
 
 addHandler(newConsoleLogger(fmtStr=verboseFmtStr))
 
 import systems/windowing
+import systems/ecs
 import systems/rendering
 import systems/gui
 import systems/world
@@ -17,6 +19,7 @@ when defined(profiler) or defined(memProfiler):
 proc startup*() = 
   initWindow()
   initMessageSystem()
+  initEntityManager()
   initInputSystem()
   initTimeSystem()
   initRenderSystem()

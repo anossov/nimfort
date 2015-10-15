@@ -96,7 +96,7 @@ proc findUniform*(p: Program, name: string): Uniform =
   result = Uniform()
   result.location = glGetUniformLocation(p.id, name)
   if result.location == -1:
-    stderr.writeln("Could not find uniform: " & name)
+    info("Could not find uniform: " & name)
 
 proc getUniform*(p: var Program, name: string): Uniform =
   if p.uniforms.hasKey(name):
