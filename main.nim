@@ -1,5 +1,6 @@
 import tables
 import logging
+import strutils
 
 addHandler(newConsoleLogger(fmtStr=verboseFmtStr))
 
@@ -11,6 +12,8 @@ import systems/world
 import systems/timekeeping
 import systems/messaging
 import systems/input
+import systems/resources
+
 
 when defined(profiler) or defined(memProfiler):
   import nimprof
@@ -22,6 +25,7 @@ proc startup*() =
   initEntityManager()
   initInputSystem()
   initTimeSystem()
+  initResources()
   initRenderSystem()
   initGUI()
   initWorld()
@@ -30,7 +34,7 @@ proc startup*() =
 proc gameloop*() = 
   var quit = newListener()
   Messages.listen("quit", quit)
-
+  info("Loading complete in $1s", formatFloat(Time.now(), precision=3))
   while true:
     if len(quit.queue) > 0:
       break

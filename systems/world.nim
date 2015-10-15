@@ -9,6 +9,7 @@ import math
 
 import systems/ecs
 import systems/rendering
+import systems/resources
 
 type
   World* = ref object
@@ -19,9 +20,7 @@ var TheWorld*: World
 
 
 proc initWorld*() =
-  var data = loadObj("assets/bird/bird_decoration.obj")
-  var mesh = newMesh(data, newTexture("assets/bird/bird_decoration_diffuse1024.png"))
-
+  var mesh = Resources.getModel("bird")
   var e = newEntity("bird")
   e.attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3), mesh: mesh))
   

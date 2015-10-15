@@ -9,6 +9,7 @@ import systems/messaging
 import systems/timekeeping
 import systems/windowing
 import systems/input
+import systems/resources
 
 type 
   Transform* = object
@@ -91,10 +92,8 @@ proc initRenderSystem*() =
   Renderer.projection2d = orthographic(0.0, w, 0.0, h)
   Renderer.view = newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3)
 
-
-
-  Renderer.shaderMain = createProgram(readFile("assets/shaders/main.vs.glsl"), readFile("assets/shaders/main.fs.glsl"))
-  Renderer.shaderText = createProgram(readFile("assets/shaders/text.vs.glsl"), readFile("assets/shaders/text.fs.glsl"))
+  Renderer.shaderMain = Resources.getShader("main")
+  Renderer.shaderText = Resources.getShader("text")
 
   Renderer.listener = newListener()
   Messages.listen("wire-on", Renderer.listener)

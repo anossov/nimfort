@@ -6,6 +6,7 @@ import vector
 
 import systems/ecs
 import systems/messaging
+import systems/resources
 import systems/rendering
 import systems/timekeeping
 
@@ -39,10 +40,9 @@ proc update(t: var Text, s: string) =
 
 
 proc initGUI*()=
-  var f = loadFont("assets/liberationsans.fnt")
   UI = GUI(
     listener: newListener(),
-    font: f,
+    font: Resources.getFont("liberationsans"),
     texts: initTable[string, Text]()
   )
 

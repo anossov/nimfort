@@ -22,10 +22,11 @@ proc initTimeSystem*() =
   Time = TimeSystem()
   info("Timers ok")
 
+proc now*(t: TimeSystem): float = glfw.getTime()
 
 proc updateTime*() =
   let t = Time
-  t.totalTime = glfw.getTime()
+  t.totalTime = t.now()
   t.delta = t.totalTime - t.prevTime
   t.prevTime = t.totalTime
 
