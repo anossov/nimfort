@@ -10,6 +10,7 @@ import gl/shader
 import opengl
 import vector
 import mesh
+import nimPNG
 
 type
   Char = object
@@ -20,7 +21,7 @@ type
     advance: float32
 
   Font* = ref object
-    texture: Texture
+    textures: seq[Texture]
     textureSize: vec2
     chars: array[16384, Char]
     hichars: Table[Rune, Char]
@@ -38,7 +39,7 @@ proc hash(r: Rune): THash =
 
 
 proc loadFont*(path: string): Font = 
-  result = Font()
+  result = Font(textures: newSeq[Texture]())
   result.hichars = initTable[Rune, Char]()
   result.kerning = initTable[array[2, Rune], float32]()
 
@@ -64,7 +65,11 @@ proc loadFont*(path: string): Font =
       result.textureSize[0] = data["scaleW"].parseFloat
       result.textureSize[1] = data["scaleH"].parseFloat
     of "page":
-      result.texture = newTexture(splitPath(path).head / data["file"][1..^2])
+      let image = loadPNG32(splitPath(path).head / data["file"][1..^2])
+      var texture = newTexture()
+      texture.image2d(image.data, image.width.int32, image.height.int32, mipmap=true)
+      texture.filter(true)
+      result.textures.add(texture)
     of "char":
       let c = Char(
           id: data["id"].parseInt.Rune,
@@ -128,7 +133,7 @@ proc newTextMesh*(f: Font, s: string): TextMesh =
   result = TextMesh(
     s: s,
     font: f,
-    mesh: newMesh(v, f.texture),
+    mesh: newMesh(v, f.textures[0]),
     width: w,
   )
 
@@ -140,5 +145,5 @@ proc update*(t: var TextMesh, s: string) =
     return
   var w: float32
   var v = stringMesh(s, t.font, w)
-  t.mesh = newMesh(v, t.font.texture)
+  t.mesh = newMesh(v, t.font.textures[0])
   t.width = w

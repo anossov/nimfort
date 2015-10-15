@@ -3,6 +3,8 @@ import strutils
 import text
 import objfile
 import mesh
+import nimPNG
+
 import gl/texture
 import gl/shader
 
@@ -30,5 +32,10 @@ proc getShader*(r: ResourceManager, name: string): Program =
 proc getModel*(r: ResourceManager, name: string): Mesh = 
   let
     data = loadObj("assets/models/$1.obj" % name)
-    texture = newTexture("assets/textures/$1.png" % name)
+    image = loadPNG32("assets/textures/$1.png" % name)
+
+  var texture = newTexture()
+  texture.image2d(image.data, image.width.int32, image.height.int32)
+  texture.filter(true)
+
   newMesh(data, texture)
