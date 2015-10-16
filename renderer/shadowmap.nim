@@ -10,18 +10,24 @@ import renderer/components
 import config
 
 type
-  ShadowMap* = object
+  ShadowMap* = ref object
     fb: Framebuffer
-    texture*: Texture
     shader: Program
 
 
 proc newShadowMap*(): ShadowMap =
   var
     b = newFramebuffer()
-    t = newTexture()
     s = Resources.getShader("shadowmap")
 
+  glDrawBuffer(GL_NONE)
+  glReadBuffer(GL_NONE)
+
+  return ShadowMap(fb: b, shader: s)
+
+
+proc createShadowMap(sm: var ShadowMap, light: var Light) =
+  var t = newTexture()
   t.image2d(nil, shadowMapSize, shadowMapSize, false, TextureFormat.Depth, PixelType.Float, GL_DEPTH_COMPONENT)
   t.filter(true)
 
@@ -34,24 +40,27 @@ proc newShadowMap*(): ShadowMap =
   var border = [1'f32, 1, 1, 1]
   glTexParameterfv(ord t.target, GL_TEXTURE_BORDER_COLOR, addr border[0])
 
-  b.attach(t, depth=true)
-
-  glDrawBuffer(GL_NONE)
-  glReadBuffer(GL_NONE)
-
-  debug("Shadow map: $1", b.check())
-
-  return ShadowMap(fb: b, texture: t, shader: s)
+  sm.fb.attach(t, depth=true)
+  light.shadowMap = t
 
 
-proc render*(sm: var ShadowMap, lightspace: var mat4, geometry: seq[Renderable3d]) =
+proc render*(sm: var ShadowMap, light: var Light, geometry: seq[Renderable3d]) =
+  if not light.shadows:
+    return
+
   sm.fb.use()
+
+  if light.shadowMap.isEmpty():
+    sm.createShadowMap(light)
+
+  sm.fb.attach(light.shadowMap, depth=true)
+  
   glEnable(GL_DEPTH_TEST)
   glClear(GL_DEPTH_BUFFER_BIT)
   glViewport(0, 0, shadowMapSize, shadowMapSize)
   
   sm.shader.use()
-  sm.shader.getUniform("lightspace").set(lightspace)
+  sm.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
 
   for i in geometry:
     var model = i.transform.matrix

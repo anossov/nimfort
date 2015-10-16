@@ -7,6 +7,7 @@ import gl/shader
 import mesh
 import vector
 import systems/resources
+import systems/camera
 import renderer/components
 import renderer/shadowMap
 
@@ -87,7 +88,7 @@ proc newLightingPass*(): LightingPass =
   )
 
 
-proc perform*(pass: var GeometryPass, view: var mat4, proj: var mat4, geometry: seq[Renderable3d]) =
+proc perform*(pass: var GeometryPass, geometry: seq[Renderable3d]) =
   pass.fb.use()
   glEnable(GL_DEPTH_TEST)
   glDisable(GL_BLEND)
@@ -95,8 +96,8 @@ proc perform*(pass: var GeometryPass, view: var mat4, proj: var mat4, geometry: 
   glViewport(0, 0, windowWidth, windowHeight)
 
   pass.shader.use()
-  pass.shader.getUniform("view").set(view)
-  pass.shader.getUniform("projection").set(proj)
+  pass.shader.getUniform("view").set(Camera.getView())
+  pass.shader.getUniform("projection").set(Camera.getProjection())
   
   for i in geometry:
     var model = i.transform.matrix
@@ -107,21 +108,31 @@ proc perform*(pass: var GeometryPass, view: var mat4, proj: var mat4, geometry: 
     i.mesh.render()
 
 
-proc perform*(pass: var LightingPass, lightSpace: var mat4, lightPos: vec3, cameraPos: vec3, gp: GeometryPass, sm: ShadowMap) =
+proc begin*(pass: var LightingPass) =
   useDefaultFramebuffer()
   glViewport(0, 0, windowWidth, windowHeight)
   glEnable(GL_BLEND)
+  glBlendEquation(GL_FUNC_ADD)
+  glBlendFunc(GL_ONE, GL_ONE)
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+  glDisable(GL_DEPTH_TEST)
 
   pass.shader.use()
-  pass.shader.getUniform("eye").set(cameraPos)
-  pass.shader.getUniform("light").set(lightPos)
-  pass.shader.getUniform("lightspace").set(lightSpace)
-  
+  pass.shader.getUniform("eye").set(Camera.position)
+
+proc perform*(pass: var LightingPass, light: Light, gp: GeometryPass) =
+  var lp = vec(light.position.x, light.position.y, light.position.z, 0.0)
+  if light.kind == Point:
+    lp.w = 1.0
+  pass.shader.getUniform("light").set(lp)
+  pass.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
+  pass.shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
+  pass.shader.getUniform("att").set(light.attenuation)
+
   gp.position.use(0)
   gp.normal.use(1)
   gp.albedo.use(2)
-  sm.texture.use(3)
+  light.shadowMap.use(3)
 
   pass.quad.render()

@@ -45,6 +45,8 @@ proc addComponent*(em: EntityManager, e: EntityHandle, c: ComponentHandle, ctype
 proc `[]`*(e: EntityHandle, ctype: string): ComponentHandle =
   return Entities.entities[e].components[ctype]
 
+proc has(e: EntityHandle, ctype: string): bool = 
+  return Entities.entities[e].components.hasKey(ctype)
 
 proc newComponentStore*[T](): ComponentStore[T] = 
   result = ComponentStore[T](
@@ -59,4 +61,5 @@ proc add*[T](cs: ComponentStore[T], e: EntityHandle, c: T) =
   Entities.addComponent(e, ch, cs.name)
 
 proc `[]`*[T](cs: ComponentStore[T], e: EntityHandle): var T =
+  assert e.has(cs.name)
   return cs.data[e[cs.name]]

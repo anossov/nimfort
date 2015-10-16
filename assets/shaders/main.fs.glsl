@@ -10,8 +10,11 @@ uniform sampler2D gAlbedoSpec;
 uniform sampler2DShadow shadowMap;
 
 uniform vec3 eye;
-uniform vec3 light;
+uniform vec4 light;
 uniform mat4 lightspace;
+uniform bool hasShadowmap;
+
+uniform vec3 att;
 
 
 float calcShadow(vec4 fpLS, float bias) {
@@ -39,26 +42,29 @@ void main() {
     vec3 n = texture(gNormal, uvf).rgb;
 
     if (n == vec3(0.0, 0.0, 0.0)) {
-      outColor = vec4(0.0, 0.4, 0.5, 1.0);
-      return;
+      discard;
     }
 
     vec4 AS = texture(gAlbedoSpec, uvf);
     vec3 color = AS.rgb;
-    vec3 spec = vec3(AS.a);
+    float spec = AS.a;
     vec3 posf = texture(gPosition, uvf).rgb;
 
-    vec3 ambient = 0.1 * color;
-
-    vec3 l = normalize(light);
+    vec3 l = normalize(light.xyz - posf * light.w);
     vec3 v = normalize(eye - posf);
     vec3 h = normalize(l + v);
  
-    float bias = max(0.003 * (1.0 - dot(n, l)), 0.0002);
-    float shadow = calcShadow(lightspace * vec4(posf, 1.0), bias);
+    float shadow = 1.0;
 
-    vec3 diffuse = max(dot(n, l), 0.0) * color;
-    vec3 specular = pow(max(dot(n, h), 0.0), 64.0) * spec;
+    if (hasShadowmap) {
+      float bias = max(0.003 * (1.0 - dot(n, l)), 0.0002);
+      shadow = calcShadow(lightspace * vec4(posf, 1.0), bias);  
+    }
 
-    outColor = vec4(ambient + (diffuse + specular) * shadow, 1.0f);
+    float lighting = max(dot(n, l), 0.0) + pow(max(dot(n, h), 0.0), 64.0) * spec;
+
+    float ld = length(light.xyz - posf);
+    float attenuation = 1.0 / (att[0] + att[1] * ld + att[2] * ld * ld);
+
+    outColor = vec4(color, 1.0) * max(lighting * shadow * attenuation, 0.0);
 }

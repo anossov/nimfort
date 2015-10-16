@@ -117,6 +117,9 @@ proc bindFragDataLocation*(p: Program, num: GLuint, name: string) {.inline.} =
   glBindFragDataLocation(p.id, num, name)
 
 
+proc set*(u: Uniform, b1: bool) =
+  glUniform1i(u.location, b1.int32)
+
 proc set*(u: Uniform, i1: int32) =
   glUniform1i(u.location, i1)
 
@@ -136,7 +139,12 @@ proc set*(u: Uniform, v: vec3) =
   var v = v
   glUniform3fv(u.location, 1, v.value_ptr)
 
-proc set*(u: Uniform, m: var mat4) = 
+proc set*(u: Uniform, v: vec4) =
+  var v = v
+  glUniform4fv(u.location, 1, v.value_ptr)
+
+proc set*(u: Uniform, m: mat4) = 
+  var m = m
   glUniformMatrix4fv(u.location, 1, GL_FALSE.GLboolean, m.value_ptr)
 
 

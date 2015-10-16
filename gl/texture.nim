@@ -83,3 +83,4 @@ proc newTexture*(target=TextureTarget.t2D): Texture =
   glBindTexture(ord target, result.id)
 
 proc emptyTexture*(t=TextureTarget.t2d): Texture = Texture(target: t, id: 0)
+proc isEmpty*(t: Texture): bool = t.id.int == 0

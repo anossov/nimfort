@@ -12,6 +12,7 @@ import systems/timekeeping
 import systems/messaging
 import systems/input
 import systems/resources
+import systems/camera
 import renderer/rendering
 
 
@@ -26,6 +27,7 @@ proc startup*() =
   initInputSystem()
   initTimeSystem()
   initResources()
+  initCamera()
   initRenderSystem()
   initGUI()
   initWorld()
@@ -41,6 +43,7 @@ proc gameloop*() =
 
     updateTime()
     updateWorld()
+    updateCamera()
     updateUi()
 
     render()

@@ -1,19 +1,20 @@
 import logging
 import mesh
+import math
 import gl/texture
 import objfile
 import vector
-import times
 import strutils
 
 import systems/ecs
 import systems/resources
+import systems/timekeeping
 import renderer/rendering
 import renderer/components
 
 type
   World* = ref object
-    discard
+    sun: EntityHandle
 
 
 var TheWorld*: World
@@ -43,8 +44,14 @@ proc initWorld*() =
   
   TheWorld = World()
 
+  TheWorld.sun = newEntity("sun")
+  TheWorld.sun.attach(newLight(Directional, shadows=true))
+  
+  newEntity("p").attach(newLight(Point, position=vec(0.0, 0.2, 0.8), attenuation=vec(1.0, 0.0, 150.0)))
+  newEntity("p").attach(newLight(Point, position=vec(0.0, 0.2, 0.1), attenuation=vec(1.0, 0.0, 150.0)))
+
   info("World ok")
 
 
 proc updateWorld*() =
-  discard
+  TheWorld.sun.getLight.position = vec(sin(Time.totalTime / 4.0)*5, 2, cos(Time.totalTime / 4.0)*5)
