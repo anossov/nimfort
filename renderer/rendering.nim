@@ -16,26 +16,6 @@ import config
 
 
 type 
-  Transform* = object
-    rotation*: vec3
-    position: vec3
-    scale: vec3
-    matrix: mat4
-
-  Renderable3d* = object of Component
-    transform*: Transform
-    mesh*: Mesh
-
-  Renderable2d* = object of Component
-    transform*: Transform
-    mesh*: Mesh
-
-  Light* = object of Component
-    position*: vec3
-    target*: vec3
-    directional*: bool
-    shadows*: bool
-
   RenderSystem* = ref object
     view*: Transform
     windowSize*: vec2
@@ -49,20 +29,15 @@ type
 
     shaderMain: Program
     shaderText: Program
-    shaderG: Program
+    
     shaderSM: Program
 
-    gBuffer: GBuffer
+    geometryPass: GeometryPass
+    
     shadowMap: ShadowMap
     screenQuad: Mesh
 
     listener: Listener
-
-  GBuffer = object
-    buffer: Framebuffer
-    albedo: Texture
-    normal: Texture
-    position: Texture
 
   ShadowMap = object
     buffer: Framebuffer
@@ -82,16 +57,7 @@ proc getRenderable2d*(e: EntityHandle): var Renderable2d =
   return Renderer.queue2d[e]
 
 
-proc updateMatrix*(t: var Transform) = 
-  let rot = rotate(xaxis, t.rotation.x) * rotate(yaxis, t.rotation.y) * rotate(zaxis, t.rotation.z)
-  t.matrix = translate(t.position) * rot * scale(t.scale)
 
-
-proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform = 
-  result.position = p
-  result.rotation = r
-  result.scale = s
-  result.updateMatrix()
 
 
 proc newShadowMap(size: int32): ShadowMap =
@@ -121,35 +87,6 @@ proc newShadowMap(size: int32): ShadowMap =
   return ShadowMap(buffer: b, texture: t)
 
 
-proc newGBuffer(w: int32, h: int32): GBuffer =
-  var p, n, a: Texture
-  var b = newFramebuffer()
-  p = newTexture()
-  p.image2d(nil, w, h, false, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
-  p.filter(false)
-  
-  n = newTexture()
-  n.image2d(nil, w, h, false, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
-  n.filter(false)
-  
-  a = newTexture()
-  a.image2d(nil, w, h, false, TextureFormat.RGBA, internalformat=GL_RGBA)
-  a.filter(false)
-
-  b.attach(p)
-  b.attach(n)
-  b.attach(a)
-  b.attachDepthStencilRBO(w, h)
-
-  debug("GBuffer: $1", b.check())
-
-  return GBuffer(
-    buffer: b,
-    position: p,
-    normal: n,
-    albedo: a,
-  )
-
 proc initRenderSystem*() =
   loadExtensions()
   let dummyt = newTexture()
@@ -166,7 +103,7 @@ proc initRenderSystem*() =
     queue3d: newComponentStore[Renderable3d](),
     queue2d: newComponentStore[Renderable2d](),
     screenQuad: newMesh(quad, dummyt),
-    gBuffer: newGBuffer(windowWidth, windowHeight),
+    geometryPass: newGeometryPass(),
     shadowMap: newShadowMap(shadowMapSize),
   )
   Renderer.windowSize = windowSize()
@@ -188,7 +125,7 @@ proc initRenderSystem*() =
 
   Renderer.shaderMain = Resources.getShader("main")
   Renderer.shaderText = Resources.getShader("text")
-  Renderer.shaderG = Resources.getShader("gbuffer")
+  Renderer.shaderG = 
   Renderer.shaderSM = Resources.getShader("shadowmap")
 
   Renderer.shaderMain.use()
@@ -197,10 +134,6 @@ proc initRenderSystem*() =
   Renderer.shaderMain.getUniform("gAlbedoSpec").set(2)
   Renderer.shaderMain.getUniform("shadowMap").set(3)
 
-  Renderer.shaderG.use()
-  Renderer.shaderG.getUniform("normalmap").set(1)
-  Renderer.shaderG.getUniform("specularmap").set(2)
-  
   Renderer.listener = newListener()
   Messages.listen("wire-on", Renderer.listener)
   Messages.listen("wire-off", Renderer.listener)
@@ -239,31 +172,12 @@ proc render*() =
   var viewMat = lookAt(r.view.position, zeroes3, yaxis)
   var light = vec(sin(Time.totalTime / 10.0)*5, 5.0, cos(Time.totalTime / 10.0)*5)
 
-  glEnable(GL_DEPTH_TEST)
-
-  r.gBuffer.buffer.use()
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-  glViewport(0, 0, r.windowSize.x.GLsizei, r.windowSize.y.GLsizei)
-  
-  glDisable(GL_BLEND)
-  r.shaderG.use()
-  r.shaderG.getUniform("view").set(viewMat)
-  r.shaderG.getUniform("projection").set(r.projection3d)
-  
-  for i in r.queue3d.data:
-    var model = i.transform.matrix
-    r.shaderG.getUniform("model").set(model)
-    i.mesh.texture.use(0)
-    i.mesh.normalmap.use(1)
-    i.mesh.specularmap.use(2)
-    i.mesh.render()
-
+  r.geometryPass.perform(viewMat, r.projection3d, r.queue3d.data)
 
   r.shadowMap.buffer.use()
   glClear(GL_DEPTH_BUFFER_BIT)
   glViewport(0, 0, shadowMapSize, shadowMapSize)
   
-
   let lp = orthographic(-2.0, 2.0, -2.0, 2.0, 2, 10.0)
   let lv = lookAt(light, zeroes3, yaxis)
   var ls = lp * lv
