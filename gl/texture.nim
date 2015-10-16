@@ -81,3 +81,5 @@ proc newTexture*(target=TextureTarget.t2D): Texture =
   
   glGenTextures(1, addr result.id)
   glBindTexture(ord target, result.id)
+
+proc emptyTexture*(t=TextureTarget.t2d): Texture = Texture(target: t, id: 0)

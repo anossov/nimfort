@@ -8,6 +8,7 @@ import systems/ecs
 import systems/messaging
 import systems/resources
 import systems/timekeeping
+import renderer/components
 import renderer/rendering
 
 

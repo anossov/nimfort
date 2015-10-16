@@ -91,8 +91,8 @@ proc newMesh*(data: MeshData, texture: Texture): Mesh =
   result = Mesh(
     data: data,
     texture: texture,
-    normalmap: Texture(target: TextureTarget.t2d, id: 0),
-    specularmap: Texture(target: TextureTarget.t2d, id: 0),
+    normalmap: emptyTexture(),
+    specularmap: emptyTexture(),
     vao: createVAO(),
     vbo: createVBO(vertices),
     ebo: createEBO(data.indices),

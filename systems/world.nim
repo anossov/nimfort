@@ -9,6 +9,7 @@ import strutils
 import systems/ecs
 import systems/resources
 import renderer/rendering
+import renderer/components
 
 type
   World* = ref object
@@ -38,9 +39,7 @@ proc initWorld*() =
   
   newEntity("hut").attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3 * 0.02), mesh: cabinM))
   newEntity("roof").attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3 * 0.02), mesh: roofM))
-
   newEntity("ground").attach(Renderable3d(transform: newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3 * 10.0), mesh: p))
-  
   
   TheWorld = World()
 

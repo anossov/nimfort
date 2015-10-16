@@ -6,9 +6,9 @@ import mesh
 type
   Transform* = object
     rotation*: vec3
-    position: vec3
-    scale: vec3
-    matrix: mat4
+    position*: vec3
+    scale*: vec3
+    matrix*: mat4
 
   Renderable3d* = object of Component
     transform*: Transform
