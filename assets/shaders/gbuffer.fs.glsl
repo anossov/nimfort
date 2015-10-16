@@ -24,8 +24,7 @@ void main()
     } else {
         gNormal = TBN[2];
     }
-
-
+    
     gAlbedoSpec.rgb = texture(tex, uvf).rgb;
     gAlbedoSpec.a = texture(specularmap, uvf).r;
 } 

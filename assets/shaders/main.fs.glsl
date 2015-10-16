@@ -50,11 +50,11 @@ void main() {
 
     vec3 ambient = 0.1 * color;
 
-    vec3 l = normalize(light - posf);
+    vec3 l = normalize(light);
     vec3 v = normalize(eye - posf);
     vec3 h = normalize(l + v);
  
-    float bias = max(0.001 * (1.0 - dot(n, l)), 0.0002);
+    float bias = max(0.003 * (1.0 - dot(n, l)), 0.0002);
     float shadow = calcShadow(lightspace * vec4(posf, 1.0), bias);
 
     vec3 diffuse = max(dot(n, l), 0.0) * color;

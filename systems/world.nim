@@ -19,18 +19,27 @@ var TheWorld*: World
 
 
 proc initWorld*() =
-  var mesh = Resources.getModel("head")
+  var cabinM = Resources.getModel("cabin")
+  var roofM = Resources.getModel("roof", false)
   var p = Resources.getModel("quad", false)
   
-  let e = newEntity("bird")
-  let ep = newEntity("ground")
-  let t = Resources.getTexture("test")
-  p.texture = t
-  mesh.normalmap = Resources.getTexture("headN", false)
-  mesh.specularmap = Resources.getTexture("headS", false)
+  let
+    cs = Resources.getTexture("cabinS", false)
+    cn = Resources.getTexture("cabinN", false)
+
+  p.texture = Resources.getTexture("ground")
+  #p.normalmap = Resources.getTexture("groundN")
+  #p.specularmap = Resources.getTexture("white")
+  cabinM.normalmap = cn
+  cabinM.specularmap = cs
+  roofM.texture = cabinM.texture
+  roofM.normalmap = cn
+  roofM.specularmap = cs
   
-  e.attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3 * 0.05), mesh: mesh))
-  ep.attach(Renderable3d(transform: newTransform(vec(0.0, -1.0, 0.0), zeroes3, ones3 * 20.0), mesh: p))
+  newEntity("hut").attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3 * 0.02), mesh: cabinM))
+  newEntity("roof").attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3 * 0.02), mesh: roofM))
+
+  newEntity("ground").attach(Renderable3d(transform: newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3 * 10.0), mesh: p))
   
   
   TheWorld = World()

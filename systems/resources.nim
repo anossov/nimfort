@@ -3,7 +3,7 @@ import strutils
 import text
 import objfile
 import mesh
-import nimPNG
+import nimBMP
 import opengl
 
 import gl/texture
@@ -40,7 +40,7 @@ proc flipimage(data: string; w, h: int): string =
     result.add(data[f * stride..t * stride - 1])
 
 proc getTexture*(r: ResourceManager, name: string, srgb=true): Texture =
-  let image = loadPNG32("assets/textures/$1.png" % name)
+  let image = loadBMP32("assets/textures/$1.bmp" % name)
   let f = if srgb: GL_SRGB else: GL_RGBA
   let data = flipimage(image.data, image.width, image.height)
   

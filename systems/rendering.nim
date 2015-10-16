@@ -201,7 +201,7 @@ proc initRenderSystem*() =
   info("Renderer ok: OpenGL v. $1", cast[cstring](glGetString(GL_VERSION)))
 
 
-# TODO: MSAA
+# TODO: MSAA or maybe SMAA
 # TODO: maybe Tile-Based DR
 
 proc render*() = 
@@ -239,7 +239,7 @@ proc render*() =
   glViewport(0, 0, shadowMapSize, shadowMapSize)
   
 
-  let lp = orthographic(-5.0, 5.0, -5.0, 5.0, 2, 50.0)
+  let lp = orthographic(-2.0, 2.0, -2.0, 2.0, 2, 10.0)
   let lv = lookAt(light, zeroes3, yaxis)
   var ls = lp * lv
   
