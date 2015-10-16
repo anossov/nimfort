@@ -7,8 +7,8 @@ import times
 import strutils
 
 import systems/ecs
-import systems/rendering
 import systems/resources
+import renderer/rendering
 
 type
   World* = ref object

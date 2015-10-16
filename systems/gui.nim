@@ -7,8 +7,8 @@ import vector
 import systems/ecs
 import systems/messaging
 import systems/resources
-import systems/rendering
 import systems/timekeeping
+import renderer/rendering
 
 
 type

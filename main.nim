@@ -6,13 +6,13 @@ addHandler(newConsoleLogger(fmtStr=verboseFmtStr))
 
 import systems/windowing
 import systems/ecs
-import systems/rendering
 import systems/gui
 import systems/world
 import systems/timekeeping
 import systems/messaging
 import systems/input
 import systems/resources
+import renderer/rendering
 
 
 when defined(profiler) or defined(memProfiler):
