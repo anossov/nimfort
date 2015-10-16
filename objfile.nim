@@ -39,3 +39,5 @@ proc loadObj*(path: string): MeshData =
         result.indices.add(map[v])
     else:
       discard
+
+  result.calculateTangents()

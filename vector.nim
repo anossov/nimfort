@@ -1,5 +1,6 @@
 import opengl
 import math
+import strutils
 
 type
   vec2* = array[2, float32]
@@ -32,6 +33,10 @@ proc vec*(x, y, z, w: float32): vec4 {.inline.} =
   result.y = y
   result.z = z
   result.w = w
+
+proc `$`*(v: vec2): string = "($1, $2)".format(v.x, v.y)
+proc `$`*(v: vec3): string = "($1, $2, $3)".format(v.x, v.y, v.z)
+proc `$`*(v: vec4): string = "($1, $2, $3, $4)".format(v.x, v.y, v.z, v.w)
 
 const
   xaxis*   = vec(1.0, 0.0, 0.0)

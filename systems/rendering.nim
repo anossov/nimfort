@@ -256,11 +256,13 @@ proc render*() =
   r.shaderG.use()
   r.shaderG.getUniform("view").set(viewMat)
   r.shaderG.getUniform("projection").set(r.projection3d)
+  r.shaderG.getUniform("normalmap").set(1)
   
   for i in r.queue3d.data:
     var model = i.transform.matrix
     r.shaderG.getUniform("model").set(model)
     i.mesh.texture.use(0)
+    i.mesh.normalmap.use(1)
     i.mesh.render()
 
 

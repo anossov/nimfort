@@ -57,7 +57,7 @@ proc use*(t: Texture, unit: int) =
   glActiveTexture((GL_TEXTURE0 + unit).GLenum)
   glBindTexture(ord t.target, t.id)
 
-proc image2d*(t: Texture, data: string, w: int32, h: int32, mipmap=true, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, internalformat=GL_SRGB) = 
+proc image2d*(t: Texture, data: string, w: int32, h: int32, mipmap=true, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, internalformat=GL_RGBA) = 
   glTexImage2D(ord t.target, 0, internalformat.GLint, w, h, 0, ord format, ord pixeltype, if data == nil: nil else: cstring(data))
 
   if mipmap:

@@ -42,6 +42,9 @@ void main() {
     vec3 n = texture(gNormal, uvf).rgb;
     vec3 posf = texture(gPosition, uvf).rgb;
 
+    // outColor = vec4(n, 1.0);
+    // return;
+
     if (n == vec3(0.0, 0.0, 0.0)) {
       outColor = vec4(0.0, 0.4, 0.5, 1.0);
       return;
@@ -89,7 +92,8 @@ void main() {
  
     vec4 amb = vec4(0.04 * Rd, 1.0);
 
-    float bias = max(0.0008 * (1.0 - dot(n, l)), 0.0002);
+    float bias = max(0.001 * (1.0 - dot(n, l)), 0.0002);
+    
     float shadow = calcShadow(lightspace * vec4(posf, 1.0), bias);
     outColor = max(amb, shadow * vec4(2.0 * (Pd + Ps), 1.0));
 }

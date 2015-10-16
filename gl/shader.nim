@@ -81,7 +81,6 @@ proc createShader*(t: ShaderType, src: string): Shader =
 
   if result.info(ShaderInfo.CompileStatus) == GL_FALSE:
     stderr.writeln(result.infoLog())
-    stderr.writeln(result.src[0])
 
 
 proc use*(p: Program) {.inline.} = 
