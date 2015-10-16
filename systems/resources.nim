@@ -29,13 +29,20 @@ proc getShader*(r: ResourceManager, name: string): Program =
     readFile("assets/shaders/$1.fs.glsl" % name),
   )
 
-proc getModel*(r: ResourceManager, name: string): Mesh = 
+proc getTexture*(r: ResourceManager, name: string): Texture =
+  let image = loadPNG32("assets/textures/$1.png" % name)
+  result = newTexture()
+  result.image2d(image.data, image.width.int32, image.height.int32)
+  result.filter(true)
+
+proc getModel*(r: ResourceManager, name: string, t=true): Mesh = 
   let
     data = loadObj("assets/models/$1.obj" % name)
-    image = loadPNG32("assets/textures/$1.png" % name)
 
-  var texture = newTexture()
-  texture.image2d(image.data, image.width.int32, image.height.int32)
-  texture.filter(true)
+  var texture: Texture
+  if t:
+    texture = r.getTexture(name)
+  else:
+    texture = newTexture()
 
   newMesh(data, texture)

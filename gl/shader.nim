@@ -41,11 +41,6 @@ type
     fs: Shader
     vs: Shader
 
-    projection*: Uniform
-    view*: Uniform
-    model*: Uniform
-    eye*: Uniform
-
     uniforms: Table[string, Uniform]
 
   Uniform = object
@@ -118,12 +113,6 @@ proc createProgram*(vs: string, fs: string): Program =
 
   if result.info(ProgramInfo.LinkStatus) == GL_FALSE:
     stderr.writeln(result.infoLog())
-
-  result.use()
-  result.projection = result.getUniform("projection")
-  result.model      = result.getUniform("model")
-  result.view       = result.getUniform("view")
-  result.eye        = result.getUniform("eye")
 
 proc bindFragDataLocation*(p: Program, num: GLuint, name: string) {.inline.} =
   glBindFragDataLocation(p.id, num, name)

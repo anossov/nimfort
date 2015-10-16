@@ -2,12 +2,7 @@ import logging
 import glfw/wrapper as glfw
 import vector
 import systems/messaging
-
-const
-  windowWidth = 800
-  windowHeight = 600
-  windowTitle = "Nimfort"
-
+import config
 
 var Window*: GLFWwindow
 
@@ -29,7 +24,7 @@ proc initWindow*() =
   glfw.windowHint(glfw.OPENGL_FORWARD_COMPAT, 1)
   glfw.windowHint(glfw.OPENGL_DEBUG_CONTEXT, 1)
   glfw.windowHint(glfw.RESIZABLE, 0)
-  glfw.windowHint(glfw.SAMPLES, 4)
+  glfw.windowHint(glfw.SAMPLES, MSAASamples)
 
   Window = glfw.createWindow(width=windowWidth, height=windowHeight, title=windowTitle, nil, nil)
 

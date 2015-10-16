@@ -6,7 +6,34 @@ out vec4 outColor;
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
+
+uniform sampler2DShadow shadowMap;
+
 uniform vec3 eye;
+uniform vec3 light;
+uniform mat4 lightspace;
+
+
+float calcShadow(vec4 fpLS, float bias) {
+    vec3 posfLP = fpLS.xyz / fpLS.w;
+    posfLP = posfLP * 0.5 + 0.5;
+    posfLP.z = posfLP.z - bias;
+
+    
+    // float shadow = 0.0;
+    // vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    // for(int x = -1; x <= 1; ++x)
+    // {
+    //   for(int y = -1; y <= 1; ++y)
+    //   {
+    //       vec3 tc = vec3(posfLP.xy + vec2(x, y) * texelSize, posfLP.z);
+    //       shadow += texture(shadowMap, tc);
+    //   }
+    // }
+    // return shadow / 9.0;
+    return texture(shadowMap, posfLP);
+}
+
 
 void main() {
   // Ashikhmin-Shirley brdf
@@ -20,7 +47,7 @@ void main() {
       return;
     }
 
-    vec3 l = normalize(vec3(2.0, 1.5, 1.0));
+    vec3 l = normalize(light);
     vec3 v = normalize(eye - posf);
     vec3 h = normalize(l + v);
  
@@ -62,5 +89,7 @@ void main() {
  
     vec4 amb = vec4(0.04 * Rd, 1.0);
 
-    outColor = max(amb, vec4(2.0 * (Pd + Ps), 1.0));
+    float bias = max(0.0008 * (1.0 - dot(n, l)), 0.0002);
+    float shadow = calcShadow(lightspace * vec4(posf, 1.0), bias);
+    outColor = max(amb, shadow * vec4(2.0 * (Pd + Ps), 1.0));
 }

@@ -40,12 +40,12 @@ proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false) =
     fb.colors += 1
 
   glFramebufferTexture(ord fb.target, ap, t.id, 0)
-
-  var bufs = newSeq[GLenum](fb.colors)
   
-  for i in 0..(fb.colors-1):
-    bufs[i] = ((ord AttachmentPoint.Color) + i).GLenum
-  glDrawBuffers(fb.colors, addr bufs[0])
+  if fb.colors > 0:
+    var bufs = newSeq[GLenum](fb.colors)
+    for i in 0..(fb.colors-1):
+      bufs[i] = ((ord AttachmentPoint.Color) + i).GLenum
+    glDrawBuffers(fb.colors, addr bufs[0])
 
 
 # TODO: RBO object

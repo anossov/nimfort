@@ -16,12 +16,14 @@ type
     t2DMultisampleArray = GL_TEXTURE_2D_MULTISAMPLE_ARRAY, # 0x9102
 
   TextureFormat* {.pure.} = enum
-    Red  = GL_RED  # 0x1903
-    RGB  = GL_RGB  # 0x1907
-    RGBA = GL_RGBA # 0x1908
-    BGR  = GL_BGR  # 0x80E0
-    BGRA = GL_BGRA # 0x80E1
-    RG   = GL_RG   # 0x8227
+    Depth        = GL_DEPTH_COMPONENT # 0x1902
+    Red          = GL_RED  # 0x1903
+    RGB          = GL_RGB  # 0x1907
+    RGBA         = GL_RGBA # 0x1908
+    BGR          = GL_BGR  # 0x80E0
+    BGRA         = GL_BGRA # 0x80E1
+    RG           = GL_RG   # 0x8227
+    DepthStencil = GL_DEPTH_STENCIL # 0x84F9
 
   PixelType* {.pure.} = enum
     Byte           = cGL_BYTE                       # 0x1400
@@ -48,7 +50,7 @@ type
 
   Texture* = object
     id*: GLuint
-    target: TextureTarget
+    target*: TextureTarget
 
 
 proc use*(t: Texture, unit: int) = 
@@ -65,6 +67,10 @@ proc filter*(t: Texture, yes: bool) =
   if yes:
     glTexParameteri(ord t.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
     glTexParameteri(ord t.target, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    
+    var aniso: float32
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, addr aniso);
+    glTexParameterf(ord t.target, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso); 
   else:
     glTexParameteri(ord t.target, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexParameteri(ord t.target, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
