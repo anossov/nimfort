@@ -189,6 +189,10 @@ proc initRenderSystem*() =
   Renderer.shaderMain.getUniform("gNormal").set(1)
   Renderer.shaderMain.getUniform("gAlbedoSpec").set(2)
   Renderer.shaderMain.getUniform("shadowMap").set(3)
+
+  Renderer.shaderG.use()
+  Renderer.shaderG.getUniform("normalmap").set(1)
+  Renderer.shaderG.getUniform("specularmap").set(2)
   
   Renderer.listener = newListener()
   Messages.listen("wire-on", Renderer.listener)
@@ -256,13 +260,14 @@ proc render*() =
   r.shaderG.use()
   r.shaderG.getUniform("view").set(viewMat)
   r.shaderG.getUniform("projection").set(r.projection3d)
-  r.shaderG.getUniform("normalmap").set(1)
+
   
   for i in r.queue3d.data:
     var model = i.transform.matrix
     r.shaderG.getUniform("model").set(model)
     i.mesh.texture.use(0)
     i.mesh.normalmap.use(1)
+    i.mesh.specularmap.use(2)
     i.mesh.render()
 
 

@@ -25,6 +25,7 @@ type
     data*: MeshData
     texture*: Texture
     normalmap*: Texture
+    specularmap*: Texture
 
     vao: VAO
     vbo: Buffer
@@ -60,19 +61,9 @@ proc calculateTangents*(m: var MeshData) =
       e2 = v3.position - v1.position
       duv1 = v2.uv - v1.uv
       duv2 = v3.uv - v1.uv
-      f = 1.0'f32 / (duv1.x * duv2.y - duv2.x * duv1.y)
-      flip = if duv2.x * duv1.y - duv2.y * duv1.x < 0: -1.0 else: 1.0
-
-      tangent = vec(
-        flip * (e2.x * duv1.y - e1.x * duv2.y),
-        flip * (e2.y * duv1.y - e1.y * duv2.y),
-        flip * (e2.z * duv1.y - e1.z * duv2.y),
-      )
-      bitangent = vec(
-        flip * (e2.x * duv1.x - e1.x * duv2.x),
-        flip * (e2.y * duv1.x - e1.y * duv2.x),
-        flip * (e2.z * duv1.x - e1.z * duv2.x),
-      )
+      f = 1.0'f32 / (duv1.y * duv2.x - duv2.y * duv1.x)
+      tangent = (e1 * -duv2.y + e2 * duv1.y) * f
+      bitangent = (e1 * -duv2.x + e2 * duv1.x) * f
 
     tangents[face] = tangent
     bitangents[face] = bitangent
@@ -101,6 +92,7 @@ proc newMesh*(data: MeshData, texture: Texture): Mesh =
     data: data,
     texture: texture,
     normalmap: Texture(target: TextureTarget.t2d, id: 0),
+    specularmap: Texture(target: TextureTarget.t2d, id: 0),
     vao: createVAO(),
     vbo: createVBO(vertices),
     ebo: createEBO(data.indices),

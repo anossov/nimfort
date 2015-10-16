@@ -11,6 +11,7 @@ out vec4 outColor;
 
 uniform sampler2D tex;
 uniform sampler2D normalmap;
+uniform sampler2D specularmap;
 
 void main()
 {    
@@ -23,8 +24,8 @@ void main()
     } else {
         gNormal = TBN[2];
     }
-    
 
-    gAlbedoSpec.rgb = texture(tex, vec2(uvf.s, 1.0 - uvf.t)).rgb;
-    gAlbedoSpec.a = 1.0;
+
+    gAlbedoSpec.rgb = texture(tex, uvf).rgb;
+    gAlbedoSpec.a = texture(specularmap, uvf).r;
 } 

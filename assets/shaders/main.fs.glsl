@@ -36,64 +36,29 @@ float calcShadow(vec4 fpLS, float bias) {
 
 
 void main() {
-  // Ashikhmin-Shirley brdf
-    
-    vec3 Rd = texture(gAlbedoSpec, uvf).rgb;
     vec3 n = texture(gNormal, uvf).rgb;
-    vec3 posf = texture(gPosition, uvf).rgb;
-
-    // outColor = vec4(n, 1.0);
-    // return;
 
     if (n == vec3(0.0, 0.0, 0.0)) {
       outColor = vec4(0.0, 0.4, 0.5, 1.0);
       return;
     }
 
-    vec3 l = normalize(light);
+    vec4 AS = texture(gAlbedoSpec, uvf);
+    vec3 color = AS.rgb;
+    vec3 spec = vec3(AS.a);
+    vec3 posf = texture(gPosition, uvf).rgb;
+
+    vec3 ambient = 0.1 * color;
+
+    vec3 l = normalize(light - posf);
     vec3 v = normalize(eye - posf);
     vec3 h = normalize(l + v);
  
-    vec3 epsilon = vec3(1.0, 0.0, 0.0);
-    vec3 tangent = normalize(cross(n, epsilon));
-    vec3 bitangent = normalize(cross(n, tangent));
- 
-
-    float VdotN = dot(v, n);
-    float LdotN = dot(l, n);
-    float HdotN = dot(h, n);
-    float HdotL = dot(h, l);
-    float HdotT = dot(h, tangent);
-    float HdotB = dot(h, bitangent);
- 
-    vec3 Rs = vec3(0.3, 0.3, 0.3);
- 
-    float Nu = 200;
-    float Nv = 32;
- 
-    
-    vec3 Pd = (28.0 * Rd) / ( 23.0 * 3.14159 );
-    Pd *= (1.0 - Rs);
-    Pd *= (1.0 - pow(1.0 - (LdotN / 2.0), 5.0));
-    Pd *= (1.0 - pow(1.0 - (VdotN / 2.0), 5.0));
- 
-
-    float ps_num_exp = Nu * HdotT * HdotT + Nv * HdotB * HdotB;
-    ps_num_exp /= (1.0 - HdotN * HdotN);
- 
-    float Ps_num = sqrt((Nu + 1) * (Nv + 1));
-    Ps_num *= pow( HdotN, ps_num_exp );
- 
-    float Ps_den = 8.0 * 3.14159 * HdotL;
-    Ps_den *= max( LdotN, VdotN );
- 
-    vec3 Ps = Rs * (Ps_num / Ps_den);
-    Ps *= (Rs + (1.0 - Rs) * pow(1.0 - HdotL, 5.0));
- 
-    vec4 amb = vec4(0.04 * Rd, 1.0);
-
     float bias = max(0.001 * (1.0 - dot(n, l)), 0.0002);
-    
     float shadow = calcShadow(lightspace * vec4(posf, 1.0), bias);
-    outColor = max(amb, shadow * vec4(2.0 * (Pd + Ps), 1.0));
+
+    vec3 diffuse = max(dot(n, l), 0.0) * color;
+    vec3 specular = pow(max(dot(n, h), 0.0), 64.0) * spec;
+
+    outColor = vec4(ambient + (diffuse + specular) * shadow, 1.0f);
 }
