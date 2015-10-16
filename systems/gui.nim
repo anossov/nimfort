@@ -31,13 +31,13 @@ proc newText(ui: GUI, name: string, transform: Transform, s: string = "") =
     m = ui.font.newTextMesh(s)
     e = newEntity("ui-text-" & name)
     t = Text(entity: e, mesh: m)
-  t.entity.attach(Renderable2d(transform: transform, mesh: m.mesh))
+  t.entity.attach(Label(transform: transform, mesh: m.mesh))
   ui.texts[name] = t
 
 
 proc update(t: var Text, s: string) = 
   t.mesh.update(s)
-  t.entity.getRenderable2d().mesh = t.mesh.mesh
+  t.entity.getLabel().mesh = t.mesh.mesh
 
 
 proc initGUI*()=

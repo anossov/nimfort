@@ -17,6 +17,7 @@ import config
 import renderer/components
 import renderer/deferred
 import renderer/shadowmap
+import renderer/textrenderer
 
 type 
   RenderSystem* = ref object
@@ -28,14 +29,13 @@ type
 
     queue3d: ComponentStore[Renderable3d]
     lights: ComponentStore[Light]
-    queue2d: ComponentStore[Renderable2d]
+    labels: ComponentStore[Label]
 
-    shaderText: Program
-    
     shadowMap: ShadowMap
     geometryPass: GeometryPass
     lightingPass: LightingPass
-    
+    textRenderer: TextRenderer
+
     listener: Listener
 
 
@@ -45,11 +45,11 @@ var Renderer*: RenderSystem
 proc attach*(e: EntityHandle, r: Renderable3d) =
   Renderer.queue3d.add(e, r)
 
-proc attach*(e: EntityHandle, r: Renderable2d) =
-  Renderer.queue2d.add(e, r)
+proc attach*(e: EntityHandle, r: Label) =
+  Renderer.labels.add(e, r)
 
-proc getRenderable2d*(e: EntityHandle): var Renderable2d =
-  return Renderer.queue2d[e]
+proc getLabel*(e: EntityHandle): var Label =
+  return Renderer.labels[e]
 
 
 proc initRenderSystem*() =
@@ -57,10 +57,12 @@ proc initRenderSystem*() =
   
   Renderer = RenderSystem(
     queue3d: newComponentStore[Renderable3d](),
-    queue2d: newComponentStore[Renderable2d](),
+    lights: newComponentStore[Light](),
+    labels: newComponentStore[Label](),
     geometryPass: newGeometryPass(),
     lightingPass: newLightingPass(),
     shadowMap: newShadowMap(),
+    textRenderer: newTextRenderer(),
   )
   Renderer.windowSize = windowSize()
 
@@ -75,8 +77,6 @@ proc initRenderSystem*() =
   Renderer.projection3d = perspective(60.0, w / h, 0.1, 100.0)
   Renderer.projection2d = orthographic(0.0, w, 0.0, h)
   Renderer.view = newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3)
-
-  Renderer.shaderText = Resources.getShader("text")
 
   Renderer.listener = newListener()
   Messages.listen("wire-on", Renderer.listener)
@@ -123,15 +123,4 @@ proc render*() =
   r.geometryPass.perform(viewMat, r.projection3d, r.queue3d.data)
   r.shadowMap.render(ls, r.queue3d.data)
   r.lightingPass.perform(ls, light, r.view.position, r.geometryPass, r.shadowMap)
-
-  glDisable(GL_DEPTH_TEST)
-  glEnable(GL_BLEND)
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-
-  r.shaderText.use()
-  r.shaderText.getUniform("projection").set(r.projection2d)
-  for i in r.queue2d.data:
-    var model = i.transform.matrix
-    r.shaderText.getUniform("model").set(model)
-    i.mesh.texture.use(0)
-    i.mesh.render()
+  r.textRenderer.render(r.projection2d, r.labels.data)

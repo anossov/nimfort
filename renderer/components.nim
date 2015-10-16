@@ -14,15 +14,15 @@ type
     transform*: Transform
     mesh*: Mesh
 
-  Renderable2d* = object of Component
-    transform*: Transform
-    mesh*: Mesh
-
   Light* = object of Component
     position*: vec3
     target*: vec3
     directional*: bool
     shadows*: bool
+
+  Label* = object of Component
+    transform*: Transform
+    mesh*: Mesh
 
 
 proc updateMatrix*(t: var Transform) = 

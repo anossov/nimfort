@@ -47,3 +47,4 @@ nimcache
 profile_results.txt
 glfw3.dll
 sources
+main*.trace
