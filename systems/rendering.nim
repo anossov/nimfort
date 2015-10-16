@@ -30,6 +30,12 @@ type
     transform*: Transform
     mesh*: Mesh
 
+  Light* = object of Component
+    position*: vec3
+    target*: vec3
+    directional*: bool
+    shadows*: bool
+
   RenderSystem* = ref object
     view*: Transform
     windowSize*: vec2
@@ -38,6 +44,7 @@ type
     projection2d: mat4
 
     queue3d: ComponentStore[Renderable3d]
+    lights: ComponentStore[Light]
     queue2d: ComponentStore[Renderable2d]
 
     shaderMain: Program
@@ -234,6 +241,24 @@ proc render*() =
 
   glEnable(GL_DEPTH_TEST)
 
+  r.gBuffer.buffer.use()
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  glViewport(0, 0, r.windowSize.x.GLsizei, r.windowSize.y.GLsizei)
+  
+  glDisable(GL_BLEND)
+  r.shaderG.use()
+  r.shaderG.getUniform("view").set(viewMat)
+  r.shaderG.getUniform("projection").set(r.projection3d)
+  
+  for i in r.queue3d.data:
+    var model = i.transform.matrix
+    r.shaderG.getUniform("model").set(model)
+    i.mesh.texture.use(0)
+    i.mesh.normalmap.use(1)
+    i.mesh.specularmap.use(2)
+    i.mesh.render()
+
+
   r.shadowMap.buffer.use()
   glClear(GL_DEPTH_BUFFER_BIT)
   glViewport(0, 0, shadowMapSize, shadowMapSize)
@@ -251,26 +276,7 @@ proc render*() =
     r.shaderSM.getUniform("model").set(model)
     i.mesh.render()
 
-
-  r.gBuffer.buffer.use()
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glViewport(0, 0, r.windowSize.x.GLsizei, r.windowSize.y.GLsizei)
-  
-  glDisable(GL_BLEND)
-  r.shaderG.use()
-  r.shaderG.getUniform("view").set(viewMat)
-  r.shaderG.getUniform("projection").set(r.projection3d)
-
-  
-  for i in r.queue3d.data:
-    var model = i.transform.matrix
-    r.shaderG.getUniform("model").set(model)
-    i.mesh.texture.use(0)
-    i.mesh.normalmap.use(1)
-    i.mesh.specularmap.use(2)
-    i.mesh.render()
-
-
   useDefaultFramebuffer()
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
