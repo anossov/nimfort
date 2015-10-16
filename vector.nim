@@ -212,9 +212,9 @@ proc scale*(s: vec3): mat4 =
 proc perspective*(fov, aspect, near, far: float32): mat4 =
   result[5] = 1.0 / tan(fov * PI / 360.0)
   result[0] = result[5] / aspect
-  result[10] = (-near - far) / (near - far)
-  result[14] = (2.0 * far * near) / (near - far)
-  result[11] = 1.0
+  result[10] = -(far + near) / (far - near)
+  result[14] = -(2.0 * far * near) / (far - near)
+  result[11] = -1.0
 
 
 proc orthographic*(left, right, bottom, top, near, far: float32): mat4 =
@@ -246,12 +246,12 @@ proc lookAt*(eye, center, up: vec3): mat4 =
   result[1] = u.x
   result[5] = u.y
   result[9] = u.z
-  result[2] = f.x
-  result[6] = f.y
-  result[10] = f.z
+  result[2] = -f.x
+  result[6] = -f.y
+  result[10] = -f.z
   result[12] = -(s.dot(eye))
   result[13] = -(u.dot(eye))
-  result[14] = -(f.dot(eye))
+  result[14] = (f.dot(eye))
   result[15] = 1.0
 
 # TODO:
