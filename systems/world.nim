@@ -21,37 +21,36 @@ var TheWorld*: World
 
 
 proc initWorld*() =
-  var cabinM = Resources.getModel("cabin")
-  var roofM = Resources.getModel("roof", false)
-  var p = Resources.getModel("quad", false)
+  var cabinM = Resources.getMesh("cabin")
+  var roofM = Resources.getMesh("roof")
+  var p = Resources.getMesh("quad")
   
   let
-    cs = Resources.getTexture("cabinS", false)
-    cn = Resources.getTexture("cabinN", false)
+    cd = Resources.getTexture("cabin", srgb=true)
+    cs = Resources.getTexture("cabinS")
+    cn = Resources.getTexture("cabinN")
 
-  p.texture = Resources.getTexture("ground")
-  #p.normalmap = Resources.getTexture("groundN")
-  #p.specularmap = Resources.getTexture("white")
-  cabinM.normalmap = cn
-  cabinM.specularmap = cs
-  roofM.texture = cabinM.texture
-  roofM.normalmap = cn
-  roofM.specularmap = cs
-  
-  newEntity("hut").attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3 * 0.02), mesh: cabinM))
-  newEntity("roof").attach(Renderable3d(transform: newTransform(zeroes3, zeroes3, ones3 * 0.02), mesh: roofM))
-  newEntity("ground").attach(Renderable3d(transform: newTransform(vec(0.0, 0.0, 0.0), zeroes3, ones3 * 10.0), mesh: p))
+    gd = Resources.getTexture("ground", srgb=true)
+
+  newEntity("hut").attach(newModel(newTransform(s=0.02), cabinM, cd, cn, cs))
+  newEntity("roof").attach(newModel(newTransform(s=0.02), roofM, cd, cn, cs))
+  newEntity("ground").attach(newModel(newTransform(s=100.0), p, gd))
   
   TheWorld = World()
 
   TheWorld.sun = newEntity("sun")
   TheWorld.sun.attach(newLight(Directional, shadows=true))
   
-  newEntity("p").attach(newLight(Point, position=vec(0.0, 0.2, 0.8), attenuation=vec(1.0, 0.0, 150.0)))
-  newEntity("p").attach(newLight(Point, position=vec(0.0, 0.2, 0.1), attenuation=vec(1.0, 0.0, 150.0)))
+  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 0.8), attenuation=vec(1.0, 0.0, 150.0)))
+  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 0.1), attenuation=vec(1.0, 0.0, 150.0)))
+
+  newEntity("p").attach(newLight(Point, vec(1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 15.0)))
+  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 1.0), attenuation=vec(1.0, 5.0, 15.0)))
+  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, -1.0), attenuation=vec(1.0, 5.0, 15.0)))
+  newEntity("p").attach(newLight(Point, vec(-1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 15.0)))
 
   info("World ok")
 
 
 proc updateWorld*() =
-  TheWorld.sun.getLight.position = vec(sin(Time.totalTime / 4.0)*5, 2, cos(Time.totalTime / 4.0)*5)
+  TheWorld.sun.getLight.position = vec(sin(Time.totalTime / 4.0)*5, cos(Time.totalTime / 4.0)*5, 5)

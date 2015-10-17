@@ -5,14 +5,14 @@ import mesh
 
 proc tof32(s: string): float32 = s.parseFloat.float32
 
-proc loadObj*(path: string): MeshData =
+proc loadObj*(path: string): Mesh =
   var
     p = newSeq[array[3, float32]]()
     n = newSeq[array[3, float32]]()
     uv = newSeq[array[2, float32]]()
     map = initTable[string, uint32]()
 
-  result = newMeshData()
+  result = newMesh()
   
   for line in lines(path):
     var fields = line.split
@@ -41,3 +41,4 @@ proc loadObj*(path: string): MeshData =
       discard
 
   result.calculateTangents()
+  result.buildBuffers()

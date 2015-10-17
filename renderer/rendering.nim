@@ -18,7 +18,7 @@ type
     windowSize*: vec2
     projection2d: mat4
 
-    queue3d: ComponentStore[Renderable3d]
+    models: ComponentStore[Model]
     lights: ComponentStore[Light]
     labels: ComponentStore[Label]
 
@@ -31,8 +31,8 @@ type
 
 var Renderer*: RenderSystem
 
-proc attach*(e: EntityHandle, r: Renderable3d) =
-  Renderer.queue3d.add(e, r)
+proc attach*(e: EntityHandle, r: Model) =
+  Renderer.models.add(e, r)
 
 proc attach*(e: EntityHandle, r: Label) =
   Renderer.labels.add(e, r)
@@ -50,7 +50,7 @@ proc initRenderSystem*() =
   loadExtensions()
   
   Renderer = RenderSystem(
-    queue3d: newComponentStore[Renderable3d](),
+    models: newComponentStore[Model](),
     lights: newComponentStore[Light](),
     labels: newComponentStore[Label](),
     geometryPass: newGeometryPass(),
@@ -92,13 +92,11 @@ proc render*() =
     else:
       discard
 
-  r.geometryPass.perform(r.queue3d.data)
+  r.geometryPass.perform(r.models.data)
 
   for light in mitems(r.lights.data):
-    r.shadowMap.render(light, r.queue3d.data)
-    
-  r.lightingPass.begin()
-  for light in r.lights.data:
-    r.lightingPass.perform(light, r.geometryPass)
+    r.shadowMap.render(light, r.models.data)
+
+  r.lightingPass.perform(r.lights.data, r.geometryPass)
 
   r.textRenderer.render(r.projection2d, r.labels.data)

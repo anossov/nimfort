@@ -11,9 +11,11 @@ type
     scale*: vec3
     matrix*: mat4
 
-  Renderable3d* = object of Component
+  Model* = object of Component
     transform*: Transform
     mesh*: Mesh
+    textures*: array[3, Texture]
+    shadows*: bool
 
   LightType* = enum
     Directional
@@ -31,6 +33,7 @@ type
   Label* = object of Component
     transform*: Transform
     mesh*: Mesh
+    texture*: Texture
 
 
 proc updateMatrix*(t: var Transform) = 
@@ -38,12 +41,24 @@ proc updateMatrix*(t: var Transform) =
   t.matrix = translate(t.position) * rot * scale(t.scale)
 
 
-proc newTransform*(p: vec3, r=zeroes3, s=ones3): Transform = 
+
+
+proc newTransform*(p=zeroes3, r=zeroes3, s=ones3): Transform = 
   result.position = p
   result.rotation = r
   result.scale = s
   result.updateMatrix()
 
+proc newTransform*(p=zeroes3, r=zeroes3, s: float32): Transform {.inline.} = newTransform(p, r, vec(s, s, s))
+
+
+proc newModel*(t: Transform, m: Mesh, diffuse: Texture, normal=emptyTexture(), specular=emptyTexture(), shadows=true): Model =
+  Model(
+    transform: t,
+    mesh: m,
+    textures: [diffuse, normal, specular],
+    shadows: shadows
+  )
 
 proc newLight*(kind: LightType, position=zeroes3, target=zeroes3, shadows=false, attenuation=xaxis): Light = 
   Light(

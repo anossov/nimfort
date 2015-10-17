@@ -21,7 +21,7 @@ type
     advance: float32
 
   Font* = ref object
-    textures: seq[Texture]
+    textures*: seq[Texture]
     textureSize: vec2
     chars: array[16384, Char]
     hichars: Table[Rune, Char]
@@ -87,8 +87,8 @@ proc loadFont*(path: string): Font =
     else:
       discard
 
-proc stringMesh(s: string, f: Font, w: var float32): MeshData = 
-  result = newMeshData()
+proc stringMesh(s: string, f: Font, w: var float32): Mesh = 
+  result = newMesh()
   
   var x = 0.0'f32
   
@@ -130,10 +130,11 @@ proc stringMesh(s: string, f: Font, w: var float32): MeshData =
 proc newTextMesh*(f: Font, s: string): TextMesh = 
   var w: float32
   var v = stringMesh(s, f, w)
+  v.buildBuffers()
   result = TextMesh(
     s: s,
     font: f,
-    mesh: newMesh(v, f.textures[0]),
+    mesh: v,
     width: w,
   )
 
@@ -145,5 +146,6 @@ proc update*(t: var TextMesh, s: string) =
     return
   var w: float32
   var v = stringMesh(s, t.font, w)
-  t.mesh = newMesh(v, t.font.textures[0])
+  v.buildBuffers()
+  t.mesh = v
   t.width = w

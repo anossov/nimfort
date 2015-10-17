@@ -44,7 +44,7 @@ proc createShadowMap(sm: var ShadowMap, light: var Light) =
   light.shadowMap = t
 
 
-proc render*(sm: var ShadowMap, light: var Light, geometry: seq[Renderable3d]) =
+proc render*(sm: var ShadowMap, light: var Light, geometry: seq[Model]) =
   if not light.shadows:
     return
 
@@ -56,6 +56,7 @@ proc render*(sm: var ShadowMap, light: var Light, geometry: seq[Renderable3d]) =
   sm.fb.attach(light.shadowMap, depth=true)
   
   glEnable(GL_DEPTH_TEST)
+  glDepthMask(true)
   glClear(GL_DEPTH_BUFFER_BIT)
   glViewport(0, 0, shadowMapSize, shadowMapSize)
   
@@ -63,6 +64,8 @@ proc render*(sm: var ShadowMap, light: var Light, geometry: seq[Renderable3d]) =
   sm.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
 
   for i in geometry:
+    if not i.shadows:
+      continue
     var model = i.transform.matrix
     sm.shader.getUniform("model").set(model)
     i.mesh.render()

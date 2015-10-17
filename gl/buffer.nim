@@ -57,6 +57,9 @@ proc createVAO*(): VAO =
   glBindVertexArray(result.id)
 
 
+proc emptyBuffer*(target: BufferTarget): Buffer = Buffer(target: target)
+
+
 proc createBuffer*[T](data: var openarray[T], target: BufferTarget): Buffer = 
   let u: GLenum = ord BufferUsage.StaticDraw
   

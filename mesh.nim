@@ -17,28 +17,25 @@ type
     tangent*: vec3
     bitangent*: vec3
 
-  MeshData* = ref object
+  Mesh* = object
     vertices*: seq[Vertex]
     indices*: seq[uint32]
-
-  Mesh* = object
-    data*: MeshData
-    texture*: Texture
-    normalmap*: Texture
-    specularmap*: Texture
 
     vao: VAO
     vbo: Buffer
     ebo: Buffer
 
-proc newMeshData*(): MeshData = 
-  result = MeshData(
+
+proc newMesh*(): Mesh = 
+  result = Mesh(
     vertices: newSeq[Vertex](),
     indices: newSeq[uint32](),
+    vbo: emptyBuffer(BufferTarget.Array),
+    ebo: emptyBuffer(BufferTarget.ElementArray),
   )
 
 
-proc calculateTangents*(m: var MeshData) = 
+proc calculateTangents*(m: var Mesh) = 
   let numFaces = m.indices.len div 3
 
   var
@@ -79,24 +76,19 @@ proc calculateTangents*(m: var MeshData) =
     v.bitangent = v.bitangent.normalize()
 
 
-proc newMesh*(data: MeshData, texture: Texture): Mesh =
+proc buildBuffers*(m: var Mesh) =
   var vertices = newSeq[float32]()
-  for v in data.vertices:
+  for v in m.vertices:
     vertices.add(v.position)
     vertices.add(v.uv)
     vertices.add(v.normal)
     vertices.add(v.tangent)
     vertices.add(v.bitangent)
 
-  result = Mesh(
-    data: data,
-    texture: texture,
-    normalmap: emptyTexture(),
-    specularmap: emptyTexture(),
-    vao: createVAO(),
-    vbo: createVBO(vertices),
-    ebo: createEBO(data.indices),
-  )
+
+  m.vao = createVAO()
+  m.vbo = createVBO(vertices)
+  m.ebo = createEBO(m.indices)
 
   let stride = GLsizei(14 * sizeof(float32))
 
@@ -114,7 +106,7 @@ proc newMesh*(data: MeshData, texture: Texture): Mesh =
 
 proc render*(m: Mesh) =
   m.vao.use()
-  glDrawElements(GL_TRIANGLES, len(m.data.indices).GLsizei, GL_UNSIGNED_INT, nil)
+  glDrawElements(GL_TRIANGLES, len(m.indices).GLsizei, GL_UNSIGNED_INT, nil)
 
 
 proc deleteBuffers*(m: var Mesh) =

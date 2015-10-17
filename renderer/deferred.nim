@@ -72,25 +72,26 @@ proc newLightingPass*(): LightingPass =
   s.getUniform("gAlbedoSpec").set(2)
   s.getUniform("shadowMap").set(3)
 
-  let quad = MeshData(
-    vertices: @[
+  var quad = newMesh()
+  quad.vertices = @[
       Vertex(position: [-1.0'f32,  1.0, 0.0], uv: [0.0'f32, 1.0]),
       Vertex(position: [-1.0'f32, -1.0, 0.0], uv: [0.0'f32, 0.0]),
       Vertex(position: [ 1.0'f32,  1.0, 0.0], uv: [1.0'f32, 1.0]),
       Vertex(position: [ 1.0'f32, -1.0, 0.0], uv: [1.0'f32, 0.0]),
-    ],
-    indices: @[0'u32, 2, 1, 2, 3, 1]
-  )
+    ]
+  quad.indices = @[0'u32, 2, 1, 2, 3, 1]
+  quad.buildBuffers()
 
   return LightingPass(
     shader: s,
-    quad: newMesh(quad, emptyTexture())
+    quad: quad,
   )
 
 
-proc perform*(pass: var GeometryPass, geometry: seq[Renderable3d]) =
+proc perform*(pass: var GeometryPass, geometry: seq[Model]) =
   pass.fb.use()
   glEnable(GL_DEPTH_TEST)
+  glDepthMask(true)
   glDisable(GL_BLEND)
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glViewport(0, 0, windowWidth, windowHeight)
@@ -102,13 +103,11 @@ proc perform*(pass: var GeometryPass, geometry: seq[Renderable3d]) =
   for i in geometry:
     var model = i.transform.matrix
     pass.shader.getUniform("model").set(model)
-    i.mesh.texture.use(0)
-    i.mesh.normalmap.use(1)
-    i.mesh.specularmap.use(2)
+    for i, t in pairs(i.textures):
+      t.use(i)
     i.mesh.render()
 
-
-proc begin*(pass: var LightingPass) =
+proc perform*(pass: var LightingPass, lights: seq[Light], gp: GeometryPass) =
   useDefaultFramebuffer()
   glViewport(0, 0, windowWidth, windowHeight)
   glEnable(GL_BLEND)
@@ -117,22 +116,23 @@ proc begin*(pass: var LightingPass) =
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
   glDisable(GL_DEPTH_TEST)
+  glDepthMask(false)
 
   pass.shader.use()
   pass.shader.getUniform("eye").set(Camera.position)
 
-proc perform*(pass: var LightingPass, light: Light, gp: GeometryPass) =
-  var lp = vec(light.position.x, light.position.y, light.position.z, 0.0)
-  if light.kind == Point:
-    lp.w = 1.0
-  pass.shader.getUniform("light").set(lp)
-  pass.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
-  pass.shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
-  pass.shader.getUniform("att").set(light.attenuation)
+  for light in lights:
+    var lp = vec(light.position.x, light.position.y, light.position.z, 0.0)
+    if light.kind == Point:
+      lp.w = 1.0
+    pass.shader.getUniform("light").set(lp)
+    pass.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
+    pass.shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
+    pass.shader.getUniform("att").set(light.attenuation)
 
-  gp.position.use(0)
-  gp.normal.use(1)
-  gp.albedo.use(2)
-  light.shadowMap.use(3)
+    gp.position.use(0)
+    gp.normal.use(1)
+    gp.albedo.use(2)
+    light.shadowMap.use(3)
 
-  pass.quad.render()
+    pass.quad.render()

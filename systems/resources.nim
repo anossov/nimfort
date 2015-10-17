@@ -9,7 +9,6 @@ import opengl
 import gl/texture
 import gl/shader
 
-
 type
   ResourceManager = ref object
     discard
@@ -39,7 +38,7 @@ proc flipimage(data: string; w, h: int): string =
       t = (h-i)
     result.add(data[f * stride..t * stride - 1])
 
-proc getTexture*(r: ResourceManager, name: string, srgb=true): Texture =
+proc getTexture*(r: ResourceManager, name: string, srgb=false): Texture =
   let image = loadBMP32("assets/textures/$1.bmp" % name)
   let f = if srgb: GL_SRGB else: GL_RGBA
   let data = flipimage(image.data, image.width, image.height)
@@ -48,14 +47,6 @@ proc getTexture*(r: ResourceManager, name: string, srgb=true): Texture =
   result.image2d(data, image.width.int32, image.height.int32, internalformat=f)
   result.filter(true)
 
-proc getModel*(r: ResourceManager, name: string, t=true): Mesh = 
-  let
-    data = loadObj("assets/models/$1.obj" % name)
 
-  var texture: Texture
-  if t:
-    texture = r.getTexture(name)
-  else:
-    texture = newTexture()
-
-  newMesh(data, texture)
+proc getMesh*(r: ResourceManager, name: string, t=true): Mesh = 
+  result = loadObj("assets/models/$1.obj" % name)
