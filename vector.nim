@@ -19,6 +19,8 @@ template `z=`*(v: vec3 | vec4, f: float32)        = v[2] = f
 template `w=`*(v: vec4, f: float32)               = v[3] = f
 template value_ptr*(m: var vec2 | vec3 | vec4 | mat3 | mat4): ptr float32 = addr m[0]
 
+template xyz*(v: vec4): vec3 = vec(v.x, v.y, v.z)
+
 proc vec*(x, y: float32): vec2 {.inline.} = 
   result.x = x
   result.y = y
@@ -132,6 +134,12 @@ proc `*`*(a: vec3, b: float32): vec3 =
   result.x = a.x * b
   result.y = a.y * b
   result.z = a.z * b
+
+
+proc `/`*(a: vec3, b: float32): vec3 =
+  result.x = a.x / b
+  result.y = a.y / b
+  result.z = a.z / b
 
 
 proc `cross`*(a, b: vec3): vec3 =

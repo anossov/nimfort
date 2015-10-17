@@ -1,8 +1,10 @@
 import systems/ecs
 import vector
 import mesh
+import math
 import gl/texture
-
+import systems/camera
+import config
 
 type
   Transform* = object
@@ -32,6 +34,7 @@ type
 
   Label* = object of Component
     transform*: Transform
+    color*: vec3
     mesh*: Mesh
     texture*: Texture
 
@@ -39,8 +42,6 @@ type
 proc updateMatrix*(t: var Transform) = 
   let rot = rotate(xaxis, t.rotation.x) * rotate(yaxis, t.rotation.y) * rotate(zaxis, t.rotation.z)
   t.matrix = translate(t.position) * rot * scale(t.scale)
-
-
 
 
 proc newTransform*(p=zeroes3, r=zeroes3, s=ones3): Transform = 
@@ -73,3 +74,19 @@ proc newLight*(kind: LightType, position=zeroes3, target=zeroes3, shadows=false,
 proc getView*(light: Light): mat4 = lookAt(light.position, light.target, yaxis)
 
 proc getProjection*(light: Light): mat4 = orthographic(-2.0, 2.0, -2.0, 2.0, 2, 10.0)
+
+proc getScreenExtentsTransform*(light: Light, epsilon=25.6): mat4 = 
+  if light.kind != Point:
+    return identity()
+
+  let
+    viewProjection = Camera.getProjection() * Camera.getView()
+    worldLight = vec(light.position.x, light.position.y, light.position.z, 1.0)
+    clipLight = viewProjection * worldLight
+    aspectRatio = windowWidth / windowHeight
+    a = light.attenuation
+    worldExtentRadius = (-a.y + sqrt(a.y*a.y - 4 * a.z * (a.x - epsilon))) / (2 * a.z)
+    clipOffset = viewProjection * vec(worldLight.x - worldExtentRadius, worldLight.y, worldLight.z, 1.0)
+    clipExtentRadius = (clipLight.xyz - clipOffset.xyz).length
+
+  return translate(clipLight.xyz / clipLight.w) * scale(vec(clipExtentRadius, clipExtentRadius * aspectRatio, 1.0))

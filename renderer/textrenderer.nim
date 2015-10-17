@@ -24,5 +24,6 @@ proc render*(r: var TextRenderer, proj: mat4, labels: seq[Label]) =
   for i in labels:
     var model = i.transform.matrix
     r.shader.getUniform("model").set(model)
+    r.shader.getUniform("textColor").set(i.color)
     i.texture.use(0)
     i.mesh.render()

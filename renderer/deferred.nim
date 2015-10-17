@@ -4,6 +4,7 @@ import opengl
 import gl/framebuffer
 import gl/texture
 import gl/shader
+import math
 import mesh
 import vector
 import systems/resources
@@ -23,6 +24,7 @@ type
   LightingPass* = object
     shader: Program
     quad: Mesh
+    octagon: Mesh
 
 
 proc newGeometryPass*(): GeometryPass =
@@ -74,17 +76,32 @@ proc newLightingPass*(): LightingPass =
 
   var quad = newMesh()
   quad.vertices = @[
-      Vertex(position: [-1.0'f32,  1.0, 0.0], uv: [0.0'f32, 1.0]),
-      Vertex(position: [-1.0'f32, -1.0, 0.0], uv: [0.0'f32, 0.0]),
-      Vertex(position: [ 1.0'f32,  1.0, 0.0], uv: [1.0'f32, 1.0]),
-      Vertex(position: [ 1.0'f32, -1.0, 0.0], uv: [1.0'f32, 0.0]),
-    ]
+    Vertex(position: [-1.0'f32,  1.0, 0.0]),
+    Vertex(position: [-1.0'f32, -1.0, 0.0]),
+    Vertex(position: [ 1.0'f32,  1.0, 0.0]),
+    Vertex(position: [ 1.0'f32, -1.0, 0.0]),
+  ]
   quad.indices = @[0'u32, 2, 1, 2, 3, 1]
   quad.buildBuffers()
 
+  var octagon = newMesh()
+  let hs: float32 = 1.0 / (1.0 + sqrt(2.0))
+  octagon.vertices = @[
+    Vertex(position: [ -hs,    -1.0, 0.0]),
+    Vertex(position: [  hs,    -1.0, 0.0]),
+    Vertex(position: [ 1.0'f32, -hs, 0.0]),
+    Vertex(position: [ 1.0'f32,  hs, 0.0]),
+    Vertex(position: [  hs,     1.0, 0.0]),
+    Vertex(position: [ -hs,     1.0, 0.0]),
+    Vertex(position: [-1.0'f32,  hs, 0.0]),
+    Vertex(position: [-1.0'f32, -hs, 0.0]),
+  ]
+  octagon.indices = @[0'u32, 2, 1, 0, 7, 2, 7, 3, 2, 7, 6, 3, 6, 4, 3, 6, 5, 4]
+  octagon.buildBuffers()
   return LightingPass(
     shader: s,
     quad: quad,
+    octagon: octagon,
   )
 
 
@@ -121,18 +138,24 @@ proc perform*(pass: var LightingPass, lights: seq[Light], gp: GeometryPass) =
   pass.shader.use()
   pass.shader.getUniform("eye").set(Camera.position)
 
+  gp.position.use(0)
+  gp.normal.use(1)
+  gp.albedo.use(2)
+
   for light in lights:
-    var lp = vec(light.position.x, light.position.y, light.position.z, 0.0)
-    if light.kind == Point:
-      lp.w = 1.0
+    var lp = vec(light.position.x, light.position.y, light.position.z, (light.kind == Point).float32)
+    
+    pass.shader.getUniform("transform").set(light.getScreenExtentsTransform())
+
     pass.shader.getUniform("light").set(lp)
     pass.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
     pass.shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
     pass.shader.getUniform("att").set(light.attenuation)
-
-    gp.position.use(0)
-    gp.normal.use(1)
-    gp.albedo.use(2)
+    
     light.shadowMap.use(3)
 
-    pass.quad.render()
+    case light.kind:
+    of Point:
+      pass.octagon.render()
+    else:
+      pass.quad.render()

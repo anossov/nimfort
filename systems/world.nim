@@ -41,13 +41,12 @@ proc initWorld*() =
   TheWorld.sun = newEntity("sun")
   TheWorld.sun.attach(newLight(Directional, shadows=true))
   
-  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 0.8), attenuation=vec(1.0, 0.0, 150.0)))
   newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 0.1), attenuation=vec(1.0, 0.0, 150.0)))
 
-  newEntity("p").attach(newLight(Point, vec(1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 15.0)))
-  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 1.0), attenuation=vec(1.0, 5.0, 15.0)))
-  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, -1.0), attenuation=vec(1.0, 5.0, 15.0)))
-  newEntity("p").attach(newLight(Point, vec(-1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 15.0)))
+  newEntity("p").attach(newLight(Point, vec(1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 150.0)))
+  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 1.0), attenuation=vec(1.0, 5.0, 150.0)))
+  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, -1.0), attenuation=vec(1.0, 5.0, 150.0)))
+  newEntity("p").attach(newLight(Point, vec(-1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 150.0)))
 
   info("World ok")
 

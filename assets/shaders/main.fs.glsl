@@ -67,4 +67,5 @@ void main() {
     float attenuation = 1.0 / (att[0] + att[1] * ld + att[2] * ld * ld);
 
     outColor = vec4(color, 1.0) * max(lighting * shadow * attenuation, 0.0);
+    //outColor = outColor + vec4(light.w * 0.05, 0.0, 0.0, 1.0);
 }

@@ -31,7 +31,7 @@ proc newText(ui: GUI, name: string, transform: Transform, s: string = "") =
     m = ui.font.newTextMesh(s)
     e = newEntity("ui-text-" & name)
     t = Text(entity: e, mesh: m)
-  t.entity.attach(Label(transform: transform, mesh: m.mesh, texture: ui.font.textures[0]))
+  t.entity.attach(Label(transform: transform, color: vec(0.5, 0.5, 0.5), mesh: m.mesh, texture: ui.font.textures[0]))
   ui.texts[name] = t
 
 
