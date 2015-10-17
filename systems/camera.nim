@@ -29,9 +29,9 @@ proc updateCamera*() =
   if theta > PI * 1.49:
     theta = PI * 1.49
 
-  Camera.position.x = sin(phi) * cos(theta) * 3
-  Camera.position.y = sin(theta) * 3
-  Camera.position.z = cos(phi) * cos(theta) * 3
+  Camera.position.x = sin(phi) * cos(theta) * 15
+  Camera.position.y = sin(theta) * 15
+  Camera.position.z = cos(phi) * cos(theta) * 15
 
 
 proc getView*(c: CameraSystem): mat4 = lookAt(c.position, c.target, yaxis)

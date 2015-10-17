@@ -24,8 +24,10 @@ proc initWorld*() =
   var cabinM = Resources.getMesh("cabin")
   var roofM = Resources.getMesh("roof")
   var p = Resources.getMesh("quad")
+  var c = Resources.getMesh("anticube")
   
   let
+    w = Resources.getTexture("white")
     cd = Resources.getTexture("cabin", srgb=true)
     cs = Resources.getTexture("cabinS")
     cn = Resources.getTexture("cabinN")
@@ -39,17 +41,23 @@ proc initWorld*() =
   TheWorld = World()
 
   TheWorld.sun = newEntity("sun")
-  TheWorld.sun.attach(newLight(Directional, shadows=true))
-  
-  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 0.1), attenuation=vec(1.0, 0.0, 150.0)))
+  #TheWorld.sun.attach(newLight(Directional, shadows=true))
 
-  newEntity("p").attach(newLight(Point, vec(1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 150.0)))
-  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, 1.0), attenuation=vec(1.0, 5.0, 150.0)))
-  newEntity("p").attach(newLight(Point, vec(0.0, 0.2, -1.0), attenuation=vec(1.0, 5.0, 150.0)))
-  newEntity("p").attach(newLight(Point, vec(-1.0, 0.2, 0.0), attenuation=vec(1.0, 5.0, 150.0)))
+  let lights = [
+    vec(0.0, 0.2, 0.1),
+    vec(1.0, 0.5, 0.0),
+    vec(1.0, 0.5, 0.0),
+    vec(0.0, 0.5, 1.0),
+    vec(0.0, 0.5, -1.0),
+    vec(-1.0, 0.5, 0.0),
+  ]
+  for lp in lights:
+    let e = newEntity("light")
+    e.attach(newLight(Point, lp, radius=1.0))
+    e.attach(newModel(newTransform(p=lp, s=0.03), c, w))
 
   info("World ok")
 
 
 proc updateWorld*() =
-  TheWorld.sun.getLight.position = vec(sin(Time.totalTime / 4.0)*5, cos(Time.totalTime / 4.0)*5, 5)
+  discard#TheWorld.sun.getLight.position = vec(sin(Time.totalTime / 4.0)*5, cos(Time.totalTime / 4.0)*5, 5)

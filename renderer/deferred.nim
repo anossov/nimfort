@@ -150,7 +150,7 @@ proc perform*(pass: var LightingPass, lights: seq[Light], gp: GeometryPass) =
     pass.shader.getUniform("light").set(lp)
     pass.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
     pass.shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
-    pass.shader.getUniform("att").set(light.attenuation)
+    pass.shader.getUniform("radius").set(light.radius)
     
     light.shadowMap.use(3)
 

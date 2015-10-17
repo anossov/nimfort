@@ -28,7 +28,7 @@ type
     position*: vec3
     target*: vec3
     kind*: LightType
-    attenuation*: vec3
+    radius*: float32
     shadows*: bool
     shadowMap*: Texture
 
@@ -61,13 +61,13 @@ proc newModel*(t: Transform, m: Mesh, diffuse: Texture, normal=emptyTexture(), s
     shadows: shadows
   )
 
-proc newLight*(kind: LightType, position=zeroes3, target=zeroes3, shadows=false, attenuation=xaxis): Light = 
+proc newLight*(kind: LightType, position=zeroes3, target=zeroes3, shadows=false, radius=1.0): Light = 
   Light(
     position: position,
     target: target,
     kind: kind,
     shadows: shadows,
-    attenuation: attenuation,
+    radius: radius,
     shadowMap: emptyTexture(),
   )
 
@@ -75,18 +75,18 @@ proc getView*(light: Light): mat4 = lookAt(light.position, light.target, yaxis)
 
 proc getProjection*(light: Light): mat4 = orthographic(-2.0, 2.0, -2.0, 2.0, 2, 10.0)
 
-proc getScreenExtentsTransform*(light: Light, epsilon=25.6): mat4 = 
+proc getScreenExtentsTransform*(light: Light): mat4 = 
   if light.kind != Point:
     return identity()
 
   let
-    viewProjection = Camera.getProjection() * Camera.getView()
-    worldLight = vec(light.position.x, light.position.y, light.position.z, 1.0)
-    clipLight = viewProjection * worldLight
-    aspectRatio = windowWidth / windowHeight
-    a = light.attenuation
-    worldExtentRadius = (-a.y + sqrt(a.y*a.y - 4 * a.z * (a.x - epsilon))) / (2 * a.z)
-    clipOffset = viewProjection * vec(worldLight.x - worldExtentRadius, worldLight.y, worldLight.z, 1.0)
-    clipExtentRadius = (clipLight.xyz - clipOffset.xyz).length
-
-  return translate(clipLight.xyz / clipLight.w) * scale(vec(clipExtentRadius, clipExtentRadius * aspectRatio, 1.0))
+    v = Camera.getView()
+    viewProjection = Camera.getProjection() * v
+    bb = mat4([
+      v[0], v[4], v[8], 0.0,
+      v[1], v[5], v[9], 0.0,
+      v[2], v[6], v[10], 0.0,
+      0.0, 0.0, 0.0, 1.0,
+    ])
+    
+  return viewProjection * translate(light.position) * bb * scale(light.radius)

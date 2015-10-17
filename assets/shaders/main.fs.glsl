@@ -14,7 +14,7 @@ uniform vec4 light;
 uniform mat4 lightspace;
 uniform bool hasShadowmap;
 
-uniform vec3 att;
+uniform float radius;
 
 
 float calcShadow(vec4 fpLS, float bias) {
@@ -64,8 +64,11 @@ void main() {
     float lighting = max(dot(n, l), 0.0) + pow(max(dot(n, h), 0.0), 64.0) * spec;
 
     float ld = length(light.xyz - posf);
-    float attenuation = 1.0 / (att[0] + att[1] * ld + att[2] * ld * ld);
+    float attenuation = clamp(1.0 - ld * ld / (radius * radius), 0.0, 1.0);
+    attenuation = attenuation * attenuation;
 
     outColor = vec4(color, 1.0) * max(lighting * shadow * attenuation, 0.0);
-    //outColor = outColor + vec4(light.w * 0.05, 0.0, 0.0, 1.0);
+    
+   // outColor = vec4(1.0) * lighting * shadow * attenuation;
+   // outColor = outColor + vec4(light.w * 0.01, 0.0, 0.0, 1.0);
 }
