@@ -117,7 +117,7 @@ proc getProjection*(light: Light): mat4 =
     return orthographic(-20.0, 20.0, -20.0, 20.0, 2, 50.0)
   if light.kind == Spot:
     return perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
-  assert false
+  return identity()
 
 proc getScreenExtentsTransform*(light: Light): mat4 = 
   if light.kind != Point:
