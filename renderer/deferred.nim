@@ -22,7 +22,7 @@ type
     shader: Program
 
   LightingPass* = object
-    shader: Program
+    shaders: array[LightType, Program]
     quad: Mesh
     octagon: Mesh
 
@@ -67,12 +67,17 @@ proc newGeometryPass*(): GeometryPass =
 
 
 proc newLightingPass*(): LightingPass =
-  var s = Resources.getShader("main")
-  s.use()
-  s.getUniform("gPosition").set(0)
-  s.getUniform("gNormal").set(1)
-  s.getUniform("gAlbedoSpec").set(2)
-  s.getUniform("shadowMap").set(3)
+  var p = Resources.getShader("dr_point")
+  var d = Resources.getShader("dr_directional")
+  var a = Resources.getShader("dr_ambient")
+  var s = Resources.getShader("dr_spot")
+  var shaders = [a, p, d, s]
+  for shader in mitems(shaders):
+    shader.use()
+    shader.getUniform("gPosition").set(0)
+    shader.getUniform("gNormal").set(1)
+    shader.getUniform("gAlbedoSpec").set(2)
+    shader.getUniform("shadowMap").set(3)
 
   var quad = newMesh()
   quad.vertices = @[
@@ -99,7 +104,7 @@ proc newLightingPass*(): LightingPass =
   octagon.indices = @[0'u32, 2, 1, 0, 7, 2, 7, 3, 2, 7, 6, 3, 6, 4, 3, 6, 5, 4]
   octagon.buildBuffers()
   return LightingPass(
-    shader: s,
+    shaders: shaders,
     quad: quad,
     octagon: octagon,
   )
@@ -135,27 +140,32 @@ proc perform*(pass: var LightingPass, lights: seq[Light], gp: GeometryPass) =
   glDisable(GL_DEPTH_TEST)
   glDepthMask(false)
 
-  pass.shader.use()
-  pass.shader.getUniform("eye").set(Camera.position)
-
   gp.position.use(0)
   gp.normal.use(1)
   gp.albedo.use(2)
 
-  for light in lights:
-    var lp = vec(light.position.x, light.position.y, light.position.z, (light.kind == Point).float32)
-    
-    pass.shader.getUniform("transform").set(light.getScreenExtentsTransform())
+  for kind, shader in mpairs(pass.shaders):
+    shader.use()
+    shader.getUniform("eye").set(Camera.position)
 
-    pass.shader.getUniform("light").set(lp)
-    pass.shader.getUniform("lightspace").set(light.getProjection() * light.getView())
-    pass.shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
-    pass.shader.getUniform("radius").set(light.radius)
-    
-    light.shadowMap.use(3)
+    for light in lights:
+      if light.kind != kind:
+        continue
 
-    case light.kind:
-    of Point:
-      pass.octagon.render()
-    else:
-      pass.quad.render()
+      shader.getUniform("transform").set(light.getScreenExtentsTransform())
+      shader.getUniform("light").set(light.position)
+      shader.getUniform("lightDir").set(light.target - light.position)
+      shader.getUniform("lightspace").set(light.getProjection() * light.getView())
+      shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
+      shader.getUniform("radius").set(light.radius)
+      shader.getUniform("lightColor").set(light.color)
+      shader.getUniform("cosSpotAngle").set(cos(light.spotAngle.radians))
+      shader.getUniform("cosSpotFalloff").set(cos(light.spotFalloff.radians))
+      
+      light.shadowMap.use(3)
+
+      case light.kind:
+      of Point:
+        pass.octagon.render()
+      else:
+        pass.quad.render()

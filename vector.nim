@@ -61,7 +61,6 @@ proc identity*(): mat4 =
 
 proc length*(v: vec3): float32 {.inline.} = sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
 
-
 proc normalize*(v: vec3): vec3 {.inline.} =
   let mag = v.length
   result.x = v.x / mag
@@ -151,6 +150,7 @@ proc `dot`*(a, b: vec3): float32 =
   var t = a * b
   result = t.x + t.y + t.z
 
+proc angle*(a, b: vec3): float32 = arccos(a.dot(b) / (a.length * b.length))
 
 proc `*`*(a: mat4, b: vec4): vec4 =
   result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3]
@@ -221,9 +221,10 @@ proc scale*(s: vec3): mat4 =
   result[10] = s.z
   result[15] = 1.0
 
+proc radians*(d: float32): float32 {.inline.} = d * PI / 180.0
 
 proc perspective*(fov, aspect, near, far: float32): mat4 =
-  result[5] = 1.0 / tan(fov * PI / 360.0)
+  result[5] = 1.0 / tan(radians(fov) / 2)
   result[0] = result[5] / aspect
   result[10] = -(far + near) / (far - near)
   result[14] = -(2.0 * far * near) / (far - near)
@@ -273,7 +274,6 @@ proc lookAt*(eye, center, up: vec3): mat4 =
 # reflect
 # refract
 # unproject
-# vector angle
 # point distance
 # vector rotate directly
 # quaternions

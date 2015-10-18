@@ -35,10 +35,8 @@ proc newEntity*(name: string): EntityHandle =
     components: initTable[string, ComponentHandle]()
   ))
   result = (len(Entities.entities) - 1).EntityHandle
-  debug("NE: $1 = $2", name, result)
 
 proc addComponent*(em: EntityManager, e: EntityHandle, c: ComponentHandle, ctype: string) = 
-  debug("NC: $1 <- $2", e, ctype)
   em.entities[e].components[ctype] = c
 
 

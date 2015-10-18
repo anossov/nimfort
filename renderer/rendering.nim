@@ -46,6 +46,9 @@ proc getLabel*(e: EntityHandle): var Label =
 proc getLight*(e: EntityHandle): var Light =
   return Renderer.lights[e]
 
+proc getModel*(e: EntityHandle): var Model =
+  return Renderer.models[e]
+
 proc initRenderSystem*() =
   loadExtensions()
   
