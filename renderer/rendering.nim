@@ -12,6 +12,7 @@ import renderer/components
 import renderer/deferred
 import renderer/shadowmap
 import renderer/textrenderer
+import renderer/postprocess
 
 type
   RenderSystem* = ref object
@@ -26,7 +27,7 @@ type
     geometryPass: GeometryPass
     lightingPass: LightingPass
     textRenderer: TextRenderer
-
+    tonemapping: Tonemapping
     listener: Listener
 
 var Renderer*: RenderSystem
@@ -60,6 +61,7 @@ proc initRenderSystem*() =
     lightingPass: newLightingPass(),
     shadowMap: newShadowMap(),
     textRenderer: newTextRenderer(),
+    tonemapping: newTonemapping(),
   )
   Renderer.windowSize = windowSize()
 
@@ -70,6 +72,7 @@ proc initRenderSystem*() =
   glEnable(GL_MULTISAMPLE)
   glEnable(GL_FRAMEBUFFER_SRGB)
   glClearColor(0.0, 0.0, 0.0, 1.0)
+  glEnable(GL_CULL_FACE)
 
   Renderer.projection2d = orthographic(0.0, w, 0.0, h)
 
@@ -100,6 +103,7 @@ proc render*() =
   for light in mitems(r.lights.data):
     r.shadowMap.render(light, r.models.data)
 
-  r.lightingPass.perform(r.lights.data, r.geometryPass)
+  r.lightingPass.perform(r.lights.data, r.geometryPass, r.tonemapping.fb)
+  r.tonemapping.perform()
 
   r.textRenderer.render(r.projection2d, r.labels.data)

@@ -141,6 +141,11 @@ proc set*(u: Uniform; f1, f2, f3, f4: float32) =
   if u.location == -1: return
   glUniform4f(u.location, f1, f2, f3, f4)
 
+proc set*(u: Uniform, v: vec2) =
+  if u.location == -1: return
+  var v = v
+  glUniform2fv(u.location, 1, v.value_ptr)
+
 proc set*(u: Uniform, v: vec3) =
   if u.location == -1: return
   var v = v

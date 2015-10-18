@@ -14,6 +14,8 @@ uniform vec3 light;
 uniform mat4 lightspace;
 uniform bool hasShadowmap;
 uniform vec3 lightColor;
+uniform vec2 invBufferSize;
+
 
 float calcShadow(vec4 fpLS, float bias) {
     vec3 posfLP = fpLS.xyz / fpLS.w;
@@ -24,11 +26,12 @@ float calcShadow(vec4 fpLS, float bias) {
 }
 
 void main() {
-    vec3 n = texture(gNormal, uvf).rgb;
-    vec4 AS = texture(gAlbedoSpec, uvf);
+    vec2 uv = gl_FragCoord.xy * invBufferSize;
+    vec3 n = texture(gNormal, uv).rgb;
+    vec4 AS = texture(gAlbedoSpec, uv);
     vec3 color = AS.rgb;
     float spec = AS.a;
-    vec3 posf = texture(gPosition, uvf).rgb;
+    vec3 posf = texture(gPosition, uv).rgb;
 
     vec3 l = normalize(light.xyz);
     vec3 v = normalize(eye - posf);

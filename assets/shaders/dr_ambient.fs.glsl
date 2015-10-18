@@ -8,9 +8,12 @@ uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
 uniform vec3 lightColor;
+uniform vec2 invBufferSize;
+
 
 void main() {
-    vec4 AS = texture(gAlbedoSpec, uvf);
+    vec2 uv = gl_FragCoord.xy * invBufferSize;
+    vec4 AS = texture(gAlbedoSpec, uv);
 
     outColor = vec4(AS.rgb * lightColor, 1.0);
 }

@@ -118,19 +118,3 @@ proc getProjection*(light: Light): mat4 =
   if light.kind == Spot:
     return perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
   return identity()
-
-proc getScreenExtentsTransform*(light: Light): mat4 = 
-  if light.kind != Point:
-    return identity()
-
-  let
-    v = Camera.getView()
-    viewProjection = Camera.getProjection() * v
-    bb = mat4([
-      v[0], v[4], v[8], 0.0,
-      v[1], v[5], v[9], 0.0,
-      v[2], v[6], v[10], 0.0,
-      0.0, 0.0, 0.0, 1.0,
-    ])
-    
-  return viewProjection * translate(light.position) * bb * scale(light.radius)

@@ -13,19 +13,17 @@ import renderer/components
 import renderer/shadowMap
 
 type
-  GeometryPass* = object
+  GeometryPass* = ref object
     fb: Framebuffer
     albedo*: Texture
     normal*: Texture
     position*: Texture
-
     shader: Program
 
-  LightingPass* = object
+  LightingPass* = ref object
     shaders: array[LightType, Program]
     quad: Mesh
-    octagon: Mesh
-
+    ball: Mesh
 
 proc newGeometryPass*(): GeometryPass =
   let 
@@ -48,7 +46,7 @@ proc newGeometryPass*(): GeometryPass =
   b.attach(p)
   b.attach(n)
   b.attach(a)
-  b.attachDepthStencilRBO(w, h)
+  b.attachDepthStencilRBO(windowWidth, windowHeight)
 
   debug("GBuffer: $1", b.check())
 
@@ -86,32 +84,18 @@ proc newLightingPass*(): LightingPass =
     Vertex(position: [ 1.0'f32,  1.0, 0.0]),
     Vertex(position: [ 1.0'f32, -1.0, 0.0]),
   ]
-  quad.indices = @[0'u32, 2, 1, 2, 3, 1]
+  quad.indices = @[0'u32, 1, 2, 2, 1, 3]
   quad.buildBuffers()
 
-  var octagon = newMesh()
-  let hs: float32 = 1.0 / (1.0 + sqrt(2.0))
-  octagon.vertices = @[
-    Vertex(position: [ -hs,    -1.0, 0.0]),
-    Vertex(position: [  hs,    -1.0, 0.0]),
-    Vertex(position: [ 1.0'f32, -hs, 0.0]),
-    Vertex(position: [ 1.0'f32,  hs, 0.0]),
-    Vertex(position: [  hs,     1.0, 0.0]),
-    Vertex(position: [ -hs,     1.0, 0.0]),
-    Vertex(position: [-1.0'f32,  hs, 0.0]),
-    Vertex(position: [-1.0'f32, -hs, 0.0]),
-  ]
-  octagon.indices = @[0'u32, 2, 1, 0, 7, 2, 7, 3, 2, 7, 6, 3, 6, 4, 3, 6, 5, 4]
-  octagon.buildBuffers()
   return LightingPass(
     shaders: shaders,
     quad: quad,
-    octagon: octagon,
+    ball: Resources.getMesh("lightball"),
   )
 
 
 proc perform*(pass: var GeometryPass, geometry: seq[Model]) =
-  pass.fb.use()
+  pass.fb.use(FramebufferTarget.Both)
   glEnable(GL_DEPTH_TEST)
   glDepthMask(true)
   glDisable(GL_BLEND)
@@ -129,15 +113,19 @@ proc perform*(pass: var GeometryPass, geometry: seq[Model]) =
       t.use(i)
     i.mesh.render()
 
-proc perform*(pass: var LightingPass, lights: seq[Light], gp: GeometryPass) =
-  useDefaultFramebuffer()
+proc perform*(pass: var LightingPass, lights: seq[Light], gp: var GeometryPass, output: var Framebuffer) =
+  gp.fb.use(FramebufferTarget.Read)
+  output.use(FramebufferTarget.Draw)
+  glBlitFramebuffer(0, 0, windowWidth, windowHeight, 0, 0, windowWidth, windowHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+  output.use(FramebufferTarget.Both)
+  
   glViewport(0, 0, windowWidth, windowHeight)
   glEnable(GL_BLEND)
   glBlendEquation(GL_FUNC_ADD)
   glBlendFunc(GL_ONE, GL_ONE)
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  glClear(GL_COLOR_BUFFER_BIT)
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-  glDisable(GL_DEPTH_TEST)
+  glEnable(GL_DEPTH_TEST)
   glDepthMask(false)
 
   gp.position.use(0)
@@ -152,7 +140,7 @@ proc perform*(pass: var LightingPass, lights: seq[Light], gp: GeometryPass) =
       if light.kind != kind:
         continue
 
-      shader.getUniform("transform").set(light.getScreenExtentsTransform())
+      shader.getUniform("invBufferSize").set(vec(1.0 / windowWidth, 1.0 / windowHeight))
       shader.getUniform("light").set(light.position)
       shader.getUniform("lightDir").set(light.target - light.position)
       shader.getUniform("lightspace").set(light.getProjection() * light.getView())
@@ -166,6 +154,8 @@ proc perform*(pass: var LightingPass, lights: seq[Light], gp: GeometryPass) =
 
       case light.kind:
       of Point:
-        pass.octagon.render()
+        shader.getUniform("transform").set(Camera.getProjection() * Camera.getView() * translate(light.position) * scale(light.radius))
+        pass.ball.render()
       else:
+        shader.getUniform("transform").set(identity())
         pass.quad.render()

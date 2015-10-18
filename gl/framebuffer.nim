@@ -73,16 +73,17 @@ proc check*(fb: Framebuffer): string =
   else: "should not happen"
 
 
-proc use*(fb: Framebuffer) = 
-  glBindFramebuffer(ord fb.target, fb.id)
+proc use*(fb: var Framebuffer, t=FramebufferTarget.Both) = 
+  glBindFramebuffer(ord t, fb.id)
+  fb.target =t
 
 
-proc useDefaultFramebuffer*() = 
-  glBindFramebuffer(ord FramebufferTarget.Both, 0)
+proc useDefaultFramebuffer*(t=FramebufferTarget.Both) = 
+  glBindFramebuffer(ord t, 0)
 
 
 proc newFramebuffer*(t=FramebufferTarget.Both): Framebuffer = 
   result = Framebuffer(target: t)
 
   glGenFramebuffers(1, addr result.id)
-  result.use()
+  result.use(t)

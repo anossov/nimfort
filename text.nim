@@ -113,11 +113,11 @@ proc stringMesh(s: string, f: Font, w: var float32): Mesh =
     ])
     result.indices.add([
       uint32(idx * 4 + 0),
+      uint32(idx * 4 + 2),
       uint32(idx * 4 + 1),
-      uint32(idx * 4 + 2),
       uint32(idx * 4 + 0),
-      uint32(idx * 4 + 2),
       uint32(idx * 4 + 3),
+      uint32(idx * 4 + 2),
     ])
     
     x += c.advance

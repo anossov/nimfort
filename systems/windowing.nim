@@ -22,7 +22,7 @@ proc initWindow*() =
   glfw.windowHint(glfw.CONTEXT_VERSION_MINOR, 0)
   glfw.windowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
   glfw.windowHint(glfw.OPENGL_FORWARD_COMPAT, 1)
-  glfw.windowHint(glfw.OPENGL_DEBUG_CONTEXT, 1)
+  glfw.windowHint(glfw.OPENGL_DEBUG_CONTEXT, debugContext)
   glfw.windowHint(glfw.RESIZABLE, 0)
   glfw.windowHint(glfw.SAMPLES, MSAASamples)
 

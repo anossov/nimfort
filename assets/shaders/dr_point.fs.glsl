@@ -1,6 +1,5 @@
 #version 400 core
 
-in vec2 uvf;
 out vec4 outColor;
 
 uniform sampler2D gPosition;
@@ -11,11 +10,13 @@ uniform vec3 eye;
 uniform vec3 light;
 uniform float radius;
 uniform vec3 lightColor;
+uniform vec2 invBufferSize;
 
 void main() {
-    vec3 n = texture(gNormal, uvf).rgb;
-    vec4 AS = texture(gAlbedoSpec, uvf);
-    vec3 posf = texture(gPosition, uvf).rgb;
+    vec2 uv = gl_FragCoord.xy * invBufferSize;
+    vec3 n = texture(gNormal, uv).rgb;
+    vec4 AS = texture(gAlbedoSpec, uv);
+    vec3 posf = texture(gPosition, uv).rgb;
 
     vec3 color = AS.rgb;
     float spec = AS.a;
