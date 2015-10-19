@@ -1,30 +1,32 @@
 #version 400 core
 
 layout (location = 0) out vec3 gPosition;
-layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec4 gAlbedoSpec;
+layout (location = 1) out vec4 gNormalMetalness;
+layout (location = 2) out vec4 gAlbedoRoughness;
 
 in vec2 uvf;
 in vec4 posf;
 in mat3 TBN;
 out vec4 outColor;
 
-uniform sampler2D tex;
-uniform sampler2D normalmap;
-uniform sampler2D specularmap;
+uniform sampler2D albedo;
+uniform sampler2D normal;
+uniform sampler2D roughness;
+uniform sampler2D metalness;
 
 void main()
 {    
     gPosition = vec3(posf);
 
-    vec3 n = texture(normalmap, uvf).rgb;
+    vec3 n = texture(normal, uvf).rgb;
     if (n != vec3(0.0)) {
         n = normalize(n * 2.0 - 1.0);   
-        gNormal = normalize(TBN * n);
+        gNormalMetalness.rgb = normalize(TBN * n);
     } else {
-        gNormal = TBN[2];
+        gNormalMetalness.rgb = TBN[2];
     }
-    
-    gAlbedoSpec.rgb = texture(tex, uvf).rgb;
-    gAlbedoSpec.a = texture(specularmap, uvf).r;
+    gNormalMetalness.a = texture(metalness, uvf).r;
+
+    gAlbedoRoughness.rgb = texture(albedo, uvf).rgb;
+    gAlbedoRoughness.a = texture(roughness, uvf).r;
 } 

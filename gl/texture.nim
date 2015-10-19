@@ -40,8 +40,6 @@ type
     Uint8888       = GL_UNSIGNED_INT_8_8_8_8        # 0x8035
     Uint1010102    = GL_UNSIGNED_INT_10_10_10_2     # 0x8036 
 
-    
-
     Ubyte233       = GL_UNSIGNED_BYTE_2_3_3_REV     # 0x8362
     Ushort565      = GL_UNSIGNED_SHORT_5_6_5        # 0x8363
     Ushort565rev   = GL_UNSIGNED_SHORT_5_6_5_REV    # 0x8364
@@ -51,7 +49,7 @@ type
     Uint2101010rev = GL_UNSIGNED_INT_2_10_10_10_REV # 0x8368
 
     Uint24_8       = GL_UNSIGNED_INT_24_8           # 0x84FA
-    
+
 
   Texture* = object
     id*: GLuint

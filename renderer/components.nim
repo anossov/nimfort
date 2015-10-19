@@ -17,7 +17,7 @@ type
   Model* = object of Component
     transform*: Transform
     mesh*: Mesh
-    textures*: array[3, Texture]
+    textures*: seq[Texture]
     shadows*: bool
 
   LightType* = enum
@@ -58,13 +58,22 @@ proc newTransform*(p=zeroes3, r=zeroes3, s=ones3): Transform =
 proc newTransform*(p=zeroes3, r=zeroes3, s: float32): Transform {.inline.} = newTransform(p, r, vec(s, s, s))
 
 
-proc newModel*(t: Transform, m: Mesh, diffuse: Texture, normal=emptyTexture(), specular=emptyTexture(), shadows=true): Model =
-  Model(
-    transform: t,
+proc newModel*(t: Transform, m: Mesh,
+               albedo: Texture,
+               normal=emptyTexture(),
+               roughness=emptyTexture(),
+               metalness=emptyTexture(),
+               shadows=true): Model =
+  result = Model(
     mesh: m,
-    textures: [diffuse, normal, specular],
-    shadows: shadows
+    textures: newSeq[Texture](4),
   )
+  result.textures[0] = albedo
+  result.textures[1] = normal
+  result.textures[2] = roughness
+  result.textures[3] = metalness
+  result.transform = t
+  result.shadows = shadows
 
 proc newAmbientLight*(color=ones3): Light = 
   Light(

@@ -36,7 +36,7 @@ proc newGeometryPass*(): GeometryPass =
   p.filter(false)
   
   n = newTexture()
-  n.image2d(nil, w, h, false, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
+  n.image2d(nil, w, h, false, TextureFormat.RGBA, PixelType.Float, GL_RGBA16F)
   n.filter(false)
   
   a = newTexture()
@@ -52,8 +52,10 @@ proc newGeometryPass*(): GeometryPass =
 
   var s = Resources.getShader("gbuffer")
   s.use()
-  s.getUniform("normalmap").set(1)
-  s.getUniform("specularmap").set(2)
+  s.getUniform("albedo").set(0)
+  s.getUniform("normal").set(1)
+  s.getUniform("roughness").set(2)
+  s.getUniform("metalness").set(3)
 
   return GeometryPass(
     fb: b,
@@ -65,16 +67,17 @@ proc newGeometryPass*(): GeometryPass =
 
 
 proc newLightingPass*(): LightingPass =
-  var p = Resources.getShader("dr_point")
-  var d = Resources.getShader("dr_directional")
-  var a = Resources.getShader("dr_ambient")
-  var s = Resources.getShader("dr_spot")
+  let inc = ["dr_head", "brdfs"]
+  var p = Resources.getShader("dr_point", inc)
+  var d = Resources.getShader("dr_directional", inc)
+  var a = Resources.getShader("dr_ambient", inc)
+  var s = Resources.getShader("dr_spot", inc)
   var shaders = [a, p, d, s]
   for shader in mitems(shaders):
     shader.use()
     shader.getUniform("gPosition").set(0)
-    shader.getUniform("gNormal").set(1)
-    shader.getUniform("gAlbedoSpec").set(2)
+    shader.getUniform("gNormalMetalness").set(1)
+    shader.getUniform("gAlbedoRoughness").set(2)
     shader.getUniform("shadowMap").set(3)
 
   var quad = newMesh()
@@ -141,9 +144,9 @@ proc perform*(pass: var LightingPass, lights: seq[Light], gp: var GeometryPass, 
         continue
 
       shader.getUniform("invBufferSize").set(vec(1.0 / windowWidth, 1.0 / windowHeight))
-      shader.getUniform("light").set(light.position)
-      shader.getUniform("lightDir").set(light.target - light.position)
-      shader.getUniform("lightspace").set(light.getProjection() * light.getView())
+      shader.getUniform("lightPos").set(light.position)
+      shader.getUniform("lightDir").set(light.position - light.target)
+      shader.getUniform("lightSpace").set(light.getProjection() * light.getView())
       shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
       shader.getUniform("radius").set(light.radius)
       shader.getUniform("lightColor").set(light.color)

@@ -22,8 +22,8 @@ vec3 Uncharted2Tonemap(vec3 x)
 void main() {
 	vec3 color = texture(hdr, uv).rgb;
 
-	float exposure = 10.0;
-	
+	float exposure = 1.0;
+
 	color = Uncharted2Tonemap(exposure * color);
 	vec3 scale = 1.0 / Uncharted2Tonemap(vec3(W));
 	color = color * scale;
