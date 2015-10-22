@@ -13,6 +13,7 @@ import systems/messaging
 import systems/input
 import systems/resources
 import systems/camera
+import systems/transform
 import renderer/rendering
 
 
@@ -43,6 +44,7 @@ proc gameloop*() =
 
     updateTime()
     updateWorld()
+    updateTransforms()
     updateCamera()
     updateUi()
 

@@ -13,18 +13,18 @@ type
     Color        = GL_COLOR_ATTACHMENT0        # 0x8CE0
     Depth        = GL_DEPTH_ATTACHMENT         # 0x8D00
     Stencil      = GL_STENCIL_ATTACHMENT       # 0x8D20
-    
+
   Framebuffer* = object
-    id: GLuint
-    target: FramebufferTarget
+    id*: GLuint
+    target*: FramebufferTarget
     depth: bool
     stencil: bool
     colors: GLsizei
 
 
-proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false) =
+proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false, level=0) =
   var ap: GLenum
-  
+
   if depth and stencil:
     ap = ord AttachmentPoint.DepthStencil
     fb.depth = true
@@ -39,8 +39,8 @@ proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false) =
     ap = ((ord AttachmentPoint.Color) + fb.colors).GLenum
     fb.colors += 1
 
-  glFramebufferTexture(ord fb.target, ap, t.id, 0)
-  
+  glFramebufferTexture(ord fb.target, ap, t.id, level.GLint)
+
   if fb.colors > 0:
     var bufs = newSeq[GLenum](fb.colors)
     for i in 0..(fb.colors-1):
@@ -53,8 +53,8 @@ proc attachDepthStencilRBO*(fb: Framebuffer, w: int32, h: int32) =
   var rbo: GLuint
   glGenRenderbuffers(1, addr rbo)
   glBindRenderbuffer(GL_RENDERBUFFER, rbo)
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h)
-  glFramebufferRenderbuffer(ord fb.target, ord AttachmentPoint.Depth, GL_RENDERBUFFER, rbo)
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h)
+  glFramebufferRenderbuffer(ord fb.target, ord AttachmentPoint.DepthStencil, GL_RENDERBUFFER, rbo)
 
 
 proc check*(fb: Framebuffer): string =
@@ -73,16 +73,16 @@ proc check*(fb: Framebuffer): string =
   else: "should not happen"
 
 
-proc use*(fb: var Framebuffer, t=FramebufferTarget.Both) = 
+proc use*(fb: var Framebuffer, t=FramebufferTarget.Both) =
   glBindFramebuffer(ord t, fb.id)
   fb.target =t
 
 
-proc useDefaultFramebuffer*(t=FramebufferTarget.Both) = 
+proc useDefaultFramebuffer*(t=FramebufferTarget.Both) =
   glBindFramebuffer(ord t, 0)
 
 
-proc newFramebuffer*(t=FramebufferTarget.Both): Framebuffer = 
+proc newFramebuffer*(t=FramebufferTarget.Both): Framebuffer =
   result = Framebuffer(target: t)
 
   glGenFramebuffers(1, addr result.id)

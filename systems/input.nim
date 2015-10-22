@@ -43,7 +43,7 @@ proc keyCallback(win: GLFWwindow; key, scancode, action, mods: cint) {.cdecl.} =
 
 proc initInputSystem*() =
   Input = InputSystem()
-  
+
   discard glfw.setCursorPosCallback(Window, cursorCallback)
   discard glfw.setKeyCallback(Window, keyCallback)
 

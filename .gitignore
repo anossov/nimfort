@@ -48,3 +48,6 @@ profile_results.txt
 glfw3.dll
 sources
 main*.trace
+trace.bat
+nf.sublime-project
+nf.sublime-workspace

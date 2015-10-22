@@ -17,7 +17,7 @@ void main() {
 
     float ld = length(lightPos.xyz - posf);
     float attenuation = clamp(1.0 - ld * ld / (radius * radius), 0.0, 1.0);
-    attenuation = attenuation * attenuation;    
-  
+    attenuation = attenuation * attenuation;
+
     outColor = vec4(color * attenuation, 1.0);
 }

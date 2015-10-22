@@ -32,6 +32,9 @@ float G_Cook_Torrance(float NdotL, float NdotV, float NdotH, float VdotH) {
 
 
 float D_Beckmann(float NdotH, float alpha) {
+    if (alpha < 1e-3) {
+        return 0;
+    }
     float a2 = alpha * alpha;
     float nh2 = NdotH * NdotH;
     float nh4 = nh2 * nh2;
@@ -52,26 +55,28 @@ float D_Blinn(float NdotH, float alpha) {
 
 vec3 Shade_Cook_Torrance(vec3 l, vec3 p, vec3 n, vec3 albedo, float metalness, float roughness) {
     float NdotL = clamp(dot(n, l), 0.0, 1.0);
-    if (NdotL == 0.0) {
+    if (NdotL < 1e-5) {
         return vec3(0.0);
     }
-    
+
     vec3 v = normalize(eye - p);
     vec3 h = normalize(l + v);
+    float NdotH = clamp(dot(n, h), 0.0, 1.0);
+    if (NdotH < 1e-5) {
+        return vec3(0.0);
+    }
 
     float f0 = mix(0.03, albedo.r, metalness);
-   
+
     float NdotV = abs(dot(n, v)) + 1e-5;
     float LdotH = clamp(dot(l, h), 0.0, 1.0);
-    float NdotH = clamp(dot(n, h), 0.0, 1.0);
-    
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
     vec3 diffuse = albedo * NdotL;
 
     float F = F_Schlick(f0, VdotH);
     float G = G_Smith_GGX(NdotL, NdotV, roughness);
-    float D = D_Beckmann(NdotH, roughness);
+    float D = D_GGX_Trowbridge_Reitz(NdotH, roughness);
 
     vec3 specular = vec3(D * F * G / (4 * NdotL * NdotV));
 

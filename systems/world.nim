@@ -9,59 +9,78 @@ import strutils
 import systems/ecs
 import systems/resources
 import systems/timekeeping
+import systems/transform
 import renderer/rendering
 import renderer/components
 
 type
   World* = ref object
     handles: seq[EntityHandle]
-    spot: EntityHandle
-
 
 var TheWorld*: World
 
 
+proc add(w: var World, name: string): EntityHandle =
+  let e = newEntity(name)
+  w.handles.add(e)
+  return e
+
+
 proc initWorld*() =
-  var cabinM = Resources.getMesh("cabin")
-  var roofM = Resources.getMesh("roof")
-  var p = Resources.getMesh("quad")
-  var c = Resources.getMesh("anticube")
-  
+  var p = Resources.getMesh("cube")
+  var ball = Resources.getMesh("ball")
+  var c = Resources.getMesh("lightcone")
+
   let
     w = Resources.getTexture("white")
-    cd = Resources.getTexture("cabin", srgb=true)
-    cs = Resources.getTexture("cabinS")
-    cn = Resources.getTexture("cabinN")
+    cone = Resources.getTexture("lightcone", srgb=true)
+    coneE = Resources.getTexture("lightconeE", srgb=true)
+    coneR = Resources.getTexture("lightconeR", srgb=true)
 
-    gd = Resources.getTexture("ground", srgb=true)
-
-  newEntity("axe").attach(newModel(
-    newTransform(s=0.4),
-    Resources.getMesh("axe"),
-    Resources.getTexture("axe_albedo", srgb=true),
-    Resources.getTexture("axe_normal"),
-    Resources.getTexture("axe_roughness", srgb=true),
-    Resources.getTexture("axe_metalness", srgb=true),
-  ))
-  
   TheWorld = World(handles: newSeq[EntityHandle]())
 
-  TheWorld.handles.add(newEntity("sun"))
-  TheWorld.handles[0].attach(newDirLight(color=vec(2, 2, 3), position=vec(1, 10, 5), shadows=false))
+  TheWorld.add("axe")
+    .attach(newTransform(s=0.4))
+    .attach(newModel(
+      Resources.getMesh("axe"),
+      Resources.getTexture("axe_albedo", srgb=true),
+      Resources.getTexture("axe_normal"),
+      Resources.getTexture("axe_roughness", srgb=true),
+      Resources.getTexture("axe_metalness", srgb=true),
+    ))
 
-  newEntity("ambiance").attach(newAmbientLight(vec(0.02, 0.03, 0.04)))
+  #newEntity("ambiance").attach(newAmbientLight(vec(0.02, 0.03, 0.04)))
 
-  newEntity("p").attach(newPointLight(vec(3, 3, -8), vec(10, 10, 3), 8))
-  
-  let spot = newEntity("spot")
-  spot.attach(newSpotLight(vec(3, 5, 3), target=vec(0, 0, 0), color=vec(5.3, 5.3, 5.3), angle=10, falloff=20, shadows=false))
+  TheWorld.add("point")
+    .attach(newTransform(p=vec(3, 3, -8), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
+    .attach(newPointLight(vec(2, 2, 5), radius=7))
+    .attach(newModel(ball, w, emission=w, emissionIntensity=20))
+    .attach(CircleMovement(rvector: vec(0, 5, 0), period: 1, axis: zaxis, center: vec(0, 0, -8)))
 
-  TheWorld.handles.add(spot)
+  TheWorld.add("spot")
+    .attach(newSpotLight(color=vec(2, 2, 1), angle=30, falloff=50, shadows=true))
+    .attach(newTransform(p=vec(7, 7, 10), f=vec(-7, -7, -5), s=0.5))
+    .attach(newModel(c, cone, roughness=coneR, emission=coneE, emissionIntensity=16, shadows=false))
+
+  TheWorld.add("g")
+    .attach(newTransform(p=vec(-8, 0, 0), f=vec(0, 1, 0), u=xaxis, s=20))
+    .attach(newModel(
+      Resources.getMesh("quad"),
+      Resources.getTexture("axe_albedo", srgb=true),
+      Resources.getTexture("axe_normal"),
+      Resources.getTexture("axe_roughness", srgb=true),
+      Resources.getTexture("axe_metalness", srgb=true),
+    ))
+
+  TheWorld.add("sun2")
+    .attach(newTransform(f=vec(-1, 0.5, 0.5), p=vec(20, 0, 0), u=yaxis, s=0.3))
+    .attach(newDirLight(color=vec(0.5, 0.5, 0.5), shadows=true))
+    .attach(newModel(c, cone, roughness=coneR, emission=coneE, emissionIntensity=16))
 
   info("World ok")
 
-
 proc updateWorld*() =
-  TheWorld.handles[0].getLight().position = vec(sin(Time.totalTime * 1) * 10, cos(Time.totalTime * 1)  * 10, 4)
-  TheWorld.handles[1].getLight.target = vec(0, 0, cos(Time.totalTime * 3) * 12)
+  TheWorld.handles[0].transform.setUp(vec(cos(Time.totalTime / 1), sin(Time.totalTime / 1), 0))
+  TheWorld.handles[0].transform.updateMatrix()
+  TheWorld.handles[1].circleMovement.center.z = sin(Time.totalTime * 1) * 10
   discard

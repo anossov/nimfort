@@ -17,7 +17,7 @@ void main() {
 
     vec3 color = Shade_Cook_Torrance(l, posf, n, albedo, metalness, roughness);
 
-    float theta = dot(l, normalize(lightDir));
+    float theta = dot(l, normalize(-lightDir));
     float penumbra = cosSpotAngle - cosSpotFalloff;
     float intensity = clamp((theta - cosSpotFalloff) / penumbra, 0.0, 1.0);
 
@@ -25,9 +25,9 @@ void main() {
 
     if (hasShadowmap) {
       float bias = max(0.02 * (1.0 - dot(n, l)), 0.0002);
-      shadow = calcShadow(lightSpace * vec4(posf, 1.0), bias);  
+      shadow = calcShadow(lightSpace * vec4(posf, 1.0), bias);
     }
-  
+
     outColor = vec4(color * shadow * intensity, 1.0);
 
 }

@@ -13,13 +13,13 @@ proc windowSize*(): vec2 =
   result = [x.float32, y.float32]
 
 
-proc initWindow*() = 
+proc initWindow*() =
   if glfw.init() != 1:
     fatal("Failed to initialize GLFW")
     quit(0)
 
   glfw.windowHint(glfw.CONTEXT_VERSION_MAJOR, 4)
-  glfw.windowHint(glfw.CONTEXT_VERSION_MINOR, 0)
+  glfw.windowHint(glfw.CONTEXT_VERSION_MINOR, 1)
   glfw.windowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
   glfw.windowHint(glfw.OPENGL_FORWARD_COMPAT, 1)
   glfw.windowHint(glfw.OPENGL_DEBUG_CONTEXT, debugContext)

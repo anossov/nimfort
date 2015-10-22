@@ -1,4 +1,5 @@
 import logging
+import strutils
 
 import tables
 import text
@@ -8,8 +9,11 @@ import systems/ecs
 import systems/messaging
 import systems/resources
 import systems/timekeeping
+import systems/camera
+import systems/transform
 import renderer/components
 import renderer/rendering
+import renderer/screen
 
 
 type
@@ -26,18 +30,19 @@ type
 var UI*: GUI
 
 
-proc newText(ui: GUI, name: string, transform: Transform, s: string = "") = 
+proc newText(ui: GUI, name: string, transform: Transform, s: string = "") =
   let
     m = ui.font.newTextMesh(s)
     e = newEntity("ui-text-" & name)
     t = Text(entity: e, mesh: m)
-  t.entity.attach(Label(transform: transform, color: vec(0.5, 0.5, 0.5), mesh: m.mesh, texture: ui.font.textures[0]))
+  t.entity.attach(Label(color: vec(0.5, 0.5, 0.5), mesh: m.mesh, texture: ui.font.textures[0]))
+  t.entity.attach(transform)
   ui.texts[name] = t
 
 
-proc update(t: var Text, s: string) = 
+proc update(t: var Text, s: string) =
   t.mesh.update(s)
-  t.entity.getLabel().mesh = t.mesh.mesh
+  t.entity.label.mesh = t.mesh.mesh
 
 
 proc initGUI*()=
@@ -47,8 +52,7 @@ proc initGUI*()=
     texts: initTable[string, Text]()
   )
 
-  UI.newText("frametime", newTransform(vec(30.0, Renderer.windowSize.y, 0.0), zeroes3, vec(0.5, 0.5, 0.5)))
-
+  UI.newText("frametime", newTransform(p=vec(30.0, Screen.size.y, 0.0), s=0.5))
   Messages.listen("frametime", UI.listener)
 
   info("UI ok")
@@ -58,7 +62,7 @@ proc updateUi*() =
   for e in UI.listener.queue:
     case e:
     of "frametime":
-      UI.texts.mget("frametime").update($Time.mksPerFrame & " μs/frame")
+      UI.texts.mget("frametime").update($Time.mksPerFrame & " μs/frame (" & $((1000000 / Time.mksPerFrame).int) & " fps)")
     else:
       discard
   UI.listener.queue.setLen(0)

@@ -19,14 +19,14 @@ proc newListener*(): Listener =
   )
 
 
-proc initMessageSystem*() = 
+proc initMessageSystem*() =
   Messages = MessageSystem(
     listeners: initTable[string, seq[Listener]]()
   )
   info("Messaging ok")
 
 
-proc listen*(m: var MessageSystem, event: string, listener: Listener) = 
+proc listen*(m: var MessageSystem, event: string, listener: Listener) =
   if not m.listeners.hasKey(event):
     m.listeners[event] = newSeq[Listener]()
   m.listeners.mget(event).add(listener)

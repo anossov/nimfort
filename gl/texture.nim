@@ -1,16 +1,15 @@
 import opengl
 
-
 type
   TextureTarget* {.pure.} = enum
     t1D                 = GL_TEXTURE_1D,                   # 0x0DE0
     t2D                 = GL_TEXTURE_2D,                   # 0x0DE1
     t3D                 = GL_TEXTURE_3D,                   # 0x806F
     tRectangle          = GL_TEXTURE_RECTANGLE,            # 0x84F5
-    tCubeMap            = GL_TEXTURE_CUBE_MAP,             # 0x8513    
+    tCubeMap            = GL_TEXTURE_CUBE_MAP,             # 0x8513
     t1DArray            = GL_TEXTURE_1D_ARRAY,             # 0x8C18
     t2DArray            = GL_TEXTURE_2D_ARRAY,             # 0x8C1A
-    tBuffer             = GL_TEXTURE_BUFFER,               # 0x8C2A    
+    tBuffer             = GL_TEXTURE_BUFFER,               # 0x8C2A
     tCubeMapArray       = GL_TEXTURE_CUBE_MAP_ARRAY,       # 0x9009
     t2DMultisample      = GL_TEXTURE_2D_MULTISAMPLE,       # 0x9100
     t2DMultisampleArray = GL_TEXTURE_2D_MULTISAMPLE_ARRAY, # 0x9102
@@ -34,18 +33,18 @@ type
     Uint           = GL_UNSIGNED_INT                # 0x1405
     Float          = cGL_FLOAT                      # 0x1406
 
-    Ubyte332       = GL_UNSIGNED_BYTE_3_3_2         # 0x8032 
+    Ubyte332       = GL_UNSIGNED_BYTE_3_3_2         # 0x8032
     Ushort4444     = GL_UNSIGNED_SHORT_4_4_4_4      # 0x8033
     Ushort5551     = GL_UNSIGNED_SHORT_5_5_5_1      # 0x8034
     Uint8888       = GL_UNSIGNED_INT_8_8_8_8        # 0x8035
-    Uint1010102    = GL_UNSIGNED_INT_10_10_10_2     # 0x8036 
+    Uint1010102    = GL_UNSIGNED_INT_10_10_10_2     # 0x8036
 
     Ubyte233       = GL_UNSIGNED_BYTE_2_3_3_REV     # 0x8362
     Ushort565      = GL_UNSIGNED_SHORT_5_6_5        # 0x8363
     Ushort565rev   = GL_UNSIGNED_SHORT_5_6_5_REV    # 0x8364
     Ushort4444rev  = GL_UNSIGNED_SHORT_4_4_4_4_REV  # 0x8365
     Ushort1555rev  = GL_UNSIGNED_SHORT_1_5_5_5_REV  # 0x8366
-    Uint8888rev    = GL_UNSIGNED_INT_8_8_8_8_REV    # 0x8367 
+    Uint8888rev    = GL_UNSIGNED_INT_8_8_8_8_REV    # 0x8367
     Uint2101010rev = GL_UNSIGNED_INT_2_10_10_10_REV # 0x8368
 
     Uint24_8       = GL_UNSIGNED_INT_24_8           # 0x84FA
@@ -54,34 +53,53 @@ type
   Texture* = object
     id*: GLuint
     target*: TextureTarget
+    mipmap*: bool
 
 
-proc use*(t: Texture, unit: int) = 
+proc generateMipmap*(t: var Texture) =
+  t.mipmap = true
+  glGenerateMipmap(ord t.target)
+
+
+proc use*(t: Texture, unit: int) =
   glActiveTexture((GL_TEXTURE0 + unit).GLenum)
   glBindTexture(ord t.target, t.id)
 
-proc image2d*(t: Texture, data: string, w: int32, h: int32, mipmap=true, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, internalformat=GL_RGBA) = 
+
+proc image2d*(t: var Texture, data: string, w: int32, h: int32, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, internalformat=GL_RGBA) =
   glTexImage2D(ord t.target, 0, internalformat.GLint, w, h, 0, ord format, ord pixeltype, if data == nil: nil else: cstring(data))
 
-  if mipmap:
-      glGenerateMipmap(ord t.target)
 
-proc filter*(t: Texture, yes: bool) = 
+proc filter*(t: Texture, yes: bool) =
   if yes:
-    glTexParameteri(ord t.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+    if t.mipmap:
+      glTexParameteri(ord t.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+    else:
+      glTexParameteri(ord t.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexParameteri(ord t.target, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    
+
     var aniso: float32
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, addr aniso);
-    glTexParameterf(ord t.target, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso); 
+    glTexParameterf(ord t.target, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
   else:
     glTexParameteri(ord t.target, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexParameteri(ord t.target, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 
+proc clamp*(t: Texture, border=false, border_color: array[4, float32] = [0'f32, 0, 0, 0]) =
+  if border:
+    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
+    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
+  else:
+    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
-proc newTexture*(target=TextureTarget.t2D): Texture = 
+proc repeat*(t: Texture) =
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_REPEAT)
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_REPEAT)
+
+proc newTexture*(target=TextureTarget.t2D): Texture =
   result = Texture(target: target)
-  
+
   glGenTextures(1, addr result.id)
   glBindTexture(ord target, result.id)
 

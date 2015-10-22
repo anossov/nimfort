@@ -14,16 +14,16 @@ type
 var Camera*: CameraSystem
 
 
-proc initCamera*() = 
+proc initCamera*() =
   Camera = CameraSystem(
     projection: perspective(60.0, windowWidth / windowHeight, 3, 100.0)
   )
 
-proc updateCamera*() = 
+proc updateCamera*() =
   var
     phi = (windowWidth - Input.cursorPos.x) / 200
     theta = (windowHeight - Input.cursorPos.y) / 200
-  
+
   if theta < PI * 0.51:
     theta = PI * 0.51
   if theta > PI * 1.49:

@@ -38,7 +38,7 @@ proc hash(r: Rune): THash =
   result = int(r).hash
 
 
-proc loadFont*(path: string): Font = 
+proc loadFont*(path: string): Font =
   result = Font(textures: newSeq[Texture]())
   result.hichars = initTable[Rune, Char]()
   result.kerning = initTable[array[2, Rune], float32]()
@@ -54,7 +54,7 @@ proc loadFont*(path: string): Font =
         continue
 
       let pair = f.split(sep='=')
-      
+
       data[pair[0]] = pair[1]
       lastkey = pair[0]
 
@@ -67,7 +67,8 @@ proc loadFont*(path: string): Font =
     of "page":
       let image = loadPNG32(splitPath(path).head / data["file"][1..^2])
       var texture = newTexture()
-      texture.image2d(image.data, image.width.int32, image.height.int32, mipmap=true)
+      texture.image2d(image.data, image.width.int32, image.height.int32)
+      texture.generateMipmap()
       texture.filter(true)
       result.textures.add(texture)
     of "char":
@@ -87,11 +88,11 @@ proc loadFont*(path: string): Font =
     else:
       discard
 
-proc stringMesh(s: string, f: Font, w: var float32): Mesh = 
+proc stringMesh(s: string, f: Font, w: var float32): Mesh =
   result = newMesh()
-  
+
   var x = 0.0'f32
-  
+
   var lastrune = Rune(0)
   var idx = 0
   for r in runes(s):
@@ -102,7 +103,7 @@ proc stringMesh(s: string, f: Font, w: var float32): Mesh =
       yp = -c.offset[1]
       kernpair = [lastrune, r]
       kern = f.kerning[kernpair]
-    
+
     x += kern
 
     result.vertices.add([
@@ -119,7 +120,7 @@ proc stringMesh(s: string, f: Font, w: var float32): Mesh =
       uint32(idx * 4 + 3),
       uint32(idx * 4 + 2),
     ])
-    
+
     x += c.advance
     lastrune = r
     idx += 1
@@ -127,7 +128,7 @@ proc stringMesh(s: string, f: Font, w: var float32): Mesh =
   w = x
 
 
-proc newTextMesh*(f: Font, s: string): TextMesh = 
+proc newTextMesh*(f: Font, s: string): TextMesh =
   var w: float32
   var v = stringMesh(s, f, w)
   v.buildBuffers()

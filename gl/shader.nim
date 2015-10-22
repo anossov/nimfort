@@ -27,8 +27,8 @@ type
     Shaders            = GL_ATTACHED_SHADERS,            # 0x8B85
     Uniforms           = GL_ACTIVE_UNIFORMS,             # 0x8B86
     UniformMaxLength   = GL_ACTIVE_UNIFORM_MAX_LENGTH,   # 0x8B87
-    Attributes         = GL_ACTIVE_ATTRIBUTES,           # 0x8B89    
-    AttributeMaxLength = GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, # 0x8B8A    
+    Attributes         = GL_ACTIVE_ATTRIBUTES,           # 0x8B89
+    AttributeMaxLength = GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, # 0x8B8A
 
   Shader = object
     id: GLuint
@@ -37,7 +37,7 @@ type
 
   Program* = ref object
     id: GLuint
-    
+
     fs: Shader
     vs: Shader
 
@@ -67,7 +67,7 @@ proc infoLog(p: Program): cstring =
   glGetProgramInfoLog(p.id, ll, addr ll, result)
 
 
-proc delete(s: Shader) = 
+proc delete(s: Shader) =
   glDeleteShader(s.id)
 
 
@@ -75,7 +75,7 @@ proc createShader*(t: ShaderType, src: string): Shader =
   result = Shader(shaderType: t)
   result.src = allocCStringArray([src])
   result.id = glCreateShader(ord t)
-  
+
   glShaderSource(result.id, 1, result.src, nil)
   glCompileShader(result.id)
 
@@ -83,7 +83,7 @@ proc createShader*(t: ShaderType, src: string): Shader =
     stderr.writeln(result.infoLog())
 
 
-proc use*(p: Program) {.inline.} = 
+proc use*(p: Program) {.inline.} =
   glUseProgram(p.id)
 
 proc findUniform*(p: Program, name: string): Uniform =
@@ -98,14 +98,14 @@ proc getUniform*(p: var Program, name: string): Uniform =
   p.uniforms[name] = p.findUniform(name)
   return p.uniforms[name]
 
-proc createProgram*(vs: string, fs: string): Program = 
+proc createProgram*(vs: string, fs: string): Program =
   result = Program(
     id: glCreateProgram(),
     uniforms: initTable[string, Uniform](),
     vs: createShader(ShaderType.Vertex, vs),
     fs: createShader(ShaderType.Fragment, fs),
   )
-  
+
   glAttachShader(result.id, result.fs.id)
   glAttachShader(result.id, result.vs.id)
   glLinkProgram(result.id)
@@ -133,11 +133,11 @@ proc set*(u: Uniform; f1, f2: float32) =
   if u.location == -1: return
   glUniform2f(u.location, f1, f2)
 
-proc set*(u: Uniform; f1, f2, f3: float32) = 
+proc set*(u: Uniform; f1, f2, f3: float32) =
   if u.location == -1: return
   glUniform3f(u.location, f1, f2, f3)
 
-proc set*(u: Uniform; f1, f2, f3, f4: float32) = 
+proc set*(u: Uniform; f1, f2, f3, f4: float32) =
   if u.location == -1: return
   glUniform4f(u.location, f1, f2, f3, f4)
 
@@ -156,13 +156,13 @@ proc set*(u: Uniform, v: vec4) =
   var v = v
   glUniform4fv(u.location, 1, v.value_ptr)
 
-proc set*(u: Uniform, m: mat4) = 
+proc set*(u: Uniform, m: mat4) =
   if u.location == -1: return
   var m = m
   glUniformMatrix4fv(u.location, 1, GL_FALSE.GLboolean, m.value_ptr)
 
 
-proc delete*(p: Program) = 
+proc delete*(p: Program) =
   p.use()
 
   glDetachShader(p.id, p.vs.id)

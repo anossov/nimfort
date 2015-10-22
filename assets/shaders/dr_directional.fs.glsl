@@ -4,14 +4,15 @@ void main() {
     vec4 _nm = texture(gNormalMetalness, uv);
 
     vec3 n = _nm.rgb;
-    vec3 l = normalize(lightDir);
+    vec3 l = normalize(-lightDir);
 
     float shadow = 1.0;
 
     if (hasShadowmap) {
       float bias = max(0.02 * (1.0 - dot(n, l)), 0.0002);
-      shadow = calcShadow(lightSpace * vec4(posf, 1.0), bias);  
+      shadow = calcShadow(lightSpace * vec4(posf, 1.0), bias);
     }
+
     if (shadow == 0.0) {
         discard;
     }

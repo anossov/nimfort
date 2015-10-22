@@ -1,3 +1,4 @@
+import logging
 import opengl
 import math
 import strutils
@@ -21,6 +22,10 @@ template value_ptr*(m: var vec2 | vec3 | vec4 | mat3 | mat4): ptr float32 = addr
 
 template xyz*(v: vec4): vec3 = vec(v.x, v.y, v.z)
 
+proc `$`*(v: vec2): string = "($1, $2)".format(v.x, v.y)
+proc `$`*(v: vec3): string = "($1, $2, $3)".format(v.x, v.y, v.z)
+proc `$`*(v: vec4): string = "($1, $2, $3, $4)".format(v.x, v.y, v.z, v.w)
+
 proc vec*(x, y: float32): vec2 {.inline.} = 
   result.x = x
   result.y = y
@@ -36,14 +41,31 @@ proc vec*(x, y, z, w: float32): vec4 {.inline.} =
   result.z = z
   result.w = w
 
-proc `$`*(v: vec2): string = "($1, $2)".format(v.x, v.y)
-proc `$`*(v: vec3): string = "($1, $2, $3)".format(v.x, v.y, v.z)
-proc `$`*(v: vec4): string = "($1, $2, $3, $4)".format(v.x, v.y, v.z, v.w)
+proc vec*(v: vec3, w: float32): vec4 {.inline} = 
+  result.x = v.x
+  result.y = v.y
+  result.z = v.z
+  result.w = w
+
+proc mat*(c1, c2, c3, c4: vec4): mat4 = 
+  result[0..3] = c1
+  result[4..7] = c2
+  result[8..11] = c3
+  result[12..15] = c4
+
+proc mat_from_rows*(r1, r2, r3, r4: vec4): mat4 = 
+  mat(
+    vec(r1.x, r2.x, r3.x, r4.x),
+    vec(r1.y, r2.y, r3.y, r4.y),
+    vec(r1.z, r2.z, r3.z, r4.z),
+    vec(r1.w, r2.w, r3.w, r4.w),
+  )
 
 const
   xaxis*   = vec(1.0, 0.0, 0.0)
   yaxis*   = vec(0.0, 1.0, 0.0)
   zaxis*   = vec(0.0, 0.0, 1.0)
+  negzaxis*   = vec(0.0, 0.0, -1.0)
   zeroes2* = vec(0.0, 0.0)
   zeroes3* = vec(0.0, 0.0, 0.0)
   zeroes4* = vec(0.0, 0.0, 0.0, 0.0)

@@ -13,8 +13,8 @@ type
     CopyRead          = GL_COPY_READ_BUFFER,          # 0x8F36
     CopyWrite         = GL_COPY_WRITE_BUFFER,         # 0x8F37
     Draw              = GL_DRAW_INDIRECT_BUFFER,      # 0x8F3F
-    ShaderStorage     = GL_SHADER_STORAGE_BUFFER,     # 0x90D2    
-    Dispatch          = GL_DISPATCH_INDIRECT_BUFFER,  # 0x90EE    
+    ShaderStorage     = GL_SHADER_STORAGE_BUFFER,     # 0x90D2
+    Dispatch          = GL_DISPATCH_INDIRECT_BUFFER,  # 0x90EE
     Query             = GL_QUERY_BUFFER,              # 0x9192
     Counter           = GL_ATOMIC_COUNTER_BUFFER,     # 0x92C0
 
@@ -37,21 +37,26 @@ type
     id: GLuint
 
 
-proc use*(v: VAO) = 
-  glBindVertexArray(v.id)
+var vaoState: int
 
-proc use*(b: Buffer) = 
+
+proc use*(v: VAO) =
+  if v.id.int != vaoState:
+    glBindVertexArray(v.id)
+    vaoState = v.id.int
+
+proc use*(b: Buffer) =
   glBindBuffer(ord b.target, b.id)
 
-proc delete*(b: VAO) = 
+proc delete*(b: VAO) =
   var id = b.id
   glDeleteVertexArrays(1, addr id)
 
-proc delete*(b: Buffer) = 
+proc delete*(b: Buffer) =
   var id = b.id
   glDeleteBuffers(1, addr id)
 
-proc createVAO*(): VAO = 
+proc createVAO*(): VAO =
   result = VAO()
   glGenVertexArrays(1, addr result.id)
   glBindVertexArray(result.id)
@@ -60,22 +65,22 @@ proc createVAO*(): VAO =
 proc emptyBuffer*(target: BufferTarget): Buffer = Buffer(target: target)
 
 
-proc createBuffer*[T](data: var openarray[T], target: BufferTarget): Buffer = 
+proc createBuffer*[T](data: var openarray[T], target: BufferTarget): Buffer =
   let u: GLenum = ord BufferUsage.StaticDraw
-  
+
   result = Buffer(target: target)
 
   glGenBuffers(1, addr result.id)
   result.use()
-  
+
   let size = len(data) * sizeof(data[0])
-  
+
   if size > 0:
     glBufferData(ord result.target, size.GLsizeiptr, addr data[0], u)
 
 
 proc createVBO*[T](data: var openarray[T]): Buffer =
   result = createBuffer(data, BufferTarget.Array)
-  
-proc createEBO*[T](data: var openarray[T]): Buffer = 
+
+proc createEBO*[T](data: var openarray[T]): Buffer =
   result = createBuffer(data, BufferTarget.ElementArray)

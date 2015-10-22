@@ -23,6 +23,12 @@ float calcShadow(vec4 fpLS, float bias) {
     vec3 posfLP = fpLS.xyz / fpLS.w;
     posfLP = posfLP * 0.5 + 0.5;
     posfLP.z = posfLP.z - bias;
+    if (posfLP.x > 1.0 || posfLP.y > 1.0) {
+    	return 1.0;
+    }
+    if (posfLP.x < 0.0 || posfLP.y < 0.0) {
+    	return 1.0;
+    }
 
     return texture(shadowMap, posfLP);
 }
