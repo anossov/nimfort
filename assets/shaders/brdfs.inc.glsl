@@ -1,4 +1,4 @@
-float F_Schlick(float f0, float VdotH) {
+vec3 F_Schlick(vec3 f0, float VdotH) {
     return f0 + (1.0 - f0) * pow(1.0 - VdotH, 5.0);
 }
 
@@ -30,6 +30,9 @@ float G_Cook_Torrance(float NdotL, float NdotV, float NdotH, float VdotH) {
     return min(1.0, min(x * NdotV, x * NdotL));
 }
 
+float V_Kelemen(float LdotH) {
+    return 1.0 / (LdotH * LdotH);
+}
 
 float D_Beckmann(float NdotH, float alpha) {
     if (alpha < 1e-3) {
@@ -66,20 +69,18 @@ vec3 Shade_Cook_Torrance(vec3 l, vec3 p, vec3 n, vec3 albedo, float metalness, f
         return vec3(0.0);
     }
 
-    float f0 = mix(0.03, albedo.r, metalness);
+    vec3 f0 = mix(vec3(0.03), albedo, metalness);
 
     float NdotV = abs(dot(n, v)) + 1e-5;
     float LdotH = clamp(dot(l, h), 0.0, 1.0);
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
-    vec3 diffuse = albedo * NdotL;
-
-    float F = F_Schlick(f0, VdotH);
+    vec3 F = F_Schlick(f0, VdotH);
     float G = G_Smith_GGX(NdotL, NdotV, roughness);
     float D = D_GGX_Trowbridge_Reitz(NdotH, roughness);
 
-    vec3 specular = vec3(D * F * G / (4 * NdotL * NdotV));
+    vec3 specular = vec3(D * G / (4 * NdotL * NdotV));
+    vec3 diffuse = albedo;
 
-    //outColor = vec4(lightColor * shadow * (specular + (1 - F)*diffuse), 1.0);
-    return lightColor * (specular + diffuse) * NdotL;
+    return lightColor * mix(diffuse, specular, F) * NdotL;
 }
