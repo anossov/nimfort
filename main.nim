@@ -2,7 +2,7 @@ import tables
 import logging
 import strutils
 
-addHandler(newConsoleLogger(fmtStr=verboseFmtStr))
+addHandler(newFileLogger("debug.log", fmtStr=verboseFmtStr, mode=fmWrite))
 
 import systems/windowing
 import systems/ecs
@@ -21,7 +21,7 @@ when defined(profiler) or defined(memProfiler):
   import nimprof
 
 
-proc startup*() = 
+proc startup*() =
   initWindow()
   initMessageSystem()
   initEntityManager()
@@ -34,15 +34,16 @@ proc startup*() =
   initWorld()
 
 
-proc gameloop*() = 
+proc gameloop*() =
   var quit = newListener()
-  Messages.listen("quit", quit)
+  quit.listen("quit")
   info("Loading complete in $1s", formatFloat(Time.now(), precision=3))
   while true:
-    if len(quit.queue) > 0:
+    if quit.hasMessages():
       break
 
     updateTime()
+    updateInput()
     updateWorld()
     updateTransforms()
     updateCamera()

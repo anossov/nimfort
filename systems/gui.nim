@@ -53,16 +53,15 @@ proc initGUI*()=
   )
 
   UI.newText("frametime", newTransform(p=vec(30.0, Screen.size.y, 0.0), s=0.5))
-  Messages.listen("frametime", UI.listener)
+  UI.listener.listen("frametime")
 
   info("UI ok")
 
 
 proc updateUi*() =
-  for e in UI.listener.queue:
+  for e in UI.listener.getMessages():
     case e:
     of "frametime":
       UI.texts.mget("frametime").update($Time.mksPerFrame & " μs/frame (" & $((1000000 / Time.mksPerFrame).int) & " fps)")
     else:
       discard
-  UI.listener.queue.setLen(0)

@@ -6,6 +6,7 @@ layout (location = 0) out vec4 outColor;
 
 
 uniform sampler2D hdr;
+uniform float exposure;
 
 const float A = 0.15;
 const float B = 0.50;
@@ -24,9 +25,9 @@ vec3 Uncharted2Tonemap(vec3 x)
 void main() {
 	vec3 color = texture(hdr, uv).rgb;
 
-	float exposure = 5;
+	float E = exposure;
 
-	color = Uncharted2Tonemap(exposure * color);
+	color = Uncharted2Tonemap(E * color);
 	vec3 scale = 1.0 / Uncharted2Tonemap(vec3(W));
 	color = color * scale;
 

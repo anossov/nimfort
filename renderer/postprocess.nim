@@ -1,5 +1,6 @@
 import logging
 import systems/resources
+import systems/messaging
 import gl/framebuffer
 import gl/shader
 import gl/texture
@@ -14,6 +15,9 @@ type
     fb_in*: Framebuffer
     hdr: Texture
     shader: Program
+    listener: Listener
+    exposure: float
+
 
   Bloom* = ref object
     fb_in*: Framebuffer
@@ -40,18 +44,33 @@ proc newTonemapping*(): Tonemapping =
   tm.use()
   tm.getUniform("hdr").set(0)
 
+  var listener = newListener()
+  listener.listen("exposure-up")
+  listener.listen("exposure-down")
+
   return Tonemapping(
     fb_in: fb,
     hdr: t,
     shader: tm,
+    listener: listener,
+    exposure: 5,
   )
 
-proc perform*(pass: Tonemapping, fb_out: var Framebuffer) =
+proc perform*(pass: var Tonemapping, fb_out: var Framebuffer) =
+  for m in pass.listener.getMessages():
+    case m:
+      of "exposure-up": pass.exposure += 1.0
+      of "exposure-down": pass.exposure -= 1.0
+      else: discard
+  if pass.exposure < 1.0:
+    pass.exposure = 1.0
+
   glViewport(0, 0, Screen.width, Screen.height)
   fb_out.use(FramebufferTarget.Both)
   glClear(GL_COLOR_BUFFER_BIT)
   glDisable(GL_DEPTH_TEST)
   pass.shader.use()
+  pass.shader.getUniform("exposure").set(pass.exposure)
   pass.hdr.use(0)
   Screen.quad.render()
 

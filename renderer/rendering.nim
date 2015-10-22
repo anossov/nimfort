@@ -26,6 +26,7 @@ type
     tonemapping: Tonemapping
     smaa: SMAA
     listener: Listener
+    wire: bool
 
 
 var Renderer*: RenderSystem
@@ -51,8 +52,8 @@ proc initRenderSystem*() =
   glEnable(GL_FRAMEBUFFER_SRGB)
 
   Renderer.listener = newListener()
-  Messages.listen("wire-on", Renderer.listener)
-  Messages.listen("wire-off", Renderer.listener)
+  Renderer.listener.listen("wire-on")
+  Renderer.listener.listen("wire-off")
 
   info("Renderer ok: OpenGL v. $1", cast[cstring](glGetString(GL_VERSION)))
 
@@ -65,15 +66,16 @@ proc render*() =
   var r = Renderer
   var dfb = Framebuffer(target: FramebufferTarget.Both, id: 0)
 
-  for m in r.listener.queue:
+  for m in r.listener.getMessages():
     case m:
-    of "wire-on":
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-    of "wire-off":
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-    else:
-      discard
+    of "wire-on": r.wire = true
+    of "wire-off": r.wire = false
+    else: discard
 
+  if r.wire:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+  else:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
   r.geometryPass.perform()
 
   for light in mitems(LightStore().data):

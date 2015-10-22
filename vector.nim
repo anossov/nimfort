@@ -4,11 +4,11 @@ import math
 import strutils
 
 type
-  vec2* = array[2, float32]
-  vec3* = array[3, float32]
-  vec4* = array[4, float32]
-  mat3* = array[9, float32]
-  mat4* = array[16, float32]
+  vec2* {.bycopy pure.} = array[2, float32]
+  vec3* {.bycopy pure.} = array[3, float32]
+  vec4* {.bycopy pure.} = array[4, float32]
+  mat3* {.bycopy pure.} = array[9, float32]
+  mat4* {.bycopy pure.} = array[16, float32]
 
 template x*(v: vec2 | vec3 | vec4): float32 = v[0]
 template y*(v: vec2 | vec3 | vec4): float32 = v[1]
@@ -26,34 +26,34 @@ proc `$`*(v: vec2): string = "($1, $2)".format(v.x, v.y)
 proc `$`*(v: vec3): string = "($1, $2, $3)".format(v.x, v.y, v.z)
 proc `$`*(v: vec4): string = "($1, $2, $3, $4)".format(v.x, v.y, v.z, v.w)
 
-proc vec*(x, y: float32): vec2 {.inline.} = 
+proc vec*(x, y: float32): vec2 {.inline.} =
   result.x = x
   result.y = y
 
-proc vec*(x, y, z: float32): vec3 {.inline.} = 
+proc vec*(x, y, z: float32): vec3 {.inline.} =
   result.x = x
   result.y = y
   result.z = z
 
-proc vec*(x, y, z, w: float32): vec4 {.inline.} = 
+proc vec*(x, y, z, w: float32): vec4 {.inline.} =
   result.x = x
   result.y = y
   result.z = z
   result.w = w
 
-proc vec*(v: vec3, w: float32): vec4 {.inline} = 
+proc vec*(v: vec3, w: float32): vec4 {.inline} =
   result.x = v.x
   result.y = v.y
   result.z = v.z
   result.w = w
 
-proc mat*(c1, c2, c3, c4: vec4): mat4 = 
+proc mat*(c1, c2, c3, c4: vec4): mat4 =
   result[0..3] = c1
   result[4..7] = c2
   result[8..11] = c3
   result[12..15] = c4
 
-proc mat_from_rows*(r1, r2, r3, r4: vec4): mat4 = 
+proc mat_from_rows*(r1, r2, r3, r4: vec4): mat4 =
   mat(
     vec(r1.x, r2.x, r3.x, r4.x),
     vec(r1.y, r2.y, r3.y, r4.y),
@@ -185,17 +185,17 @@ proc `*`*(a: mat4, b: mat4): mat4 =
   result[1]  = a[1] *  b[0] + a[5] *  b[1] +  a[9] *  b[2] + a[13] *  b[3]
   result[2]  = a[2] *  b[0] + a[6] *  b[1] + a[10] *  b[2] + a[14] *  b[3]
   result[3]  = a[3] *  b[0] + a[7] *  b[1] + a[11] *  b[2] + a[15] *  b[3]
-  
+
   result[4]  = a[0] *  b[4] + a[4] *  b[5] +  a[8] *  b[6] + a[12] *  b[7]
   result[5]  = a[1] *  b[4] + a[5] *  b[5] +  a[9] *  b[6] + a[13] *  b[7]
   result[6]  = a[2] *  b[4] + a[6] *  b[5] + a[10] *  b[6] + a[14] *  b[7]
   result[7]  = a[3] *  b[4] + a[7] *  b[5] + a[11] *  b[6] + a[15] *  b[7]
-  
+
   result[8]  = a[0] *  b[8] + a[4] *  b[9] +  a[8] * b[10] + a[12] * b[11]
   result[9]  = a[1] *  b[8] + a[5] *  b[9] +  a[9] * b[10] + a[13] * b[11]
   result[10] = a[2] *  b[8] + a[6] *  b[9] + a[10] * b[10] + a[14] * b[11]
   result[11] = a[3] *  b[8] + a[7] *  b[9] + a[11] * b[10] + a[15] * b[11]
-  
+
   result[12] = a[0] * b[12] + a[4] * b[13] +  a[8] * b[14] + a[12] * b[15]
   result[13] = a[1] * b[12] + a[5] * b[13] +  a[9] * b[14] + a[13] * b[15]
   result[14] = a[2] * b[12] + a[6] * b[13] + a[10] * b[14] + a[14] * b[15]
@@ -208,7 +208,7 @@ proc rotate*(axis: vec3, angle: float32): mat4 =
     s = sin(angle)
     ic = 1.0 - c
     a = axis.normalize
-  
+
   result[0] = c + a.x * a.x * ic
   result[4] = a.x * a.y * ic - a.z * s
   result[8] = a.x * a.z * ic + a.y * s
@@ -221,7 +221,7 @@ proc rotate*(axis: vec3, angle: float32): mat4 =
   result[15] = 1.0
 
 
-proc translate*(v: vec3): mat4 = 
+proc translate*(v: vec3): mat4 =
   result[0] = 1.0
   result[5] = 1.0
   result[10] = 1.0
@@ -231,13 +231,13 @@ proc translate*(v: vec3): mat4 =
   result[15] = 1.0
 
 
-proc scale*(s: float32): mat4 = 
+proc scale*(s: float32): mat4 =
   result[0] = s
   result[5] = s
   result[10] = s
   result[15] = 1.0
 
-proc scale*(s: vec3): mat4 = 
+proc scale*(s: vec3): mat4 =
   result[0] = s.x
   result[5] = s.y
   result[10] = s.z

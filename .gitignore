@@ -51,3 +51,4 @@ main*.trace
 trace.bat
 nf.sublime-project
 nf.sublime-workspace
+debug.log
