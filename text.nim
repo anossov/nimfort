@@ -67,7 +67,7 @@ proc loadFont*(path: string): Font =
     of "page":
       let image = loadPNG32(splitPath(path).head / data["file"][1..^2])
       var texture = newTexture()
-      texture.image2d(image.data, image.width.int32, image.height.int32)
+      texture.image2d(GL_RGBA8, image.width.int32, image.height.int32, data=image.data)
       texture.generateMipmap()
       texture.filter(true)
       result.textures.add(texture)

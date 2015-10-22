@@ -31,17 +31,9 @@ type
 proc newGeometryPass*(): GeometryPass =
   var p, n, a: Texture
   var b = newFramebuffer()
-  p = newTexture()
-  p.image2d(nil, Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, GL_RGBA16F)
-  p.filter(false)
-
-  n = newTexture()
-  n.image2d(nil, Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, GL_RGBA16F)
-  n.filter(false)
-
-  a = newTexture()
-  a.image2d(nil, Screen.width, Screen.height, TextureFormat.RGBA, internalformat=GL_RGBA)
-  a.filter(false)
+  p = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, false)
+  n = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, false)
+  a = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Ubyte, false)
 
   b.attach(p)
   b.attach(n)

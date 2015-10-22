@@ -31,41 +31,27 @@ type
     t_search: Texture
 
 proc newSMAA*(): SMAA =
-  var in_tex = newTexture()
-  in_tex.image2d(nil, Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
-  in_tex.filter(true)
-
+  var in_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
   var in_fbo = newFramebuffer()
   in_fbo.attach(in_tex)
   debug("SMAA input: $1", in_fbo.check())
 
-  var edge_tex = newTexture()
-
-  edge_tex.image2d(nil, Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, GL_RGBA)
-  edge_tex.filter(true)
-  edge_tex.clamp()
-
-  var blend_tex = newTexture()
-  blend_tex.image2d(nil, Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, GL_RGBA8)
-  blend_tex.filter(true)
-  blend_tex.clamp()
+  var edge_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float)
+  var blend_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float)
 
   var smaa_area = readFile("assets/textures/smaa_area.raw")
   var area_tex = newTexture()
-  area_tex.image2d(smaa_area, AREATEX_WIDTH, AREATEX_HEIGHT, TextureFormat.RG, PixelType.Ubyte, GL_RG8)
+  area_tex.image2d(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, TextureFormat.RG, PixelType.Ubyte, smaa_area)
   area_tex.filter(true)
   area_tex.clamp()
 
   var smaa_search = readFile("assets/textures/smaa_search.raw")
   var search_tex = newTexture()
-  search_tex.image2d(smaa_search, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, TextureFormat.Red, PixelType.Ubyte, GL_RED)
+  search_tex.image2d(GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, TextureFormat.Red, PixelType.Ubyte, smaa_search)
   search_tex.filter(false)
   search_tex.clamp()
 
-  var stencil = newTexture()
-  stencil.image2d(nil, Screen.width, Screen.height, TextureFormat.DepthStencil, PixelType.Uint24_8, GL_DEPTH24_STENCIL8)
-  stencil.filter(false)
-  stencil.clamp()
+  var stencil = newTexture2d(Screen.width, Screen.height, TextureFormat.DepthStencil, PixelType.Uint24_8, false)
 
 
   var edge_fbo = newFramebuffer()
@@ -146,7 +132,7 @@ proc perform*(pass: SMAA, fb_out: var Framebuffer) =
   Screen.quad.render()
 
   fb_out.use()
-  glClear(GL_COLOR_BUFFER_BIT)
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT or GL_STENCIL_BUFFER_BIT)
   glDisable(GL_STENCIL_TEST)
 
   pass.s_nh.use()

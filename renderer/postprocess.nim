@@ -30,11 +30,7 @@ type
 
 proc newTonemapping*(): Tonemapping =
   var fb = newFramebuffer()
-  var t = newTexture()
-
-  t.image2d(nil, Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
-  t.filter(true)
-
+  var t = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
   fb.attach(t)
   fb.attachDepthStencilRBO(Screen.width, Screen.height)
 
@@ -62,31 +58,20 @@ proc perform*(pass: Tonemapping, fb_out: var Framebuffer) =
 
 proc newBloom*(): Bloom =
   var fb_in = newFramebuffer()
-  var t_in = newTexture()
-  t_in.image2d(nil, Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
-  t_in.filter(true)
-  t_in.clamp()
-
+  var t_in = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
   fb_in.attach(t_in)
 
-  let size = 1024'i32
-
   var fb_bright = newFramebuffer()
-  var t_bright = newTexture()
-  t_bright.image2d(nil, Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
-  t_bright.filter(true)
-  t_bright.clamp()
-
+  var t_bright = newTexture2d(Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float)
   fb_bright.attach(t_bright)
 
   var fb_pingpong = [newFramebuffer(), newFramebuffer()]
-  var t_pingpong = [newTexture(), newTexture()]
+  var t_pingpong = [
+    newTexture2d(Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float),
+    newTexture2d(Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float),
+  ]
   for i in 0..1:
     fb_pingpong[i].use()
-    t_pingpong[i].use(0)
-    t_pingpong[i].image2d(nil, Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float, GL_RGB16F)
-    t_pingpong[i].clamp()
-    t_pingpong[i].filter(true)
     fb_pingpong[i].attach(t_pingpong[i])
 
 

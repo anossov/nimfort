@@ -43,12 +43,11 @@ proc initRenderSystem*() =
     bloom: newBloom(),
     tonemapping: newTonemapping(),
     smaa: newSMAA(),
-    smaaon: true,
   )
 
-  glEnable(GL_MULTISAMPLE)
   glClearColor(0.0, 0.0, 0.0, 0.0)
   glEnable(GL_CULL_FACE)
+  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
   glEnable(GL_FRAMEBUFFER_SRGB)
 
   Renderer.listener = newListener()

@@ -28,9 +28,7 @@ proc newShadowMap*(): ShadowMap =
 
 
 proc createShadowMap(sm: var ShadowMap, light: var Light) =
-  var t = newTexture()
-  t.image2d(nil, shadowMapSize, shadowMapSize, TextureFormat.Depth, PixelType.Float, GL_DEPTH_COMPONENT)
-  t.filter(true)
+  var t = newTexture2d(shadowMapSize, shadowMapSize, TextureFormat.Depth, PixelType.Float)
   t.clamp(border=true, vec(1, 1, 1, 1))
   glTexParameteri(ord t.target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE)
 

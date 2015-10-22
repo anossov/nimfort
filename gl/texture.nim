@@ -66,7 +66,7 @@ proc use*(t: Texture, unit: int) =
   glBindTexture(ord t.target, t.id)
 
 
-proc image2d*(t: var Texture, data: string, w: int32, h: int32, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, internalformat=GL_RGBA) =
+proc image2d*(t: var Texture, internalformat: int32, w: int32, h: int32, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, data: string) =
   glTexImage2D(ord t.target, 0, internalformat.GLint, w, h, 0, ord format, ord pixeltype, if data == nil: nil else: cstring(data))
 
 
@@ -105,3 +105,26 @@ proc newTexture*(target=TextureTarget.t2D): Texture =
 
 proc emptyTexture*(t=TextureTarget.t2d): Texture = Texture(target: t, id: 0)
 proc isEmpty*(t: Texture): bool = t.id.int == 0
+
+
+proc newTexture2d*(w, h: int32, f: TextureFormat, t: PixelType, filter=true): Texture =
+  var tex = newTexture()
+  var internalFormat: GLint
+
+  if f == TextureFormat.RGB and t == PixelType.Float:
+    internalformat = GL_RGB16F
+  elif f == TextureFormat.RGBA and t == PixelType.Float:
+    internalformat = GL_RGBA16F
+  elif f == TextureFormat.RGBA and t == PixelType.Ubyte:
+    internalformat = GL_RGBA8
+  elif f == TextureFormat.Depth and t == PixelType.Float:
+    internalformat = GL_DEPTH_COMPONENT
+  elif f == TextureFormat.DepthStencil and t == PixelType.Uint24_8:
+    internalformat = GL_DEPTH24_STENCIL8
+  else:
+    assert true, "Unsupported format"
+
+  tex.image2d(internalformat, w, h, f, t, nil)
+  tex.filter(filter)
+  tex.clamp()
+  return tex

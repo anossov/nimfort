@@ -53,7 +53,7 @@ proc getTexture*(r: ResourceManager, name: string, srgb=false): Texture =
   let data = flipimage(image.data, image.width, image.height)
 
   result = newTexture()
-  result.image2d(data, image.width.int32, image.height.int32, internalformat=f)
+  result.image2d(f.int32, image.width.int32, image.height.int32, TextureFormat.RGBA, PixelType.Ubyte, data=data)
   result.generateMipmap()
   result.filter(true)
 
