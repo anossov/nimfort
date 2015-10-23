@@ -19,7 +19,7 @@ type
 proc newShadowMap*(): ShadowMap =
   var
     b = newFramebuffer()
-    s = Resources.getShader("shadowmap")
+    s = getShader("shadowmap")
 
   glDrawBuffer(GL_NONE)
   glReadBuffer(GL_NONE)

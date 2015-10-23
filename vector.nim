@@ -156,6 +156,12 @@ proc `*`*(a: vec3, b: float32): vec3 =
   result.y = a.y * b
   result.z = a.z * b
 
+proc `*`*(a: vec4, b: float32): vec4 =
+  result.x = a.x * b
+  result.y = a.y * b
+  result.z = a.z * b
+  result.w = a.w * b
+
 
 proc `/`*(a: vec3, b: float32): vec3 =
   result.x = a.x / b

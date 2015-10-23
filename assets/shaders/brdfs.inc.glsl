@@ -55,6 +55,21 @@ float D_Blinn(float NdotH, float alpha) {
     return pow(NdotH, (2.0/a2 - 2.0)) / (PI * a2);
 }
 
+float OrenNayarFast(vec3 v, vec3 l, vec3 n, float NdotV, float NdotL, float alpha) {
+    float gamma   = dot(v - n * NdotV, l - n * NdotL);
+    float rough_sq = alpha * alpha;
+
+    float A = 1.0f - 0.5f * (rough_sq / (rough_sq + 0.57f));
+    float B = 0.45f * (rough_sq / (rough_sq + 0.09));
+
+    float a = max(acos(NdotV), acos(NdotL));
+    float b = min(acos(NdotV), acos(NdotL));
+
+    float C = sin(a) * tan(b);
+
+    return (A + B * max(0.0f, gamma) * C) / PI;
+}
+
 
 vec3 Shade_Cook_Torrance(vec3 l, vec3 p, vec3 n, vec3 albedo, float metalness, float roughness) {
     float NdotL = clamp(dot(n, l), 0.0, 1.0);
@@ -79,8 +94,9 @@ vec3 Shade_Cook_Torrance(vec3 l, vec3 p, vec3 n, vec3 albedo, float metalness, f
     float G = G_Smith_GGX(NdotL, NdotV, roughness);
     float D = D_GGX_Trowbridge_Reitz(NdotH, roughness);
 
-    vec3 specular = vec3(D * G / (4 * NdotL * NdotV));
-    vec3 diffuse = albedo;
+    vec3 specular = F * D * G / (4 * NdotL * NdotV);
+    vec3 diffuse = albedo * (1.0 - metalness) / PI;
+    //vec3 diffuse = albedo * OrenNayarFast(v, l, n, NdotV, NdotL, roughness);
 
-    return lightColor * mix(diffuse, specular, F) * NdotL;
+    return lightColor * (diffuse + specular) * NdotL;
 }

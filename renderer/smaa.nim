@@ -63,26 +63,26 @@ proc newSMAA*(): SMAA =
   blend_fbo.attach(stencil, depth=true, stencil=true)
 
 
-  var edge_shader = Resources.getShader("smaa_edge", ["smaa_head"], ["smaa_head"])
+  var edge_shader = getShader("smaa_edge", ["smaa_head"], ["smaa_head"])
   edge_shader.use()
   edge_shader.getUniform("albedo_tex").set(0)
   edge_shader.getUniform("SMAA_RT_METRICS").set(vec(Screen.pixelSize.x, Screen.pixelSize.y, Screen.size.x, Screen.size.y))
 
-  var blend_shader = Resources.getShader("smaa_blend", ["smaa_head"], ["smaa_head"])
+  var blend_shader = getShader("smaa_blend", ["smaa_head"], ["smaa_head"])
   blend_shader.use()
   blend_shader.getUniform("edge_tex").set(0)
   blend_shader.getUniform("area_tex").set(1)
   blend_shader.getUniform("search_tex").set(2)
   blend_shader.getUniform("SMAA_RT_METRICS").set(vec(Screen.pixelSize.x, Screen.pixelSize.y, Screen.size.x, Screen.size.y))
 
-  var nh_shader = Resources.getShader("smaa_neighborhood", ["smaa_head"], ["smaa_head"])
+  var nh_shader = getShader("smaa_neighborhood", ["smaa_head"], ["smaa_head"])
   nh_shader.use()
   nh_shader.getUniform("albedo_tex").set(0)
   nh_shader.getUniform("blend_tex").set(1)
   nh_shader.getUniform("albedo_tex2").set(2)
   nh_shader.getUniform("SMAA_RT_METRICS").set(vec(Screen.pixelSize.x, Screen.pixelSize.y, Screen.size.x, Screen.size.y))
 
-  var debug = Resources.getShader("debug")
+  var debug = getShader("debug")
 
   return SMAA(
     fb_edge: edge_fbo,

@@ -40,7 +40,7 @@ proc newTonemapping*(): Tonemapping =
 
   debug("HDR buffer: $1", fb.check())
 
-  var tm = Resources.getShader("tonemap")
+  var tm = getShader("tonemap")
   tm.use()
   tm.getUniform("hdr").set(0)
 
@@ -94,18 +94,18 @@ proc newBloom*(): Bloom =
     fb_pingpong[i].attach(t_pingpong[i])
 
 
-  var s_brightpass = Resources.getShader("brightpass")
+  var s_brightpass = getShader("brightpass")
   s_brightpass.use()
-  s_brightpass.getUniform("threshold").set(15.0)
+  s_brightpass.getUniform("threshold").set(25.0)
 
-  var s_hblur = Resources.getShader("gaussian_h")
+  var s_hblur = getShader("gaussian_h")
   s_hblur.use()
   s_hblur.getUniform("pixelSize").set(vec(2.0/windowWidth, 2.0/windowHeight))
-  var s_vblur = Resources.getShader("gaussian_v")
+  var s_vblur = getShader("gaussian_v")
   s_vblur.use()
   s_vblur.getUniform("pixelSize").set(vec(2.0/windowWidth, 2.0/windowHeight))
 
-  var s_finalize = Resources.getShader("bloom")
+  var s_finalize = getShader("bloom")
   s_finalize.use()
   s_finalize.getUniform("color").set(0)
   s_finalize.getUniform("bloom").set(1)

@@ -48,7 +48,7 @@ proc update(t: var Text, s: string) =
 proc initGUI*()=
   UI = GUI(
     listener: newListener(),
-    font: Resources.getFont("liberationsans"),
+    font: getFont("liberationsans"),
     texts: initTable[string, Text]()
   )
 

@@ -13,7 +13,7 @@ type
     shader: Program
 
 proc newTextRenderer*(): TextRenderer =
-  return TextRenderer(shader: Resources.getShader("text"))
+  return TextRenderer(shader: getShader("text"))
 
 
 proc render*(r: var TextRenderer, proj: mat4) =

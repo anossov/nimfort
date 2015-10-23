@@ -42,7 +42,7 @@ proc newGeometryPass*(): GeometryPass =
 
   debug("GBuffer: $1", b.check())
 
-  var s = Resources.getShader("gbuffer")
+  var s = getShader("gbuffer")
   s.use()
   s.getUniform("albedo").set(0)
   s.getUniform("normal").set(1)
@@ -61,11 +61,11 @@ proc newGeometryPass*(): GeometryPass =
 
 proc newLightingPass*(): LightingPass =
   let inc = ["dr_head", "brdfs"]
-  var p = Resources.getShader("dr_point", fs_prepend=inc)
-  var d = Resources.getShader("dr_directional", fs_prepend=inc)
-  var a = Resources.getShader("dr_ambient", fs_prepend=inc)
-  var s = Resources.getShader("dr_spot", fs_prepend=inc)
-  var e = Resources.getShader("dr_emission")
+  var p = getShader("dr_point", fs_prepend=inc)
+  var d = getShader("dr_directional", fs_prepend=inc)
+  var a = getShader("dr_ambient", fs_prepend=inc)
+  var s = getShader("dr_spot", fs_prepend=inc)
+  var e = getShader("dr_emission")
   var shaders = [a, p, d, s]
   for shader in mitems(shaders):
     shader.use()
@@ -82,7 +82,7 @@ proc newLightingPass*(): LightingPass =
   return LightingPass(
     shaders: shaders,
     emission: e,
-    ball: Resources.getMesh("lightball"),
+    ball: getMesh("lightball"),
   )
 
 

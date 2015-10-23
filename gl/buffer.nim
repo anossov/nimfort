@@ -3,6 +3,7 @@ import logging
 
 type
   BufferTarget* {.pure.} = enum
+    btUnitialized = 0
     Array             = GL_ARRAY_BUFFER,              # 0x8892
     ElementArray      = GL_ELEMENT_ARRAY_BUFFER,      # 0x8893
     PixelPack         = GL_PIXEL_PACK_BUFFER,         # 0x88EB

@@ -29,5 +29,4 @@ void main() {
     }
 
     outColor = vec4(color * shadow * intensity, 1.0);
-
 }

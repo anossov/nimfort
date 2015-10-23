@@ -2,6 +2,7 @@ import opengl
 
 type
   TextureTarget* {.pure.} = enum
+    tUnitialized = 0
     t1D                 = GL_TEXTURE_1D,                   # 0x0DE0
     t2D                 = GL_TEXTURE_2D,                   # 0x0DE1
     t3D                 = GL_TEXTURE_3D,                   # 0x806F
