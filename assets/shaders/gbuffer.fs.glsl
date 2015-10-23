@@ -25,7 +25,7 @@ void main()
         n = normalize(n * 2.0 - 1.0);
         gNormalMetalness.rgb = normalize(TBN * n);
     } else {
-        gNormalMetalness.rgb = TBN[2];
+        gNormalMetalness.rgb = normalize(TBN[2]);
     }
     gNormalMetalness.a = texture(metalness, uvf).r;
 

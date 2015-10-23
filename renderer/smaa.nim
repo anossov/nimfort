@@ -23,9 +23,9 @@ type
     s_edge: Program
     s_blend: Program
     s_nh: Program
-    debug: Program
+
     t_in: Texture
-    t_edge: Texture
+    t_edge*: Texture
     t_blend: Texture
     t_area: Texture
     t_search: Texture
@@ -82,8 +82,6 @@ proc newSMAA*(): SMAA =
   nh_shader.getUniform("albedo_tex2").set(2)
   nh_shader.getUniform("SMAA_RT_METRICS").set(vec(Screen.pixelSize.x, Screen.pixelSize.y, Screen.size.x, Screen.size.y))
 
-  var debug = getShader("debug")
-
   return SMAA(
     fb_edge: edge_fbo,
     fb_blend: blend_fbo,
@@ -96,7 +94,6 @@ proc newSMAA*(): SMAA =
     t_area: area_tex,
     t_search: search_tex,
     t_in: in_tex,
-    debug: debug,
   )
 
 

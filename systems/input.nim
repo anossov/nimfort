@@ -3,7 +3,7 @@ import messaging
 import strutils
 import glfw/wrapper as glfw
 import vector
-import tables
+import strtabs
 import config
 
 import systems/windowing
@@ -13,7 +13,7 @@ type
   InputSystem* = ref object
     cursorPos*: vec2
     listener: Listener
-    binds: Table[string, tuple[e: string, g: string]]
+    binds: StringTableRef
 
 var Input*: InputSystem
 
@@ -169,7 +169,7 @@ proc keyEvent(i: InputSystem; key: int, scancode: int, action: int, mods: int) =
   else:       return
   parts.add(a)
 
-  Messages.emit(parts.join(sep="-"), "input")
+  Messages.emit("input." & parts.join(sep="-"))
 
 proc cursorCallback(win: GLFWwindow; x, y: cdouble) {.cdecl.} =
   Input.cursorMoved(x, y)
@@ -177,16 +177,16 @@ proc cursorCallback(win: GLFWwindow; x, y: cdouble) {.cdecl.} =
 proc keyCallback(win: GLFWwindow; key, scancode, action, mods: cint) {.cdecl.} =
   Input.keyEvent(key, scancode, action, mods)
 
-proc mapInput*(input: string, event: string, group="") =
-  Input.binds[input] = (event, group)
+proc mapInput*(input: string, event: string) =
+  Input.binds[input] = event
 
 proc initInputSystem*() =
   Input = InputSystem(
     listener: newListener(),
-    binds: initTable[string, tuple[e: string, g: string]](),
+    binds: newStringTable(modeCaseSensitive),
   )
 
-  Input.listener.listenGroup("input")
+  Input.listener.listen("input")
 
   discard glfw.setCursorPosCallback(Window, cursorCallback)
   discard glfw.setKeyCallback(Window, keyCallback)
@@ -199,6 +199,6 @@ proc initInputSystem*() =
 proc updateInput*() =
   for m in Input.listener.getMessages():
     if Input.binds.hasKey(m):
-      Messages.emit(Input.binds[m].e, Input.binds[m].g)
+      Messages.emit(Input.binds[m])
 
 

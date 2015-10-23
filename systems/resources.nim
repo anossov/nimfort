@@ -81,7 +81,6 @@ proc getColorTexture*(color: vec4): Texture =
   if not Resources.textures.hasKey(colorName):
     var t = newTexture()
     let data = c.x.int.chr & c.y.int.chr & c.z.int.chr & c.w.int.chr
-    info(data)
     t.image2d(GL_RGBA, 1, 1, TextureFormat.RGBA, PixelType.Ubyte, data=data)
     t.clamp()
     t.filter(false)

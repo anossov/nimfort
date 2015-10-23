@@ -75,10 +75,41 @@ proc initWorld*() =
       ball,
       getColorTexture(vec(1.00, 0.71, 0.29, 1.0)),
       emptyTexture(),
-      getColorTexture(vec(0.08, 0.08, 0.08, 1.0)),
+      getColorTexture(vec(0.1, 0.1, 0.1, 1.0)),
       getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
     ))
     .attach(newTransform(p=vec(0, 3, 0)))
+
+  TheWorld.add("b")
+    .attach(newModel(
+      ball,
+      getColorTexture(vec(0.95, 0.64, 0.54, 1.0)),
+      emptyTexture(),
+      getColorTexture(vec(0.1, 0.1, 0.1, 1.0)),
+      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
+    ))
+    .attach(newTransform(p=vec(0, 3, 3)))
+
+  TheWorld.add("b")
+    .attach(newModel(
+      ball,
+      getColorTexture(vec(0.95, 0.93, 0.88, 1.0)),
+      emptyTexture(),
+      getColorTexture(vec(0.1, 0.1, 0.1, 1.0)),
+      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
+    ))
+    .attach(newTransform(p=vec(0, 3, -3)))
+
+  TheWorld.add("b")
+    .attach(newModel(
+      ball,
+      getColorTexture(vec(0.91, 0.92, 0.92, 1.0)),
+      emptyTexture(),
+      getColorTexture(vec(0.1, 0.1, 0.1, 1.0)),
+      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
+    ))
+    .attach(newTransform(p=vec(0, 3, 6)))
+
 
   TheWorld.add("sun")
     .attach(newTransform(f=vec(-15, 0.5, 0.5), p=vec(20, 0, 0), u=yaxis, s=2.0))

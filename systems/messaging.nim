@@ -1,5 +1,6 @@
 import logging
 import tables
+import strutils
 
 
 type
@@ -8,8 +9,6 @@ type
 
   MessageSystem* = ref object
     listeners: Table[string, seq[Listener]]
-    groups: Table[string, seq[Listener]]
-
 
 var Messages*: MessageSystem
 
@@ -23,7 +22,6 @@ proc newListener*(): Listener =
 proc initMessageSystem*() =
   Messages = MessageSystem(
     listeners: initTable[string, seq[Listener]](),
-    groups: initTable[string, seq[Listener]](),
   )
   info("Messaging ok")
 
@@ -33,21 +31,15 @@ proc listen*(listener: Listener, event: string) =
     Messages.listeners[event] = newSeq[Listener]()
   Messages.listeners.mget(event).add(listener)
 
-proc listenGroup*(listener: Listener, group: string) =
-  if not Messages.groups.hasKey(group):
-    Messages.groups[group] = newSeq[Listener]()
-  Messages.groups.mget(group).add(listener)
 
-
-proc emit*(m: MessageSystem, event: string, group="") =
-  debug("$1 $2", group, event)
-  if m.listeners.hasKey(event):
-    for listener in mitems(m.listeners.mget(event)):
-      listener.queue.add(event)
-
-  if m.groups.hasKey(group):
-    for listener in mitems(m.groups.mget(group)):
-      listener.queue.add(event)
+proc emit*(m: MessageSystem, event: string) =
+  debug(event)
+  let parts = event.split('.')
+  for i in -1..high(parts):
+    let g = parts[0..i].join(".")
+    if m.listeners.hasKey(g):
+      for listener in mitems(m.listeners.mget(g)):
+        listener.queue.add(parts[high(parts)])
 
 iterator getMessages*(listener: var Listener) =
   for m in listener.queue:

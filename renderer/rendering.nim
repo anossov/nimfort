@@ -1,12 +1,17 @@
 import logging
 import opengl
+import strutils
 import vector
 import math
 import gl/framebuffer
+import gl/shader
+import gl/texture
+import mesh
 import systems/ecs
 import systems/messaging
 import systems/timekeeping
 import systems/camera
+import systems/resources
 
 import renderer/components
 import renderer/screen
@@ -26,7 +31,9 @@ type
     tonemapping: Tonemapping
     smaa: SMAA
     listener: Listener
-    wire: bool
+    debug: Program
+
+    debugMode: string
 
 
 var Renderer*: RenderSystem
@@ -44,6 +51,7 @@ proc initRenderSystem*() =
     bloom: newBloom(),
     tonemapping: newTonemapping(),
     smaa: newSMAA(),
+    debug: getShader("debug"),
   )
 
   glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -52,8 +60,7 @@ proc initRenderSystem*() =
   glEnable(GL_FRAMEBUFFER_SRGB)
 
   Renderer.listener = newListener()
-  Renderer.listener.listen("wire-on")
-  Renderer.listener.listen("wire-off")
+  Renderer.listener.listen("debug")
 
   info("Renderer ok: OpenGL v. $1", cast[cstring](glGetString(GL_VERSION)))
 
@@ -67,12 +74,12 @@ proc render*() =
   var dfb = Framebuffer(target: FramebufferTarget.Both, id: 0)
 
   for m in r.listener.getMessages():
-    case m:
-    of "wire-on": r.wire = true
-    of "wire-off": r.wire = false
-    else: discard
+    if r.debugmode == m:
+      r.debugmode = ""
+    else:
+      r.debugmode = m
 
-  if r.wire:
+  if r.debugmode == "wire":
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
   else:
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
@@ -85,5 +92,27 @@ proc render*() =
   r.bloom.perform(r.tonemapping.fb_in)
   r.tonemapping.perform(r.smaa.fb_in)
   r.smaa.perform(dfb)
+
+  if r.debugmode != "":
+    r.debug.use()
+    case r.debugmode:
+      of "albedo", "wire":
+        r.geometryPass.albedo.use(0)
+        r.debug.getUniform("alpha").set(false)
+      of "roughness":
+        r.geometryPass.albedo.use(0)
+        r.debug.getUniform("alpha").set(true)
+      of "normal":
+        r.geometryPass.normal.use(0)
+        r.debug.getUniform("alpha").set(false)
+      of "metalness":
+        r.geometryPass.normal.use(0)
+        r.debug.getUniform("alpha").set(true)
+      of "edges":
+        r.smaa.t_edge.use(0)
+        r.debug.getUniform("alpha").set(false)
+      else:
+        discard
+    Screen.quad.render()
 
   r.textRenderer.render(Screen.projection)

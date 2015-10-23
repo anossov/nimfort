@@ -7,16 +7,18 @@ const
 
   bindings* = [
     ("Q-down", "quit"),
-    ("W-down", "wire-on"),
-    ("W-up", "wire-off"),
+    ("W-down", "debug.wire"),
+    ("A-down", "debug.albedo"),
+    ("R-down", "debug.roughness"),
+    ("M-down", "debug.metalness"),
+    ("N-down", "debug.normal"),
+    ("E-down", "debug.edges"),
 
-    ("KP_ADD-down", "exposure-up"),
-    ("KP_SUBTRACT-down", "exposure-down"),
+    ("KP_ADD-down", "camera.exposure-up"),
+    ("KP_SUBTRACT-down", "camera.exposure-down"),
   ]
 
 when defined(release):
   const debugContext* = 0
 else:
   const debugContext* = 1
-
-

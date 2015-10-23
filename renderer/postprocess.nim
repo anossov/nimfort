@@ -45,8 +45,7 @@ proc newTonemapping*(): Tonemapping =
   tm.getUniform("hdr").set(0)
 
   var listener = newListener()
-  listener.listen("exposure-up")
-  listener.listen("exposure-down")
+  listener.listen("camera")
 
   return Tonemapping(
     fb_in: fb,
