@@ -52,6 +52,7 @@ proc initRenderSystem*() =
     tonemapping: newTonemapping(),
     smaa: newSMAA(),
     debug: getShader("debug"),
+    debugmode: "",
   )
 
   glClearColor(0.0, 0.0, 0.0, 0.0)

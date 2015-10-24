@@ -5,6 +5,7 @@ import mesh
 import math
 import gl/texture
 import systems/camera
+import systems/resources
 import config
 
 type
@@ -28,6 +29,12 @@ type
     spotAngle*: float32
     spotFalloff*: float32
     shadowMap*: Texture
+
+  Skybox* = object of Component
+    cubemap*: Texture
+
+  GhettoIBL* = object of Component
+    cubemap*: Texture
 
   Label* = object of Component
     color*: vec3
@@ -87,6 +94,12 @@ proc newSpotLight*(color=ones3, angle=30.0, falloff=60.0, shadows=false): Light 
     shadowMap: emptyTexture(),
   )
 
+proc newSkybox*(t: Texture): Skybox =
+  Skybox(cubemap: t)
+
+proc newGhettoIBL*(t: Texture): GhettoIBL =
+  GhettoIBL(cubemap: t)
+
 proc getProjection*(light: Light): mat4 =
   if light.kind == Directional:
     return orthographic(-20.0, 20.0, -20.0, 20.0, 2, 50.0)
@@ -98,3 +111,5 @@ proc getProjection*(light: Light): mat4 =
 ImplementComponent(Light, light)
 ImplementComponent(Model, model)
 ImplementComponent(Label, label)
+ImplementComponent(Skybox, skybox)
+ImplementComponent(GhettoIBL, ibl)

@@ -2,18 +2,18 @@ import opengl
 
 type
   TextureTarget* {.pure.} = enum
-    tUnitialized = 0
-    t1D                 = GL_TEXTURE_1D,                   # 0x0DE0
-    t2D                 = GL_TEXTURE_2D,                   # 0x0DE1
-    t3D                 = GL_TEXTURE_3D,                   # 0x806F
-    tRectangle          = GL_TEXTURE_RECTANGLE,            # 0x84F5
-    tCubeMap            = GL_TEXTURE_CUBE_MAP,             # 0x8513
-    t1DArray            = GL_TEXTURE_1D_ARRAY,             # 0x8C18
-    t2DArray            = GL_TEXTURE_2D_ARRAY,             # 0x8C1A
-    tBuffer             = GL_TEXTURE_BUFFER,               # 0x8C2A
-    tCubeMapArray       = GL_TEXTURE_CUBE_MAP_ARRAY,       # 0x9009
-    t2DMultisample      = GL_TEXTURE_2D_MULTISAMPLE,       # 0x9100
-    t2DMultisampleArray = GL_TEXTURE_2D_MULTISAMPLE_ARRAY, # 0x9102
+    Unitialized        = 0
+    Texture1D          = GL_TEXTURE_1D,                   # 0x0DE0
+    Texture2D          = GL_TEXTURE_2D,                   # 0x0DE1
+    Texture3D          = GL_TEXTURE_3D,                   # 0x806F
+    Rectangle          = GL_TEXTURE_RECTANGLE,            # 0x84F5
+    CubeMap            = GL_TEXTURE_CUBE_MAP,             # 0x8513
+    DArray1D           = GL_TEXTURE_1D_ARRAY,             # 0x8C18
+    Array2D            = GL_TEXTURE_2D_ARRAY,             # 0x8C1A
+    Buffer             = GL_TEXTURE_BUFFER,               # 0x8C2A
+    CubeMapArray       = GL_TEXTURE_CUBE_MAP_ARRAY,       # 0x9009
+    Multisample2D      = GL_TEXTURE_2D_MULTISAMPLE,       # 0x9100
+    MultisampleArray2D = GL_TEXTURE_2D_MULTISAMPLE_ARRAY, # 0x9102
 
   TextureFormat* {.pure.} = enum
     Depth        = GL_DEPTH_COMPONENT # 0x1902
@@ -67,7 +67,7 @@ proc use*(t: Texture, unit: int) =
   glBindTexture(ord t.target, t.id)
 
 
-proc image2d*(t: var Texture, internalformat: int32, w: int32, h: int32, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, data: string) =
+proc image2d*(t: var Texture, internalformat: int, w: int32, h: int32, format=TextureFormat.RGBA, pixeltype=PixelType.Ubyte, data: string) =
   glTexImage2D(ord t.target, 0, internalformat.GLint, w, h, 0, ord format, ord pixeltype, if data == nil: nil else: cstring(data))
 
 
@@ -86,25 +86,31 @@ proc filter*(t: Texture, yes: bool) =
     glTexParameteri(ord t.target, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexParameteri(ord t.target, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 
-proc clamp*(t: Texture, border=false, border_color: array[4, float32] = [0'f32, 0, 0, 0]) =
-  if border:
-    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
-    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
-  else:
-    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-    glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+proc clampToBorder*(t: Texture, color: array[4, float32]) =
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
+
+  var c = color
+  glTexParameterfv(ord t.target, GL_TEXTURE_BORDER_COLOR, addr c[0])
+
+proc clampToEdge*(t: Texture) =
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
 
 proc repeat*(t: Texture) =
   glTexParameteri(ord t.target, GL_TEXTURE_WRAP_S, GL_REPEAT)
   glTexParameteri(ord t.target, GL_TEXTURE_WRAP_T, GL_REPEAT)
+  glTexParameteri(ord t.target, GL_TEXTURE_WRAP_R, GL_REPEAT)
 
-proc newTexture*(target=TextureTarget.t2D): Texture =
+proc newTexture*(target=TextureTarget.Texture2D): Texture =
   result = Texture(target: target)
 
   glGenTextures(1, addr result.id)
   glBindTexture(ord target, result.id)
 
-proc emptyTexture*(t=TextureTarget.t2d): Texture = Texture(target: t, id: 0)
+proc emptyTexture*(t=TextureTarget.Texture2D): Texture = Texture(target: t, id: 0)
 proc isEmpty*(t: Texture): bool = t.id.int == 0
 
 
@@ -127,5 +133,20 @@ proc newTexture2d*(w, h: int32, f: TextureFormat, t: PixelType, filter=true): Te
 
   tex.image2d(internalformat, w, h, f, t, nil)
   tex.filter(filter)
-  tex.clamp()
+  tex.clampToEdge()
   return tex
+
+
+proc newCubeMap*(w, h: int32, data: array[6, string]): Texture =
+  result = newTexture(TextureTarget.CubeMap)
+  let
+    intf = GL_SRGB
+    f = ord TextureFormat.RGBA
+    t = ord PixelType.Ubyte
+  for i in 0..5:
+    let datum = data[i]
+    let face = (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i).GLenum
+    glTexImage2D(face, 0, intf.GLint, w, h, 0, f.GLenum, t.GLenum, cstring(datum))
+  result.clampToEdge()
+  result.generateMipmap()
+  result.filter(true)

@@ -16,7 +16,9 @@ void main() {
     vec3 color = Shade_Cook_Torrance(l, posf, n, albedo, metalness, roughness);
 
     float ld = length(lightPos.xyz - posf);
-    float attenuation = clamp(1.0 - ld * ld / (radius * radius), 0.0, 1.0);
+    float dr = ld / radius;
+    float falloff_num = clamp(1.0 - dr * dr * dr * dr, 0.0, 1.0);
+    float attenuation = falloff_num * falloff_num / (ld * ld + 1);
     attenuation = attenuation * attenuation;
 
     outColor = vec4(color * attenuation, 1.0);

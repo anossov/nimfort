@@ -78,6 +78,7 @@ proc newBloom*(): Bloom =
   var fb_in = newFramebuffer()
   var t_in = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
   fb_in.attach(t_in)
+  fb_in.attachDepthStencilRBO(Screen.width, Screen.height)
 
   var fb_bright = newFramebuffer()
   var t_bright = newTexture2d(Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float)

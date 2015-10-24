@@ -17,6 +17,11 @@ type
     shaders: Table[string, Program]
     meshes: Table[string, Mesh]
 
+  Image = object
+    data: string
+    width: int
+    height: int
+
 var Resources*: ResourceManager
 
 
@@ -61,14 +66,20 @@ proc flipimage*(data: string; w, h: int): string =
     result.add(data[f * stride..t * stride - 1])
 
 
+proc getImage(path: string): Image =
+  let image = loadBMP32(path)
+
+  result.data = flipimage(image.data, image.width, image.height)
+  result.width = image.width
+  result.height = image.height
+
+
 proc getTexture*(name: string, srgb=false): Texture =
   if not Resources.textures.hasKey(name):
-    let image = loadBMP32("assets/textures/$1.bmp" % name)
     let f = if srgb: GL_SRGB else: GL_RGBA
-    let data = flipimage(image.data, image.width, image.height)
-
+    let image = getImage("assets/textures/$1.bmp" % name)
     var t = newTexture()
-    t.image2d(f.int32, image.width.int32, image.height.int32, TextureFormat.RGBA, PixelType.Ubyte, data=data)
+    t.image2d(f, image.width.int32, image.height.int32, TextureFormat.RGBA, PixelType.Ubyte, data=image.data)
     t.generateMipmap()
     t.filter(true)
     Resources.textures[name] = t
@@ -82,12 +93,23 @@ proc getColorTexture*(color: vec4): Texture =
     var t = newTexture()
     let data = c.x.int.chr & c.y.int.chr & c.z.int.chr & c.w.int.chr
     t.image2d(GL_RGBA, 1, 1, TextureFormat.RGBA, PixelType.Ubyte, data=data)
-    t.clamp()
+    t.clampToEdge()
     t.filter(false)
     Resources.textures[colorName] = t
 
   return Resources.textures[colorName]
 
+proc getCubeMap*(name: string): Texture =
+  if not Resources.textures.hasKey(name):
+    var data: array[6, string]
+    var w, h: int
+    for i in 0..5:
+      let img = getImage("assets/textures/$1/$1$2.bmp".format(name, i))
+      data[i] = img.data
+      w = img.width
+      h = img.height
+    Resources.textures[name] = newCubeMap(w.int32, h.int32, data)
+  return Resources.textures[name]
 
 proc getMesh*(name: string, t=true): Mesh =
   if not Resources.meshes.hasKey(name):

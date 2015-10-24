@@ -27,6 +27,8 @@ type
     shaders: array[LightType, Program]
     emission: Program
     ball: Mesh
+    skybox: Program
+    IBL: Program
 
 proc newGeometryPass*(): GeometryPass =
   var p, n, a: Texture
@@ -79,10 +81,20 @@ proc newLightingPass*(): LightingPass =
   e.getUniform("gAlbedoRoughness").set(2)
   e.getUniform("invBufferSize").set(Screen.pixelSize)
 
+  var s_ibl = getShader("dr_ibl", fs_prepend=inc)
+  s_ibl.use()
+  s_ibl.getUniform("gPosition").set(0)
+  s_ibl.getUniform("gNormalMetalness").set(1)
+  s_ibl.getUniform("gAlbedoRoughness").set(2)
+  s_ibl.getUniform("cubemap").set(3)
+  s_ibl.getUniform("invBufferSize").set(Screen.pixelSize)
+
   return LightingPass(
     shaders: shaders,
     emission: e,
     ball: getMesh("lightball"),
+    skybox: getShader("skybox"),
+    IBL: s_ibl,
   )
 
 
@@ -127,6 +139,8 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
   gp.normal.use(1)
   gp.albedo.use(2)
 
+  let PV = Camera.getProjection() * Camera.getView();
+
   for kind, shader in mpairs(pass.shaders):
     shader.use()
     shader.getUniform("eye").set(Camera.position)
@@ -146,7 +160,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
         case light.kind:
         of Point:
           shader.getUniform("radius").set(light.radius)
-          shader.getUniform("transform").set(Camera.getProjection() * Camera.getView() * translate(t.position) * scale(light.radius))
+          shader.getUniform("transform").set(PV * translate(t.position) * scale(light.radius))
         of Spot:
           shader.getUniform("transform").set(identity())
           shader.getUniform("cosSpotAngle").set(cos(light.spotAngle.radians))
@@ -164,7 +178,22 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
       else:
         Screen.quad.render()
 
+  pass.IBL.use()
+  pass.IBL.getUniform("eye").set(Camera.position)
+  for i in GhettoIBLStore().data:
+    i.cubemap.use(3)
+    Screen.quad.render()
+
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
   pass.emission.use()
   pass.emission.getUniform("transform").set(identity())
   Screen.quad.render()
+
+  glDepthFunc(GL_EQUAL)
+  for sb in SkyboxStore().data:
+    pass.skybox.use()
+    pass.skybox.getUniform("projection").set(Camera.getProjection())
+    pass.skybox.getUniform("view").set(Camera.getView())
+    sb.cubemap.use(3)
+    Screen.quad.render()
+  glDepthFunc(GL_LESS)

@@ -43,13 +43,13 @@ proc newSMAA*(): SMAA =
   var area_tex = newTexture()
   area_tex.image2d(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, TextureFormat.RG, PixelType.Ubyte, smaa_area)
   area_tex.filter(true)
-  area_tex.clamp()
+  area_tex.clampToEdge()
 
   var smaa_search = readFile("assets/textures/smaa_search.raw")
   var search_tex = newTexture()
   search_tex.image2d(GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, TextureFormat.Red, PixelType.Ubyte, smaa_search)
   search_tex.filter(false)
-  search_tex.clamp()
+  search_tex.clampToEdge()
 
   var stencil = newTexture2d(Screen.width, Screen.height, TextureFormat.DepthStencil, PixelType.Uint24_8, false)
 

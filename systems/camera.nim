@@ -16,7 +16,7 @@ var Camera*: CameraSystem
 
 proc initCamera*() =
   Camera = CameraSystem(
-    projection: perspective(60.0, windowWidth / windowHeight, 3, 100.0)
+    projection: perspective(45.0, windowWidth / windowHeight, 3, 200.0)
   )
 
 proc updateCamera*() =
@@ -35,5 +35,14 @@ proc updateCamera*() =
 
 
 proc getView*(c: CameraSystem): mat4 = lookAt(c.position, c.target, yaxis)
+
+proc getViewRot*(c: CameraSystem): mat4 =
+  result = c.getView()
+  result[3] = 0.0
+  result[7] = 0.0
+  result[11] = 0.0
+  result[12] = 0.0
+  result[13] = 0.0
+  result[14] = 0.0
 
 proc getProjection*(c: CameraSystem): mat4 = c.projection
