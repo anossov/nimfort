@@ -35,6 +35,7 @@ type
 
   GhettoIBL* = object of Component
     cubemap*: Texture
+    color*: vec3
 
   Label* = object of Component
     color*: vec3
@@ -97,8 +98,8 @@ proc newSpotLight*(color=ones3, angle=30.0, falloff=60.0, shadows=false): Light 
 proc newSkybox*(t: Texture): Skybox =
   Skybox(cubemap: t)
 
-proc newGhettoIBL*(t: Texture): GhettoIBL =
-  GhettoIBL(cubemap: t)
+proc newGhettoIBL*(t: Texture, c: vec3): GhettoIBL =
+  GhettoIBL(cubemap: t, color: c)
 
 proc getProjection*(light: Light): mat4 =
   if light.kind == Directional:

@@ -1,5 +1,5 @@
 const
-  windowWidth* = 1600
+  windowWidth* = 2200
   windowHeight* = 1200
   windowTitle* = "Nimfort"
 

@@ -180,7 +180,9 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
 
   pass.IBL.use()
   pass.IBL.getUniform("eye").set(Camera.position)
+
   for i in GhettoIBLStore().data:
+    pass.IBL.getUniform("lightColor").set(i.color)
     i.cubemap.use(3)
     Screen.quad.render()
 

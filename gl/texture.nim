@@ -143,10 +143,16 @@ proc newCubeMap*(w, h: int32, data: array[6, string]): Texture =
     intf = GL_SRGB
     f = ord TextureFormat.RGBA
     t = ord PixelType.Ubyte
-  for i in 0..5:
+  for i, face in [
+    GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+    GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+    GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+    GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+  ]:
     let datum = data[i]
-    let face = (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i).GLenum
-    glTexImage2D(face, 0, intf.GLint, w, h, 0, f.GLenum, t.GLenum, cstring(datum))
+    glTexImage2D(face.GLenum, 0, intf.GLint, w, h, 0, f.GLenum, t.GLenum, cstring(datum))
   result.clampToEdge()
   result.generateMipmap()
   result.filter(true)

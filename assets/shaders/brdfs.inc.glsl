@@ -30,8 +30,8 @@ float G_Cook_Torrance(float NdotL, float NdotV, float NdotH, float VdotH) {
     return min(1.0, min(x * NdotV, x * NdotL));
 }
 
-float V_Kelemen(float LdotH) {
-    return 1.0 / (LdotH * LdotH);
+float V_Kelemen(float VdotH) {
+    return 1.0 / (VdotH * VdotH);
 }
 
 float D_Beckmann(float NdotH, float alpha) {
@@ -85,6 +85,7 @@ vec3 Shade_Cook_Torrance(vec3 l, vec3 p, vec3 n, vec3 albedo, float metalness, f
     }
 
     vec3 f0 = mix(vec3(0.03), albedo, metalness);
+    albedo = albedo * (1.0 - metalness);
 
     float NdotV = abs(dot(n, v)) + 1e-5;
     float LdotH = clamp(dot(l, h), 0.0, 1.0);

@@ -134,7 +134,7 @@ proc perform*(pass: Bloom, fb_out: var Framebuffer) =
   Screen.quad.render()
 
   pass.t_bright.use(0)
-  for i in 0..5:
+  for i in 0..3:
     if i == 0:
       pass.s_hblur.use()
     if i == 3:

@@ -51,7 +51,7 @@ proc initWorld*() =
 
   TheWorld.add("point")
     .attach(newTransform(p=vec(3, 3, -8), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
-    .attach(newPointLight(vec(12, 12, 12), radius=14))
+    .attach(newPointLight(vec(12, 12, 12), radius=5))
     .attach(newModel(ball, w, emission=w, emissionIntensity=20))
     .attach(CircleMovement(rvector: vec(0, 3, 0), period: 1, axis: zaxis, center: vec(0, 0, -8)))
 
@@ -93,6 +93,16 @@ proc initWorld*() =
   TheWorld.add("b")
     .attach(newModel(
       ball,
+      getColorTexture(vec(1.00, 0.71, 0.29, 1.0)),
+      emptyTexture(),
+      getColorTexture(vec(0.00, 0.00, 0.00, 1.0)),
+      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
+    ))
+    .attach(newTransform(p=vec(0, -3, 2)))
+
+  TheWorld.add("b")
+    .attach(newModel(
+      ball,
       getColorTexture(vec(0.95, 0.64, 0.54, 1.0)),
       emptyTexture(),
       getColorTexture(vec(0.75, 0.75, 0.75, 1.0)),
@@ -114,11 +124,11 @@ proc initWorld*() =
     .attach(newSkyBox(getCubeMap("lake")))
 
   TheWorld.add("sun")
-    .attach(newTransform(f=vec(-3, -4, -5), p=vec(3, 4, 5)*20, u=yaxis, s=5.0))
+    .attach(newTransform(f=vec(3, -3, -5), p=vec(-3, 3, 5)*20, u=yaxis, s=5.0))
     .attach(newDirLight(color=vec(3, 3, 3), shadows=true))
     .attach(newModel(getMesh("ball"), w, emission=w, emissionIntensity=16))
 
-  TheWorld.add("ibl").attach(newGhettoIBL(getCubeMap("lake")))
+  TheWorld.add("ibl").attach(newGhettoIBL(getCubeMap("lake"), vec(0.8, 0.8, 0.8)))
 
   info("World ok")
 
@@ -128,4 +138,4 @@ proc updateWorld*() =
   TheWorld.handles[1].circleMovement.center.z = sin(Time.totalTime * 1) * 10
 
   TheWorld.handles[2].model.emissionIntensity = sin(Time.totalTime) * 16 + 17
-  TheWorld.handles[2].light.color = vec(2, 2, 2) * (sin(Time.totalTime) + 1)
+ #TheWorld.handles[2].light.color = vec(2, 2, 2) * (sin(Time.totalTime) + 1)
