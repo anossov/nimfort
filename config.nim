@@ -6,7 +6,7 @@ const
   shadowMapSize* = 2048
 
   bindings* = [
-    ("ESC-down", "quit"),
+    ("ESCAPE-down", "quit"),
 
     ("control-KP_ADD-down", "camera.exposure-up"),
     ("control-KP_SUBTRACT-down", "camera.exposure-down"),

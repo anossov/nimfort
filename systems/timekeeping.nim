@@ -24,6 +24,8 @@ proc initTimeSystem*() =
 
 proc now*(t: TimeSystem): float = glfw.getTime()
 
+proc fps*(t: TimeSystem): float = 1_000_000 / t.mksPerFrame
+
 proc updateTime*() =
   let t = Time
   t.totalTime = t.now()
@@ -34,6 +36,5 @@ proc updateTime*() =
     t.mksPerFrame = int((t.totalTime - t.ftLastUpdate) * 1_000_000 / t.ftCounter.float)
     t.ftLastUpdate = t.totalTime
     t.ftCounter = 0
-    Messages.emit("frametime")
 
   t.ftCounter += 1

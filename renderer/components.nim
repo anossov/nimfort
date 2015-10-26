@@ -1,6 +1,7 @@
 import logging
 import systems/ecs
 import vector
+import text
 import mesh
 import math
 import gl/texture
@@ -40,9 +41,12 @@ type
     color*: vec3
 
   Label* = object of Component
-    color*: vec3
-    mesh*: Mesh
+    text*: string
+    color*: vec4
+    mesh*: TextMesh
     texture*: Texture
+    fade*: bool
+    fadeTime*: float
 
 proc newModel*(m: Mesh,
                albedo: Texture,
@@ -110,6 +114,12 @@ proc getProjection*(light: Light): mat4 =
   if light.kind == Spot:
     return perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
   return identity()
+
+
+proc update*(t: var Label, s: string) =
+  if t.text != s:
+    t.text = s
+    t.mesh.update(s)
 
 
 ImplementComponent(Light, light)
