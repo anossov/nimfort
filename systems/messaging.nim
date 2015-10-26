@@ -33,8 +33,9 @@ proc listen*(listener: Listener, event: string) =
 
 
 proc emit*(m: MessageSystem, event: string) =
-  debug(event)
+  debug(event.replace("$", "$$"))
   let parts = event.split('.')
+
   for i in -1..high(parts):
     let g = parts[0..i].join(".")
     if m.listeners.hasKey(g):

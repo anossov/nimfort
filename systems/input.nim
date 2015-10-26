@@ -1,3 +1,4 @@
+import unicode
 import logging
 import messaging
 import strutils
@@ -21,6 +22,8 @@ var Input*: InputSystem
 proc cursorMoved(i: InputSystem; x, y: float) =
   i.cursorPos = vec(x, y)
 
+proc charEvent(i: InputSystem, code: Rune) =
+  Messages.emit("input.char." & code.int.toHex(8))
 
 proc keyEvent(i: InputSystem; key: int, scancode: int, action: int, mods: int) =
   var parts = newSeq[string]()
@@ -165,7 +168,7 @@ proc keyEvent(i: InputSystem; key: int, scancode: int, action: int, mods: int) =
   case action:
   of PRESS:   a = "down"
   of RELEASE: a = "up"
-  of REPEAT:  return
+  of REPEAT:  a = "repeat"
   else:       return
   parts.add(a)
 
@@ -176,6 +179,9 @@ proc cursorCallback(win: GLFWwindow; x, y: cdouble) {.cdecl.} =
 
 proc keyCallback(win: GLFWwindow; key, scancode, action, mods: cint) {.cdecl.} =
   Input.keyEvent(key, scancode, action, mods)
+
+proc charCallback(win: GLFWwindow; codepoint: cuint) {.cdecl.} =
+  Input.charEvent(codepoint.Rune)
 
 proc mapInput*(input: string, event: string) =
   Input.binds[input] = event
@@ -190,6 +196,7 @@ proc initInputSystem*() =
 
   discard glfw.setCursorPosCallback(Window, cursorCallback)
   discard glfw.setKeyCallback(Window, keyCallback)
+  discard glfw.setCharCallback(Window, charCallback)
 
   for b, e in items(bindings):
     mapInput(b, e)

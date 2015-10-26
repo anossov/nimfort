@@ -6,16 +6,10 @@ const
   shadowMapSize* = 2048
 
   bindings* = [
-    ("Q-down", "quit"),
-    ("W-down", "debug.wire"),
-    ("A-down", "debug.albedo"),
-    ("R-down", "debug.roughness"),
-    ("M-down", "debug.metalness"),
-    ("N-down", "debug.normal"),
-    ("E-down", "debug.edges"),
+    ("ESC-down", "quit"),
 
-    ("KP_ADD-down", "camera.exposure-up"),
-    ("KP_SUBTRACT-down", "camera.exposure-down"),
+    ("control-KP_ADD-down", "camera.exposure-up"),
+    ("control-KP_SUBTRACT-down", "camera.exposure-down"),
   ]
 
 when defined(release):

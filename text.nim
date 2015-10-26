@@ -143,8 +143,6 @@ proc newTextMesh*(f: Font, s: string): TextMesh =
 proc update*(t: var TextMesh, s: string) =
   t.s = s
   t.mesh.deleteBuffers()
-  if t.s == "":
-    return
   var w: float32
   var v = stringMesh(s, t.font, w)
   v.buildBuffers()
