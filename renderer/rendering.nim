@@ -70,12 +70,6 @@ proc initRenderSystem*() =
 # HBAO
 # Hi-Z Screen-Space Cone-Traced Reflections
 
-# Ambient cube light
-# E = Ex + Ey + Ez,
-# Ex = (n·x)² * (n·x < 0 ? Ex− : Ex+)
-# Ey = (n·y)² * (n·y < 0 ? Ey− : Ey+)
-# Ez = (n·z)² * (n·z < 0 ? Ez− : Ez+)
-
 proc render*() =
   var r = Renderer
   var dfb = Framebuffer(target: FramebufferTarget.Both, id: 0)

@@ -29,6 +29,7 @@ type
     ball: Mesh
     skybox: Program
     IBL: Program
+    ambient: Program
 
 proc newGeometryPass*(): GeometryPass =
   var p, n, a: Texture
@@ -65,10 +66,15 @@ proc newLightingPass*(): LightingPass =
   let inc = ["dr_head", "brdfs"]
   var p = getShader("dr_point", fs_prepend=inc)
   var d = getShader("dr_directional", fs_prepend=inc)
-  var a = getShader("dr_ambient", fs_prepend=inc)
   var s = getShader("dr_spot", fs_prepend=inc)
   var e = getShader("dr_emission")
-  var shaders = [a, p, d, s]
+
+  var s_ibl = getShader("dr_ibl", fs_prepend=inc)
+  var s_amb = getShader("dr_ambient", fs_prepend=inc)
+
+  var lightshaders = [p, d, s]
+
+  var shaders = [p, d, s, e, s_ibl, s_amb];
   for shader in mitems(shaders):
     shader.use()
     shader.getUniform("gPosition").set(0)
@@ -76,25 +82,17 @@ proc newLightingPass*(): LightingPass =
     shader.getUniform("gAlbedoRoughness").set(2)
     shader.getUniform("shadowMap").set(3)
     shader.getUniform("invBufferSize").set(Screen.pixelSize)
-  e.use()
-  e.getUniform("gPosition").set(0)
-  e.getUniform("gAlbedoRoughness").set(2)
-  e.getUniform("invBufferSize").set(Screen.pixelSize)
 
-  var s_ibl = getShader("dr_ibl", fs_prepend=inc)
   s_ibl.use()
-  s_ibl.getUniform("gPosition").set(0)
-  s_ibl.getUniform("gNormalMetalness").set(1)
-  s_ibl.getUniform("gAlbedoRoughness").set(2)
   s_ibl.getUniform("cubemap").set(3)
-  s_ibl.getUniform("invBufferSize").set(Screen.pixelSize)
 
   return LightingPass(
-    shaders: shaders,
+    shaders: lightshaders,
     emission: e,
     ball: getMesh("lightball"),
     skybox: getShader("skybox"),
     IBL: s_ibl,
+    ambient: s_amb,
   )
 
 
@@ -178,12 +176,22 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
       else:
         Screen.quad.render()
 
-  pass.IBL.use()
-  pass.IBL.getUniform("eye").set(Camera.position)
-
   for i in GhettoIBLStore().data:
+    pass.IBL.use()
+    pass.IBL.getUniform("eye").set(Camera.position)
     pass.IBL.getUniform("lightColor").set(i.color)
     i.cubemap.use(3)
+    Screen.quad.render()
+
+  for i in AmbientCubeStore().data:
+    pass.ambient.use()
+    pass.ambient.getUniform("eye").set(Camera.position)
+    pass.ambient.getUniform("colors[0]").set(i.colors[0])
+    pass.ambient.getUniform("colors[1]").set(i.colors[1])
+    pass.ambient.getUniform("colors[2]").set(i.colors[2])
+    pass.ambient.getUniform("colors[3]").set(i.colors[3])
+    pass.ambient.getUniform("colors[4]").set(i.colors[4])
+    pass.ambient.getUniform("colors[5]").set(i.colors[5])
     Screen.quad.render()
 
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)

@@ -120,8 +120,7 @@ proc initWorld*() =
     ))
     .attach(newTransform(p=vec(0, 3, 8)))
 
-  TheWorld.add("sky")
-    .attach(newSkyBox(getCubeMap("lake")))
+  TheWorld.add("sky").attach(newSkyBox(getCubeMap("lake")))
 
   TheWorld.add("sun")
     .attach(newTransform(f=vec(3, -3, -5), p=vec(-3, 3, 5)*20, u=yaxis, s=5.0))
@@ -129,6 +128,15 @@ proc initWorld*() =
     .attach(newModel(getMesh("ball"), w, emission=w, emissionIntensity=16))
 
   TheWorld.add("ibl").attach(newGhettoIBL(getCubeMap("lake"), vec(0.8, 0.8, 0.8)))
+
+  TheWorld.add("amb").attach(newAmbientCube(
+    posx=vec(0.001, 0.002, 0.001),
+    negx=vec(0.001, 0.002, 0.001),
+    posy=vec(0.001, 0.001, 0.003),
+    negy=vec(0.01, 0.0, 0.0),
+    posz=vec(0.001, 0.002, 0.001),
+    negz=vec(0.001, 0.002, 0.001),
+  ))
 
   info("World ok")
 

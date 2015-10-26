@@ -16,7 +16,6 @@ type
     emissionIntensity*: float
 
   LightType* = enum
-    Ambient
     Point
     Directional
     Spot
@@ -32,6 +31,9 @@ type
 
   Skybox* = object of Component
     cubemap*: Texture
+
+  AmbientCube* = object of Component
+    colors*: array[6, vec3]
 
   GhettoIBL* = object of Component
     cubemap*: Texture
@@ -62,12 +64,13 @@ proc newModel*(m: Mesh,
   result.shadows = shadows
   result.emissionIntensity = emissionIntensity
 
-proc newAmbientLight*(color=ones3): Light =
-  Light(
-    kind: Ambient,
-    color: color,
-    shadowMap: emptyTexture(),
+proc newAmbientCube*(posx=ones3, negx=ones3, posy=ones3, negy=ones3, posz=ones3, negz=ones3): AmbientCube =
+  AmbientCube(
+    colors: [posx, negx, posy, negy, posz, negz]
   )
+
+proc newAmbientLight*(color=ones3): AmbientCube =
+  newAmbientCube(color, color, color, color, color, color)
 
 proc newPointLight*(color=ones3, radius=1.0): Light =
   Light(
@@ -110,6 +113,7 @@ proc getProjection*(light: Light): mat4 =
 
 
 ImplementComponent(Light, light)
+ImplementComponent(AmbientCube, ambientCube)
 ImplementComponent(Model, model)
 ImplementComponent(Label, label)
 ImplementComponent(Skybox, skybox)

@@ -5,7 +5,11 @@ void main() {
     vec3 posf = texture(gPosition, uv).rgb;
     vec4 _nm = texture(gNormalMetalness, uv);
 
-    vec3 n = normalize(_nm.rgb);
+    vec3 n = _nm.rgb;
+    if (n == vec3(0.0)) {
+        discard;
+    }
+
     vec3 v = normalize(eye - posf);
 
     vec4 _ar = texture(gAlbedoRoughness, uv);
@@ -25,6 +29,7 @@ void main() {
     vec3 spec = F * env;
     vec3 diff = albedo * (1.0 - F) * textureLod(cubemap, n, 9).rgb;
     vec3 color = diff + spec;
+
 
     outColor = vec4(lightColor * color, 1.0);
 }
