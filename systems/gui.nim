@@ -52,7 +52,7 @@ proc initGUI*()=
     texts: initTable[string, Text]()
   )
 
-  UI.newText("frametime", newTransform(p=vec(30.0, Screen.size.y, 0.0), s=0.5))
+  UI.newText("frametime", newTransform(p=vec(30.0, Screen.size.y - 10.0, 0.0), s=0.5))
   UI.listener.listen("frametime")
 
   info("UI ok")
