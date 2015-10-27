@@ -32,6 +32,7 @@ type
 
   Skybox* = object of Component
     cubemap*: Texture
+    intensity*: vec3
 
   AmbientCube* = object of Component
     colors*: array[6, vec3]
@@ -102,8 +103,8 @@ proc newSpotLight*(color=ones3, angle=30.0, falloff=60.0, shadows=false): Light 
     shadowMap: emptyTexture(),
   )
 
-proc newSkybox*(t: Texture): Skybox =
-  Skybox(cubemap: t)
+proc newSkybox*(t: Texture, intensity=ones3): Skybox =
+  Skybox(cubemap: t, intensity: intensity)
 
 proc newGhettoIBL*(t: Texture, c: vec3): GhettoIBL =
   GhettoIBL(cubemap: t, color: c)

@@ -112,6 +112,9 @@ proc render*() =
       of "edges":
         r.smaa.t_edge.use(0)
         r.debug.getUniform("alpha").set(false)
+      of "brightpass":
+        r.bloom.t_bright.use(0)
+        r.debug.getUniform("alpha").set(false)
       else:
         discard
     Screen.quad.render()

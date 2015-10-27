@@ -204,6 +204,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
     pass.skybox.use()
     pass.skybox.getUniform("projection").set(Camera.getProjection())
     pass.skybox.getUniform("view").set(Camera.getView())
+    pass.skybox.getUniform("intensity").set(sb.intensity)
     sb.cubemap.use(3)
     Screen.quad.render()
   glDepthFunc(GL_LESS)

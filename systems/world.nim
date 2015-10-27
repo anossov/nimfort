@@ -65,7 +65,7 @@ proc initWorld*() =
       ball,
       getColorTexture(vec(0.56, 0.57, 0.58 , 1.0)),
       emptyTexture(),
-      getColorTexture(vec(0.01, 0.01, 0.01, 1.0)),
+      getColorTexture(vec(0.05, 0.05, 0.05, 1.0)),
       getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
     ))
     .attach(newTransform(p=vec(0, 3, -4)))
@@ -95,7 +95,7 @@ proc initWorld*() =
       ball,
       getColorTexture(vec(1.00, 0.71, 0.29, 1.0)),
       emptyTexture(),
-      getColorTexture(vec(0.00, 0.00, 0.00, 1.0)),
+      getColorTexture(vec(0.05, 0.05, 0.05, 1.0)),
       getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
     ))
     .attach(newTransform(p=vec(0, -3, 2)))
@@ -115,12 +115,12 @@ proc initWorld*() =
       ball,
       getColorTexture(vec(0.91, 0.92, 0.92, 1.0)),
       emptyTexture(),
-      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
+      getColorTexture(vec(0.98, 0.98, 0.98, 1.0)),
       getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
     ))
     .attach(newTransform(p=vec(0, 3, 8)))
 
-  TheWorld.add("sky").attach(newSkyBox(getCubeMap("lake")))
+  TheWorld.add("sky").attach(newSkyBox(getCubeMap("lake"), vec(2.0, 2.0, 2.0)))
 
   TheWorld.add("sun")
     .attach(newTransform(f=vec(3, -3, -5), p=vec(-3, 3, 5)*20, u=yaxis, s=5.0))

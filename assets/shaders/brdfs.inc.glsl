@@ -77,6 +77,8 @@ vec3 Shade_Cook_Torrance(vec3 l, vec3 p, vec3 n, vec3 albedo, float metalness, f
         return vec3(0.0);
     }
 
+    roughness = clamp(roughness, 0.03, 1.0);
+
     vec3 v = normalize(eye - p);
     vec3 h = normalize(l + v);
     float NdotH = clamp(dot(n, h), 0.0, 1.0);

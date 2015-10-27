@@ -4,9 +4,9 @@ in vec3 uv;
 out vec4 color;
 
 uniform samplerCube skybox;
+uniform vec3 intensity;
 
 void main()
 {
-    color = texture(skybox, uv);
+    color = vec4(texture(skybox, uv).rgb * intensity, 1.0);
 }
-

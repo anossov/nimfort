@@ -20,10 +20,11 @@ type
 
 
   Bloom* = ref object
+    size: ivec2
     fb_in*: Framebuffer
     fb_bright: Framebuffer
     t_in: Texture
-    t_bright: Texture
+    t_bright*: Texture
     fb_pp: array[2, Framebuffer]
     t_pp: array[2, Texture]
     s_brightpass: Program
@@ -77,17 +78,22 @@ proc perform*(pass: var Tonemapping, fb_out: var Framebuffer) =
 proc newBloom*(): Bloom =
   var fb_in = newFramebuffer()
   var t_in = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
+
   fb_in.attach(t_in)
   fb_in.attachDepthStencilRBO(Screen.width, Screen.height)
 
+  let
+    size = ivec(Screen.width shr bloomScale, Screen.height shr bloomScale)
+    invsize = size.toFloat.inverse()
+
   var fb_bright = newFramebuffer()
-  var t_bright = newTexture2d(Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float)
+  var t_bright = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
   fb_bright.attach(t_bright)
 
   var fb_pingpong = [newFramebuffer(), newFramebuffer()]
   var t_pingpong = [
-    newTexture2d(Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float),
-    newTexture2d(Screen.width shr 1, Screen.height shr 1, TextureFormat.RGB, PixelType.Float),
+    newTexture2d(size.x, size.y, TextureFormat.RGB, PixelType.Float),
+    newTexture2d(size.x, size.y, TextureFormat.RGB, PixelType.Float),
   ]
   for i in 0..1:
     fb_pingpong[i].use()
@@ -96,14 +102,18 @@ proc newBloom*(): Bloom =
 
   var s_brightpass = getShader("brightpass")
   s_brightpass.use()
-  s_brightpass.getUniform("threshold").set(25.0)
+  s_brightpass.getUniform("threshold").set(bloomThreshold)
+
 
   var s_hblur = getShader("gaussian_h")
   s_hblur.use()
-  s_hblur.getUniform("pixelSize").set(vec(2.0/windowWidth, 2.0/windowHeight))
+  s_hblur.getUniform("pixelSize").set(invsize)
+  s_hblur.getUniform("level").set(bloomScale)
+
   var s_vblur = getShader("gaussian_v")
   s_vblur.use()
-  s_vblur.getUniform("pixelSize").set(vec(2.0/windowWidth, 2.0/windowHeight))
+  s_vblur.getUniform("pixelSize").set(invsize)
+  s_vblur.getUniform("level").set(bloomScale)
 
   var s_finalize = getShader("bloom")
   s_finalize.use()
@@ -111,6 +121,7 @@ proc newBloom*(): Bloom =
   s_finalize.getUniform("bloom").set(1)
 
   return Bloom(
+    size: size,
     fb_in: fb_in,
     fb_bright: fb_bright,
     t_in: t_in,
@@ -124,7 +135,7 @@ proc newBloom*(): Bloom =
   )
 
 proc perform*(pass: Bloom, fb_out: var Framebuffer) =
-  glViewport(0, 0, Screen.width shr 1, Screen.height shr 1)
+  glViewport(0, 0, Screen.width, Screen.height)
   pass.fb_bright.use()
   glClear(GL_COLOR_BUFFER_BIT)
   glDisable(GL_DEPTH_TEST)
@@ -134,10 +145,14 @@ proc perform*(pass: Bloom, fb_out: var Framebuffer) =
   Screen.quad.render()
 
   pass.t_bright.use(0)
-  for i in 0..3:
+  pass.t_in.generateMipmap()
+  pass.t_in.filter(true)
+
+  glViewport(0, 0, pass.size.x, pass.size.y)
+  for i in 0..(2*bloomPasses + 1):
     if i == 0:
       pass.s_hblur.use()
-    if i == 3:
+    if i == (bloomPasses + 1):
       pass.s_vblur.use()
 
     if i > 0:

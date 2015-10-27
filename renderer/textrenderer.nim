@@ -32,6 +32,9 @@ proc render*(r: var TextRenderer, proj: mat4) =
   r.shader.use()
   r.shader.getUniform("projection").set(proj)
   for i in LabelStore().data:
+    if i.text == "" or i.color.w == 0.0:
+      continue
+
     i.texture.use(0)
 
     var shadowT = i.entity.transform.matrix
