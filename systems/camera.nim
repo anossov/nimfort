@@ -16,7 +16,7 @@ var Camera*: CameraSystem
 
 proc initCamera*() =
   Camera = CameraSystem(
-    projection: perspective(45.0, windowWidth / windowHeight, 3, 200.0)
+    projection: perspective(45.0, windowWidth / windowHeight, 3, 200.0),
   )
 
 proc updateCamera*() =

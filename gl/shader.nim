@@ -47,22 +47,23 @@ type
     location: GLint
 
 
-proc info(s: Shader, param: ShaderInfo): GLint =
+proc getInfo(s: Shader, param: ShaderInfo): GLint =
   glGetShaderiv(s.id, ord param, addr result)
 
 
-proc info(p: Program, param: ProgramInfo): GLint =
+proc getInfo(p: Program, param: ProgramInfo): GLint =
   glGetProgramiv(p.id, ord param, addr result)
 
 
 proc infoLog(s: Shader): cstring =
-  var ll = s.info(ShaderInfo.LogLength)
+  var ll = s.getInfo(ShaderInfo.LogLength)
   result = cast[cstring](alloc(ll))
   glGetShaderInfoLog(s.id, ll, addr ll, result)
+  discard
 
 
 proc infoLog(p: Program): cstring =
-  var ll = p.info(ProgramInfo.LogLength)
+  var ll = p.getInfo(ProgramInfo.LogLength)
   result = cast[cstring](alloc(ll))
   glGetProgramInfoLog(p.id, ll, addr ll, result)
 
@@ -79,8 +80,8 @@ proc createShader*(t: ShaderType, src: string): Shader =
   glShaderSource(result.id, 1, result.src, nil)
   glCompileShader(result.id)
 
-  if result.info(ShaderInfo.CompileStatus) == GL_FALSE:
-    stderr.writeln(result.infoLog())
+  if result.getInfo(ShaderInfo.CompileStatus) == GL_FALSE:
+    fatal(result.infoLog())
 
 
 proc use*(p: Program) {.inline.} =
@@ -90,7 +91,7 @@ proc findUniform*(p: Program, name: string): Uniform =
   result = Uniform()
   result.location = glGetUniformLocation(p.id, name)
   if result.location == -1:
-    info("Could not find uniform: " & name)
+    debug("Could not find uniform: " & name)
 
 proc getUniform*(p: var Program, name: string): Uniform =
   if p.uniforms.hasKey(name):
@@ -110,8 +111,8 @@ proc createProgram*(vs: string, fs: string): Program =
   glAttachShader(result.id, result.vs.id)
   glLinkProgram(result.id)
 
-  if result.info(ProgramInfo.LinkStatus) == GL_FALSE:
-    stderr.writeln(result.infoLog())
+  if result.getInfo(ProgramInfo.LinkStatus) == GL_FALSE:
+    fatal(result.infoLog())
 
 proc bindFragDataLocation*(p: Program, num: GLuint, name: string) {.inline.} =
   glBindFragDataLocation(p.id, num, name)

@@ -1,3 +1,5 @@
+import logging
+
 const
   windowWidth*    = 2200
   windowHeight*   = 1200
@@ -14,9 +16,13 @@ const
 
   bloomScale*     = 3
   bloomThreshold* = 3.0
-  bloomPasses*    = 1
+  bloomPasses*    = 2
 
 when defined(release):
-  const debugContext* = 0
+  const
+    debugContext* = 0
+    logLevel* = lvlInfo
 else:
-  const debugContext* = 1
+  const
+    debugContext* = 1
+    logLevel* = lvlAll

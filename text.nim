@@ -34,7 +34,7 @@ type
     width*: float32
 
 
-proc hash(r: Rune): THash =
+proc hash(r: Rune): Hash =
   result = int(r).hash
 
 
@@ -102,7 +102,7 @@ proc stringMesh(s: string, f: Font, w: var float32): Mesh =
       th = c.size[1] / f.textureSize[1]
       yp = -c.offset[1]
       kernpair = [lastrune, r]
-      kern = f.kerning[kernpair]
+      kern = f.kerning.getOrDefault(kernpair)
 
     x += kern
 

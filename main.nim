@@ -1,8 +1,9 @@
 import tables
 import logging
 import strutils
+import config
 
-addHandler(newFileLogger("debug.log", fmtStr=verboseFmtStr, mode=fmWrite))
+addHandler(newFileLogger("debug.log", fmtStr=verboseFmtStr, mode=fmWrite, levelThreshold=logLevel, bufSize=0))
 
 import systems/windowing
 import systems/ecs

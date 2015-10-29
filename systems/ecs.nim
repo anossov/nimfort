@@ -1,6 +1,7 @@
 import logging
 import tables
 import typetraits
+import strutils
 
 type
   EntityHandle* = int32
@@ -35,7 +36,7 @@ proc newEntity*(name: string): EntityHandle =
     components: initTable[string, ComponentHandle]()
   ))
   result = (len(Entities.entities) - 1).EntityHandle
-  debug("$1 = $2", result, name)
+  debug("$1 = $2".format(result, name))
 
 proc addComponent*(em: EntityManager, e: EntityHandle, c: ComponentHandle, ctype: string) =
   em.entities[e].components[ctype] = c
@@ -61,7 +62,7 @@ proc add*[T](cs: ComponentStore[T], e: EntityHandle, c: T) =
   let ch = (cs.data.len - 1).ComponentHandle
   cs.data[ch].entity = e
   Entities.addComponent(e, ch, cs.name)
-  debug(" $1 +$2 $3", e, cs.name, ch)
+  debug(" $1 +$2 $3".format(e, cs.name, ch))
 
 proc `[]`*[T](cs: ComponentStore[T], e: EntityHandle): var T =
   assert e.has(cs.name)

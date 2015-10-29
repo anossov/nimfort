@@ -96,14 +96,6 @@ proc identity*(): mat4 =
   result[15] = 1.0
 
 
-proc length*(v: vec3): float32 {.inline.} = sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
-
-proc normalize*(v: vec3): vec3 {.inline.} =
-  let mag = v.length
-  result.x = v.x / mag
-  result.y = v.y / mag
-  result.z = v.z / mag
-
 proc inverse*(v: vec2): vec2 {.inline.} =
   result.x = 1.0 / v.x
   result.y = 1.0 / v.y
@@ -187,16 +179,24 @@ proc `/`*(a: vec3, b: float32): vec3 =
   result.z = a.z / b
 
 
+proc `dot`*(a, b: vec3): float32 =
+  var t = a * b
+  result = t.x + t.y + t.z
+
 proc `cross`*(a, b: vec3): vec3 =
   result[0] = a.y * b.z - b.y * a.z
   result[1] = a.z * b.x - b.z * a.x
   result[2] = a.x * b.y - b.x * a.y
 
-proc `dot`*(a, b: vec3): float32 =
-  var t = a * b
-  result = t.x + t.y + t.z
+proc norm*(v: vec3): float32 {.inline.} = sqrt(v.dot(v))
 
-proc angle*(a, b: vec3): float32 = arccos(a.dot(b) / (a.length * b.length))
+proc normalize*(v: vec3): vec3 {.inline.} =
+  let mag = v.norm
+  result.x = v.x / mag
+  result.y = v.y / mag
+  result.z = v.z / mag
+
+proc angle*(a, b: vec3): float32 = arccos(a.dot(b) / (a.norm * b.norm))
 
 proc `*`*(a: mat4, b: vec4): vec4 =
   result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3]

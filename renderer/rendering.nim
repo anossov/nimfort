@@ -109,6 +109,9 @@ proc render*() =
       of "metalness":
         r.geometryPass.normal.use(0)
         r.debug.getUniform("alpha").set(true)
+      of "position":
+        r.geometryPass.position.use(0)
+        r.debug.getUniform("alpha").set(false)
       of "edges":
         r.smaa.t_edge.use(0)
         r.debug.getUniform("alpha").set(false)

@@ -5,6 +5,7 @@ import gl/texture
 import objfile
 import vector
 import strutils
+import random
 
 import systems/ecs
 import systems/resources
@@ -53,7 +54,6 @@ proc initWorld*() =
     .attach(newTransform(p=vec(3, 3, -8), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
     .attach(newPointLight(vec(12, 12, 12), radius=5))
     .attach(newModel(ball, w, emission=w, emissionIntensity=20))
-    .attach(CircleMovement(rvector: vec(0, 3, 0), period: 1, axis: zaxis, center: vec(0, 0, -8)))
 
   TheWorld.add("spot")
     .attach(newSpotLight(color=vec(2, 2, 2), angle=30, falloff=50, shadows=true))
@@ -138,12 +138,15 @@ proc initWorld*() =
     negz=vec(0.001, 0.002, 0.001),
   ))
 
+  TheWorld.handles[1].transform.animate(p=vec(random(-10.0, 10.0), random(-10.0, 10.0), random(-10.0, 10.0)), duration=1.0)
+
   info("World ok")
+
+
 
 proc updateWorld*() =
   TheWorld.handles[0].transform.setUp(vec(cos(Time.totalTime / 1), sin(Time.totalTime / 1), 0))
   TheWorld.handles[0].transform.updateMatrix()
-  TheWorld.handles[1].circleMovement.center.z = sin(Time.totalTime * 1) * 10
 
-  TheWorld.handles[2].model.emissionIntensity = sin(Time.totalTime) * 16 + 17
- #TheWorld.handles[2].light.color = vec(2, 2, 2) * (sin(Time.totalTime) + 1)
+  if TheWorld.handles[1].animation.done:
+    TheWorld.handles[1].transform.animate(p=vec(random(-10.0, 10.0), random(-10.0, 10.0), random(-10.0, 10.0)), duration=1.0)

@@ -19,10 +19,10 @@ proc initScreen*() =
 
   var quad = newMesh()
   quad.vertices = @[
-    Vertex(position: [-1.0'f32, -1.0, 0.0], uv: [0.0'f32, 0.0]),
-    Vertex(position: [ 1.0'f32, -1.0, 0.0], uv: [1.0'f32, 0.0]),
-    Vertex(position: [ 1.0'f32,  1.0, 0.0], uv: [1.0'f32, 1.0]),
-    Vertex(position: [-1.0'f32,  1.0, 0.0], uv: [0.0'f32, 1.0]),
+    Vertex(position: [-1.0'f32, -1.0, -1.0], uv: [0.0'f32, 0.0]),
+    Vertex(position: [ 1.0'f32, -1.0, -1.0], uv: [1.0'f32, 0.0]),
+    Vertex(position: [ 1.0'f32,  1.0, -1.0], uv: [1.0'f32, 1.0]),
+    Vertex(position: [-1.0'f32,  1.0, -1.0], uv: [0.0'f32, 1.0]),
   ]
   quad.indices = @[0'u32, 1, 2, 2, 3, 0]
   quad.buildBuffers()

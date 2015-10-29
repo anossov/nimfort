@@ -13,6 +13,13 @@ type
     scale*: vec3
     matrix*: mat4
 
+  Animation* = object of Component
+    tFrom*: Transform
+    tTo*: Transform
+    duration*: float
+    done*: bool
+    time: float
+
   LookAtConstraint* = object of Component
     target*: vec3
 
@@ -60,7 +67,21 @@ proc getView*(t: Transform): mat4 =
 ImplementComponent(Transform, transform)
 ImplementComponent(LookAtConstraint, lookat)
 ImplementComponent(CircleMovement, circleMovement)
+ImplementComponent(Animation, animation)
 
+
+proc animate*(t: Transform, p: vec3, duration: float) =
+  if not t.entity.has("Animation"):
+    t.entity.attach(Animation())
+
+  t.entity.animation.tFrom = t
+  t.entity.animation.tTo = t
+  t.entity.animation.tTo.position = p
+  t.entity.animation.duration = duration
+  t.entity.animation.done = false
+  t.entity.animation.time = 0.0
+
+  info($t.entity.animation.tFrom.position, " ", $t.entity.animation.tTo.position)
 
 proc updateTransforms*() =
   for i in circleMovementStore.data:
@@ -73,4 +94,19 @@ proc updateTransforms*() =
 
   for i in lookatStore.data:
     i.entity.transform.setForward(i.target - i.entity.transform.position)
+    i.entity.transform.updateMatrix()
+
+  for i in mitems(animationStore.data):
+    if i.done:
+      continue
+
+    i.time += Time.delta
+    if i.time > i.duration:
+      i.done = true
+      i.entity.transform.position = i.tTo.position
+    else:
+      let progress = i.time / i.duration
+      let distance = i.tTo.position - i.tFrom.position
+      i.entity.transform.position = i.tFrom.position + distance * progress
+
     i.entity.transform.updateMatrix()

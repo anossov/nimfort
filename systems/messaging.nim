@@ -32,7 +32,7 @@ proc initMessageSystem*() =
 proc listen*(listener: Listener, event: string) =
   if not Messages.listeners.hasKey(event):
     Messages.listeners[event] = newSeq[Listener]()
-  Messages.listeners.mget(event).add(listener)
+  Messages.listeners[event].add(listener)
 
 
 proc enqueue(listener: Listener, event: string) =
@@ -49,10 +49,10 @@ proc emit*(m: MessageSystem, event: string) =
   for i in -1..high(parts):
     let g = parts[0..i].join(".")
     if m.listeners.hasKey(g):
-      for listener in mitems(m.listeners.mget(g)):
+      for listener in mitems(m.listeners[g]):
         listener.enqueue(parts[high(parts)])
 
-iterator getMessages*(listener: var Listener) =
+iterator getMessages*(listener: var Listener): string =
   listener.iterating = true
   for m in listener.queue:
     yield m

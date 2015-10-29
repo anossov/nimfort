@@ -24,7 +24,7 @@ type
     texts: Table[string, EntityHandle]
 
     consoleLines: seq[EntityHandle]
-
+    topLine: int
     charListener: Listener
     keyListener: Listener
     errorListener: Listener
@@ -74,6 +74,7 @@ proc initGUI*()=
     let f = i.float
     let e = UI.newText("console-line-" & $i, 30.0, 50.0 + f*30.0)
     UI.consoleLines.add(e)
+    UI.topLine = i
 
   UI.charListener.listen("input.char")
   UI.keyListener.listen("input")
@@ -82,25 +83,25 @@ proc initGUI*()=
   info("UI ok")
 
 proc consoleAdd(ui: GUI, text: string, color=textColor) =
-  let lines = high(ui.consoleLines)
+  let n = len(UI.consoleLines)
+  UI.topLine = (UI.topLine + n - 1) mod n
 
-  for i, line in ui.consoleLines[1..lines]:
-    let this = ui.consoleLines[lines - i]
-    let next = ui.consoleLines[lines - i - 1]
-    this.label.update(next.label.text)
-    this.label.color = next.label.color
-    this.label.fade = next.label.fade
-    this.label.fadeTime = next.label.fadeTime
+  var newLine = UI.consoleLines[UI.topLine]
+  newLine.transform.position = vec(30.0, 50.0, 0.0)
+  newLine.transform.updateMatrix()
+  newLine.label.update(text)
+  newLine.label.color = color
+  newLine.label.fade = true
+  newLine.label.fadeTime = 10.0
 
-  ui.consoleLines[0].label.update(text)
-  ui.consoleLines[0].label.color = color
-  ui.consoleLines[0].label.fade = true
-  ui.consoleLines[0].label.fadeTime = 10.0
+  for i, line in ui.consoleLines:
+    let h = (n + i - UI.topLine) mod n + 1
+    line.transform.animate(p=vec(30.0, 50.0 + h.float * 30.0, 0.0), duration=0.1)
 
 proc updateUi*() =
-  UI.texts.mget("frametime").label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
+  UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
 
-  var console = UI.texts.mget("console")
+  var console = UI.texts["console"]
   let t = console.label.text
 
   for e in UI.charListener.getMessages():
