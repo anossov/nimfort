@@ -26,13 +26,17 @@ proc add(w: var World, name: string): EntityHandle =
   w.handles.add(e)
   return e
 
+const
+  N = 12
+  S = 100
+
 
 proc terrain(): Mesh =
   result = newMesh()
 
   var x = 0
-  for i in -20..20:
-    for j in -20..20:
+  for i in -S..S:
+    for j in -S..S:
       let
         fi = i.float() - 0.5
         fj = j.float() - 0.5
@@ -61,11 +65,14 @@ proc initWorld*() =
   let w = getColorTexture(vec(1.0, 1.0, 1.0, 1.0))
   TheWorld = World(handles: newSeq[EntityHandle]())
 
-  TheWorld.add("point")
-    .attach(newTransform(p=vec(3, 3, -8), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
-    .attach(newPointLight(vec(12, 12, 12), radius=5))
-    .attach(newModel(getMesh("ball"), w, emission=w, emissionIntensity=20))
+  for i in 0..N:
+    let c = vec(random(0.4, 1.0), random(0.4, 1.0), random(0.4, 1.0), 1.0)
+    TheWorld.add("point")
+      .attach(newTransform(p=vec(3, 3, -8), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
+      .attach(newPointLight((c * 12).xyz, radius=5))
+      .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=20))
 
+    TheWorld.handles[i].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=6.0)
 
   TheWorld.add("sun")
     .attach(newTransform(f=vec(3, -8, -4.4), p=vec(-3, 5, 5), u=yaxis, s=5.0))
@@ -79,8 +86,6 @@ proc initWorld*() =
     posz=vec(0.001, 0.002, 0.001),
     negz=vec(0.001, 0.002, 0.001),
   ))
-
-  TheWorld.handles[0].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=6.0)
 
   TheWorld.add("terrain")
     .attach(newTransform())
@@ -104,5 +109,6 @@ proc initWorld*() =
 
 
 proc updateWorld*() =
-  if TheWorld.handles[0].animation.done:
-    TheWorld.handles[0].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=6.0)
+  for i in 0..N:
+    if TheWorld.handles[i].animation.done:
+      TheWorld.handles[i].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=random(0.5, 10.0))

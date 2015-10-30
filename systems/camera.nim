@@ -29,7 +29,7 @@ proc initCamera*() =
     projection: orthographic(-15 * ar, 15 * ar, -15, 15, 1, 50),
     #projection: perspective(50.0, windowWidth / windowHeight, 3, 50),
     position: vec(-15, 15, -8),
-    forward: vec(15, -15, 8),
+    forward: vec(15, -25, 8),
     listener: newListener()
   )
   Camera.listener.listen("camera")
@@ -45,7 +45,8 @@ proc updateCamera*() =
       Camera.panning = false
     else: discard
 
-  if Camera.panning:
+  if Camera.panning and Input.cursorPos != Camera.panCursorOrigin:
+    Camera.position = Camera.panOrigin - Camera.forward
     let
       viewport = vec(0.0, 0.0, windowWidth, windowHeight)
       sΔ       = Input.cursorPos - Camera.panCursorOrigin
@@ -55,8 +56,10 @@ proc updateCamera*() =
       wTarget  = unproject(sTarget, PV, viewport)
 
       wΔ = wTarget - Camera.panOrigin
+
       f = Camera.forward.normalize()
-      shift = wΔ.projectOn(yaxis).projectOn(f)
+
+      shift = f * (-wΔ.y / (yaxis.dot(-f)))
       shifted = wTarget - shift
 
     Camera.position = shifted - Camera.forward
