@@ -38,7 +38,7 @@ proc startup*() =
 proc gameloop*() =
   var quit = newListener()
   quit.listen("quit")
-  info("Loading complete in $1s", formatFloat(Time.now(), precision=3))
+  info("Loading complete in $1s".format(formatFloat(Time.now(), precision=3)))
   while true:
     if quit.hasMessages():
       break

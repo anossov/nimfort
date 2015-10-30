@@ -119,6 +119,12 @@ proc `-`*(a, b: vec3): vec3 =
   result.y = a.y - b.y
   result.z = a.z - b.z
 
+proc `-`*(a, b: vec4): vec4 =
+  result.x = a.x - b.x
+  result.y = a.y - b.y
+  result.z = a.z - b.z
+  result.w = a.w - b.w
+
 proc `-`*(a: vec2, b: float32): vec2 =
   result.x = a.x - b
   result.y = a.y - b
@@ -127,6 +133,12 @@ proc `-`*(a: vec3, b: float32): vec3 =
   result.x = a.x - b
   result.y = a.y - b
   result.z = a.z - b
+
+proc `-`*(a: vec4, b: float32): vec4 =
+  result.x = a.x - b
+  result.y = a.y - b
+  result.z = a.z - b
+  result.w = a.w - b
 
 
 proc `+`*(a, b: vec2): vec2 =
@@ -138,6 +150,12 @@ proc `+`*(a, b: vec3): vec3 =
   result.y = a.y + b.y
   result.z = a.z + b.z
 
+proc `+`*(a, b: vec4): vec4 =
+  result.x = a.x + b.x
+  result.y = a.y + b.y
+  result.z = a.z + b.z
+  result.w = a.w + b.w
+
 proc `+`*(a: vec2, b: float32): vec2 =
   result.x = a.x + b
   result.y = a.y + b
@@ -146,6 +164,12 @@ proc `+`*(a: vec3, b: float32): vec3 =
   result.x = a.x + b
   result.y = a.y + b
   result.z = a.z + b
+
+proc `+`*(a: vec4, b: float32): vec4 =
+  result.x = a.x + b
+  result.y = a.y + b
+  result.z = a.z + b
+  result.w = a.w + b
 
 
 proc `*`*(a, b: vec2): vec2 =
@@ -156,6 +180,12 @@ proc `*`*(a, b: vec3): vec3 =
   result.x = a.x * b.x
   result.y = a.y * b.y
   result.z = a.z * b.z
+
+proc `*`*(a, b: vec4): vec4 =
+  result.x = a.x * b.x
+  result.y = a.y * b.y
+  result.z = a.z * b.z
+  result.w = a.w * b.w
 
 proc `*`*(a: vec2, b: float32): vec2 =
   result.x = a.x * b
@@ -173,10 +203,35 @@ proc `*`*(a: vec4, b: float32): vec4 =
   result.w = a.w * b
 
 
+proc `*`*(a: mat4, b: float32): mat4 =
+  result[0] = a[0] * b
+  result[1] = a[1] * b
+  result[2] = a[2] * b
+  result[3] = a[3] * b
+  result[4] = a[4] * b
+  result[5] = a[5] * b
+  result[6] = a[6] * b
+  result[7] = a[7] * b
+  result[8] = a[8] * b
+  result[9] = a[9] * b
+  result[10] = a[10] * b
+  result[11] = a[11] * b
+  result[12] = a[12] * b
+  result[13] = a[13] * b
+  result[14] = a[14] * b
+  result[15] = a[15] * b
+
+
 proc `/`*(a: vec3, b: float32): vec3 =
   result.x = a.x / b
   result.y = a.y / b
   result.z = a.z / b
+
+proc `/`*(a: vec4, b: float32): vec4 =
+  result.x = a.x / b
+  result.y = a.y / b
+  result.z = a.z / b
+  result.w = a.w / b
 
 
 proc `dot`*(a, b: vec3): float32 =
@@ -314,12 +369,91 @@ proc lookAt*(eye, center, up: vec3): mat4 =
   result[14] = (f.dot(eye))
   result[15] = 1.0
 
+proc inverse*(m: mat4): mat4 =
+  let
+    Coef00 = m[10] * m[15] - m[14] * m[11]
+    Coef02 = m[6] * m[15] - m[14] * m[7]
+    Coef03 = m[6] * m[11] - m[10] * m[7]
+
+    Coef04 = m[9] * m[15] - m[13] * m[11]
+    Coef06 = m[5] * m[15] - m[13] * m[7]
+    Coef07 = m[5] * m[11] - m[9] * m[7]
+
+    Coef08 = m[9] * m[14] - m[13] * m[10]
+    Coef10 = m[5] * m[14] - m[13] * m[6]
+    Coef11 = m[5] * m[10] - m[9] * m[6]
+
+    Coef12 = m[8] * m[15] - m[12] * m[11]
+    Coef14 = m[4] * m[15] - m[12] * m[7]
+    Coef15 = m[4] * m[11] - m[8] * m[7]
+
+    Coef16 = m[8] * m[14] - m[12] * m[10]
+    Coef18 = m[4] * m[14] - m[12] * m[6]
+    Coef19 = m[4] * m[10] - m[8] * m[6]
+
+    Coef20 = m[8] * m[13] - m[12] * m[9]
+    Coef22 = m[4] * m[13] - m[12] * m[5]
+    Coef23 = m[4] * m[9] - m[8] * m[5]
+
+    Fac0 = vec(Coef00, Coef00, Coef02, Coef03)
+    Fac1 = vec(Coef04, Coef04, Coef06, Coef07)
+    Fac2 = vec(Coef08, Coef08, Coef10, Coef11)
+    Fac3 = vec(Coef12, Coef12, Coef14, Coef15)
+    Fac4 = vec(Coef16, Coef16, Coef18, Coef19)
+    Fac5 = vec(Coef20, Coef20, Coef22, Coef23)
+
+    Vec0 = vec(m[4], m[0], m[0], m[0])
+    Vec1 = vec(m[5], m[1], m[1], m[1])
+    Vec2 = vec(m[6], m[2], m[2], m[2])
+    Vec3 = vec(m[7], m[3], m[3], m[3])
+
+    Inv0 = Vec1 * Fac0 - Vec2 * Fac1 + Vec3 * Fac2
+    Inv1 = Vec0 * Fac0 - Vec2 * Fac3 + Vec3 * Fac4
+    Inv2 = Vec0 * Fac1 - Vec1 * Fac3 + Vec3 * Fac5
+    Inv3 = Vec0 * Fac2 - Vec1 * Fac4 + Vec2 * Fac5
+
+    SignA = vec(+1, -1, +1, -1)
+    SignB = vec(-1, +1, -1, +1)
+
+    Inverse = mat(Inv0 * SignA, Inv1 * SignB, Inv2 * SignA, Inv3 * SignB)
+
+    Row0 = vec(Inverse[0], Inverse[4], Inverse[8], Inverse[12])
+    Dot0 = vec(m[0], m[1], m[2], m[3]) * Row0
+
+    Dot1 = (Dot0.x + Dot0.y) + (Dot0.z + Dot0.w)
+
+    OneOverDeterminant = 1.0 / Dot1
+
+  result = Inverse * OneOverDeterminant
+
+
+proc project*(point: vec3, PV: mat4, viewport: vec4): vec3 =
+  var tmp = PV * vec(point, 1.0)
+  tmp = tmp / tmp.w;
+  tmp = tmp * 0.5 + 0.5
+  tmp[0] = tmp[0] * viewport[2] + viewport[0]
+  tmp[1] = tmp[1] * viewport[3] + viewport[1]
+
+  result = tmp.xyz
+
+
+proc unproject*(point: vec3, PV: mat4, viewport: vec4): vec4 =
+  let Inverse = inverse(PV)
+
+  var tmp = vec(point, 1.0)
+
+  tmp.x = (tmp.x - viewport[0]) / viewport[2]
+  tmp.y = (tmp.y - viewport[1]) / viewport[3]
+  tmp = tmp * 2.0 - 1.0
+
+  result = Inverse * tmp
+  result = result / result.w
+
+
 # TODO:
 # determinant
-# inverse
 # reflect
 # refract
-# unproject
 # point distance
 # vector rotate directly
 # quaternions

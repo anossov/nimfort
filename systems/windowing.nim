@@ -1,4 +1,5 @@
 import logging
+import strutils
 import glfw/wrapper as glfw
 import vector
 import systems/messaging
@@ -32,7 +33,7 @@ proc initWindow*() =
   glfw.makeContextCurrent(Window)
   glfw.swapInterval(0)
 
-  info("Window ok: $1x$2", windowWidth, windowHeight)
+  info("Window ok: $1x$2".format(windowWidth, windowHeight))
 
 
 proc updateWindow*() =

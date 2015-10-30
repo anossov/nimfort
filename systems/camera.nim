@@ -1,40 +1,63 @@
+import logging
 import vector
 import config
 import math
 import systems/input
+import systems/messaging
 
 type
   CameraSystem* = ref object
     position*: vec3
-    target: vec3
-
+    forward: vec3
     projection: mat4
+    listener: Listener
+    panning: bool
+    panCursorOrigin: vec2
+    panOrigin: vec3
 
 
 var Camera*: CameraSystem
 
 
+proc getProjection*(c: CameraSystem): mat4 = c.projection
+proc getView*(c: CameraSystem): mat4 = lookAt(c.position, c.position + c.forward, yaxis)
+
+
 proc initCamera*() =
+  let ar = windowWidth / windowHeight
   Camera = CameraSystem(
-    projection: perspective(45.0, windowWidth / windowHeight, 3, 200.0),
+    projection: orthographic(-15 * ar, 15 * ar, -15, 15, 1, 50),
+    position: vec(-15, 15, -8),
+    forward: vec(15, -15, 8),
+    listener: newListener()
   )
+  Camera.listener.listen("camera")
 
 proc updateCamera*() =
-  var
-    phi = (windowWidth - Input.cursorPos.x) / 200
-    theta = (windowHeight - Input.cursorPos.y) / 200
+  for e in Camera.listener.getMessages():
+    case e:
+    of "drag":
+      Camera.panning = true
+      Camera.panOrigin = Camera.position + Camera.forward
+      Camera.panCursorOrigin = Input.cursorPos
+    of "release":
+      Camera.panning = false
+    else: discard
 
-  if theta < PI * 0.51:
-    theta = PI * 0.51
-  if theta > PI * 1.49:
-    theta = PI * 1.49
+  if Camera.panning:
+    let
+      viewport = vec(0.0, 0.0, windowWidth, windowHeight)
+      delta    = Input.cursorPos - Camera.panCursorOrigin
+      PV       = Camera.getProjection() * Camera.getView()
+      TODO     = 2.0  # TODO: justify this
+      targetScreen    = project(Camera.panOrigin, PV, viewport)
+      newTargetScreen = targetScreen - vec(delta.x, -delta.y * TODO, 0.0)
+      newTargetWorld  = unproject(newTargetScreen, PV, viewport).xyz
 
-  Camera.position.x = sin(phi) * cos(theta) * 25
-  Camera.position.y = sin(theta) * 25
-  Camera.position.z = cos(phi) * cos(theta) * 25
+      newPos = newTargetWorld - Camera.forward
 
-
-proc getView*(c: CameraSystem): mat4 = lookAt(c.position, c.target, yaxis)
+    Camera.position.x = newPos.x
+    Camera.position.z = newPos.z
 
 proc getViewRot*(c: CameraSystem): mat4 =
   result = c.getView()
@@ -44,5 +67,3 @@ proc getViewRot*(c: CameraSystem): mat4 =
   result[12] = 0.0
   result[13] = 0.0
   result[14] = 0.0
-
-proc getProjection*(c: CameraSystem): mat4 = c.projection

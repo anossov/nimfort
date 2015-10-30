@@ -111,7 +111,7 @@ proc newGhettoIBL*(t: Texture, c: vec3): GhettoIBL =
 
 proc getProjection*(light: Light): mat4 =
   if light.kind == Directional:
-    return orthographic(-20.0, 20.0, -20.0, 20.0, 2, 50.0)
+    return orthographic(-60.0, 60.0, -60.0, 60.0, 2, 150.0)
   if light.kind == Spot:
     return perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
   return identity()

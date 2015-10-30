@@ -39,7 +39,7 @@ proc newTonemapping*(): Tonemapping =
   fb.attach(t)
   fb.attachDepthStencilRBO(Screen.width, Screen.height)
 
-  debug("HDR buffer: $1", fb.check())
+  debug("HDR buffer: ", fb.check())
 
   var tm = getShader("tonemap")
   tm.use()

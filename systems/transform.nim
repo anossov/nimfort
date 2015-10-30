@@ -81,8 +81,6 @@ proc animate*(t: Transform, p: vec3, duration: float) =
   t.entity.animation.done = false
   t.entity.animation.time = 0.0
 
-  info($t.entity.animation.tFrom.position, " ", $t.entity.animation.tTo.position)
-
 proc updateTransforms*() =
   for i in circleMovementStore.data:
     let

@@ -63,7 +63,7 @@ proc initRenderSystem*() =
   Renderer.listener = newListener()
   Renderer.listener.listen("debug")
 
-  info("Renderer ok: OpenGL v. $1", cast[cstring](glGetString(GL_VERSION)))
+  info("Renderer ok: OpenGL v.", cast[cstring](glGetString(GL_VERSION)))
 
 
 # TODO: maybe Tile-Based DR

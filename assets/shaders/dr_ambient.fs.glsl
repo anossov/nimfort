@@ -15,5 +15,5 @@ void main() {
 
     vec3 E = ex + ey + ez;
 
-    outColor = vec4(E, 1.0);
+    outColor = vec4(E * a, 1.0);
 }

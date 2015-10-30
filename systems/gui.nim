@@ -28,6 +28,7 @@ type
     charListener: Listener
     keyListener: Listener
     errorListener: Listener
+    infoListener: Listener
 
 
 var UI*: GUI
@@ -62,6 +63,7 @@ proc initGUI*()=
     charListener: newListener(),
     keyListener: newListener(),
     errorListener: newListener(),
+    infoListener: newListener(),
     font: getFont("liberationsans"),
     texts: initTable[string, EntityHandle](),
     consoleLines: newSeq[EntityHandle](),
@@ -79,6 +81,7 @@ proc initGUI*()=
   UI.charListener.listen("input.char")
   UI.keyListener.listen("input")
   UI.errorListener.listen("error")
+  UI.infoListener.listen("info")
 
   info("UI ok")
 
@@ -115,7 +118,7 @@ proc updateUi*() =
 
   for k in UI.keyListener.getMessages():
     case k:
-    of "ENTER-down":
+    of "ENTER-down", "KP_ENTER-down":
       if t == "": continue
 
       Messages.emit(t)
@@ -128,3 +131,6 @@ proc updateUi*() =
 
   for e in UI.errorListener.getMessages():
     UI.consoleAdd(e, vec(1.0, 0.1, 0.1, 1.0))
+
+  for e in UI.infoListener.getMessages():
+    UI.consoleAdd(e, vec(0.1, 0.6, 0.1, 1.0))

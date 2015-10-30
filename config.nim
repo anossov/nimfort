@@ -1,7 +1,7 @@
 import logging
 
 const
-  windowWidth*    = 2200
+  windowWidth*    = 1600
   windowHeight*   = 1200
   windowTitle*    = "Nimfort"
 
@@ -12,6 +12,9 @@ const
 
     ("control-KP_ADD-down", "camera.exposure-up"),
     ("control-KP_SUBTRACT-down", "camera.exposure-down"),
+
+    ("RMB-down", "camera.drag"),
+    ("RMB-up", "camera.release"),
   ]
 
   bloomScale*     = 3

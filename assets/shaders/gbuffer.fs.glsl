@@ -27,6 +27,7 @@ void main()
     } else {
         gNormalMetalness.rgb = normalize(TBN[2]);
     }
+
     gNormalMetalness.a = texture(metalness, uvf).r;
 
     gAlbedoRoughness.rgb = texture(albedo, uvf).rgb;

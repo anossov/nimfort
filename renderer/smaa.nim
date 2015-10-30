@@ -34,7 +34,7 @@ proc newSMAA*(): SMAA =
   var in_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
   var in_fbo = newFramebuffer()
   in_fbo.attach(in_tex)
-  debug("SMAA input: $1", in_fbo.check())
+  debug("SMAA input: ", in_fbo.check())
 
   var edge_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float)
   var blend_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float)

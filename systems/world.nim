@@ -27,126 +27,82 @@ proc add(w: var World, name: string): EntityHandle =
   return e
 
 
+proc terrain(): Mesh =
+  result = newMesh()
+
+  var x = 0
+  for i in -20..20:
+    for j in -20..20:
+      let
+        fi = i.float() - 0.5
+        fj = j.float() - 0.5
+      result.vertices.add([
+        Vertex(position: vec(fi,       -0.5, fj + 1.0), uv: vec(0, 1), normal: yaxis, tangent: xaxis, bitangent: zaxis),
+        Vertex(position: vec(fi,       -0.5, fj      ), uv: vec(0, 0), normal: yaxis, tangent: xaxis, bitangent: zaxis),
+        Vertex(position: vec(fi + 1.0, -0.5, fj      ), uv: vec(1, 0), normal: yaxis, tangent: xaxis, bitangent: zaxis),
+        Vertex(position: vec(fi + 1.0, -0.5, fj + 1.0), uv: vec(1, 1), normal: yaxis, tangent: xaxis, bitangent: zaxis),
+      ])
+
+      result.indices.add([
+        uint32(x * 4 + 0),
+        uint32(x * 4 + 2),
+        uint32(x * 4 + 1),
+        uint32(x * 4 + 0),
+        uint32(x * 4 + 3),
+        uint32(x * 4 + 2),
+      ])
+      x += 1
+
+
+  result.buildBuffers()
+
+
 proc initWorld*() =
-  var p = getMesh("cube")
-  var ball = getMesh("ball")
-  var c = getMesh("lightcone")
-
-  let
-    w = getColorTexture(vec(1.0, 1.0, 1.0, 1.0))
-    cone = getTexture("lightcone", srgb=true)
-    coneE = getTexture("lightconeE", srgb=true)
-    coneR = getTexture("lightconeR", srgb=true)
-
+  let w = getColorTexture(vec(1.0, 1.0, 1.0, 1.0))
   TheWorld = World(handles: newSeq[EntityHandle]())
-
-  TheWorld.add("axe")
-    .attach(newTransform(s=0.4))
-    .attach(newModel(
-      getMesh("axe"),
-      getTexture("axe_albedo", srgb=true),
-      getTexture("axe_normal"),
-      getTexture("axe_roughness", srgb=true),
-      getTexture("axe_metalness", srgb=true),
-    ))
 
   TheWorld.add("point")
     .attach(newTransform(p=vec(3, 3, -8), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
     .attach(newPointLight(vec(12, 12, 12), radius=5))
-    .attach(newModel(ball, w, emission=w, emissionIntensity=20))
+    .attach(newModel(getMesh("ball"), w, emission=w, emissionIntensity=20))
 
-  TheWorld.add("spot")
-    .attach(newSpotLight(color=vec(2, 2, 2), angle=30, falloff=50, shadows=true))
-    .attach(newTransform(p=vec(7, 7, 10), f=vec(-7, -7, -5), s=0.5))
-    .attach(newModel(c, cone, roughness=coneR, emission=coneE, emissionIntensity=16, shadows=false))
-
-  TheWorld.add("b")
-    .attach(newModel(
-      ball,
-      getColorTexture(vec(0.56, 0.57, 0.58 , 1.0)),
-      emptyTexture(),
-      getColorTexture(vec(0.05, 0.05, 0.05, 1.0)),
-      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
-    ))
-    .attach(newTransform(p=vec(0, 3, -4)))
-
-  TheWorld.add("b")
-    .attach(newModel(
-      ball,
-      getColorTexture(vec(0.95, 0.93, 0.88, 1.0)),
-      emptyTexture(),
-      getColorTexture(vec(0.25, 0.25, 0.25, 1.0)),
-      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
-    ))
-    .attach(newTransform(p=vec(0, 3, -1)))
-
-  TheWorld.add("b")
-    .attach(newModel(
-      ball,
-      getColorTexture(vec(1.00, 0.71, 0.29, 1.0)),
-      emptyTexture(),
-      getColorTexture(vec(0.50, 0.50, 0.50, 1.0)),
-      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
-    ))
-    .attach(newTransform(p=vec(0, 3, 2)))
-
-  TheWorld.add("b")
-    .attach(newModel(
-      ball,
-      getColorTexture(vec(1.00, 0.71, 0.29, 1.0)),
-      emptyTexture(),
-      getColorTexture(vec(0.05, 0.05, 0.05, 1.0)),
-      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
-    ))
-    .attach(newTransform(p=vec(0, -3, 2)))
-
-  TheWorld.add("b")
-    .attach(newModel(
-      ball,
-      getColorTexture(vec(0.95, 0.64, 0.54, 1.0)),
-      emptyTexture(),
-      getColorTexture(vec(0.75, 0.75, 0.75, 1.0)),
-      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
-    ))
-    .attach(newTransform(p=vec(0, 3, 5)))
-
-  TheWorld.add("b")
-    .attach(newModel(
-      ball,
-      getColorTexture(vec(0.91, 0.92, 0.92, 1.0)),
-      emptyTexture(),
-      getColorTexture(vec(0.98, 0.98, 0.98, 1.0)),
-      getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
-    ))
-    .attach(newTransform(p=vec(0, 3, 8)))
-
-  TheWorld.add("sky").attach(newSkyBox(getCubeMap("lake"), vec(2.0, 2.0, 2.0)))
 
   TheWorld.add("sun")
-    .attach(newTransform(f=vec(3, -3, -5), p=vec(-3, 3, 5)*20, u=yaxis, s=5.0))
-    .attach(newDirLight(color=vec(3, 3, 3), shadows=true))
-    .attach(newModel(getMesh("ball"), w, emission=w, emissionIntensity=16))
-
-  TheWorld.add("ibl").attach(newGhettoIBL(getCubeMap("lake"), vec(0.8, 0.8, 0.8)))
+    .attach(newTransform(f=vec(3, -8, -4.4), p=vec(-3, 5, 5), u=yaxis, s=5.0))
+    .attach(newDirLight(color=vec(0.1, 0.1, 0.1), shadows=true))
 
   TheWorld.add("amb").attach(newAmbientCube(
     posx=vec(0.001, 0.002, 0.001),
     negx=vec(0.001, 0.002, 0.001),
-    posy=vec(0.001, 0.001, 0.003),
+    posy=vec(0.01, 0.01, 0.03),
     negy=vec(0.01, 0.0, 0.0),
     posz=vec(0.001, 0.002, 0.001),
     negz=vec(0.001, 0.002, 0.001),
   ))
 
-  TheWorld.handles[1].transform.animate(p=vec(random(-10.0, 10.0), random(-10.0, 10.0), random(-10.0, 10.0)), duration=1.0)
+  TheWorld.handles[0].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=6.0)
+
+  TheWorld.add("terrain")
+    .attach(newTransform())
+    .attach(newModel(
+      terrain(),
+      albedo=getColorTexture(vec(0.5, 0.5, 0.5, 1.0)),
+      roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0)),
+      normal=getTexture("bevel"),
+    ))
+
+  TheWorld.add("c")
+    .attach(newTransform())
+    .attach(newModel(
+        getMesh("cube"),
+        albedo=w,
+        roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
+    ))
 
   info("World ok")
 
 
 
 proc updateWorld*() =
-  TheWorld.handles[0].transform.setUp(vec(cos(Time.totalTime / 1), sin(Time.totalTime / 1), 0))
-  TheWorld.handles[0].transform.updateMatrix()
-
-  if TheWorld.handles[1].animation.done:
-    TheWorld.handles[1].transform.animate(p=vec(random(-10.0, 10.0), random(-10.0, 10.0), random(-10.0, 10.0)), duration=1.0)
+  if TheWorld.handles[0].animation.done:
+    TheWorld.handles[0].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=6.0)

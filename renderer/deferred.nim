@@ -43,7 +43,7 @@ proc newGeometryPass*(): GeometryPass =
   b.attach(a)
   b.attachDepthStencilRBO(Screen.width, Screen.height)
 
-  debug("GBuffer: $1", b.check())
+  debug("GBuffer: ", b.check())
 
   var s = getShader("gbuffer")
   s.use()
