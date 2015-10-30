@@ -253,6 +253,9 @@ proc normalize*(v: vec3): vec3 {.inline.} =
 
 proc angle*(a, b: vec3): float32 = arccos(a.dot(b) / (a.norm * b.norm))
 
+proc projectOn*(a, b: vec3): vec3 =
+  result = b * a.dot(b)
+
 proc `*`*(a: mat4, b: vec4): vec4 =
   result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3]
   result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3]
@@ -330,7 +333,6 @@ proc perspective*(fov, aspect, near, far: float32): mat4 =
   result[10] = -(far + near) / (far - near)
   result[14] = -(2.0 * far * near) / (far - near)
   result[11] = -1.0
-
 
 proc orthographic*(left, right, bottom, top, near, far: float32): mat4 =
   result[0] = 2.0 / (right - left)
@@ -437,7 +439,7 @@ proc project*(point: vec3, PV: mat4, viewport: vec4): vec3 =
   result = tmp.xyz
 
 
-proc unproject*(point: vec3, PV: mat4, viewport: vec4): vec4 =
+proc unproject*(point: vec3, PV: mat4, viewport: vec4): vec3 =
   let Inverse = inverse(PV)
 
   var tmp = vec(point, 1.0)
@@ -446,8 +448,8 @@ proc unproject*(point: vec3, PV: mat4, viewport: vec4): vec4 =
   tmp.y = (tmp.y - viewport[1]) / viewport[3]
   tmp = tmp * 2.0 - 1.0
 
-  result = Inverse * tmp
-  result = result / result.w
+  tmp = Inverse * tmp
+  result = tmp.xyz / tmp.w
 
 
 # TODO:

@@ -27,6 +27,7 @@ proc initCamera*() =
   let ar = windowWidth / windowHeight
   Camera = CameraSystem(
     projection: orthographic(-15 * ar, 15 * ar, -15, 15, 1, 50),
+    #projection: perspective(50.0, windowWidth / windowHeight, 3, 50),
     position: vec(-15, 15, -8),
     forward: vec(15, -15, 8),
     listener: newListener()
@@ -47,17 +48,18 @@ proc updateCamera*() =
   if Camera.panning:
     let
       viewport = vec(0.0, 0.0, windowWidth, windowHeight)
-      delta    = Input.cursorPos - Camera.panCursorOrigin
+      sΔ       = Input.cursorPos - Camera.panCursorOrigin
       PV       = Camera.getProjection() * Camera.getView()
-      TODO     = 2.0  # TODO: justify this
-      targetScreen    = project(Camera.panOrigin, PV, viewport)
-      newTargetScreen = targetScreen - vec(delta.x, -delta.y * TODO, 0.0)
-      newTargetWorld  = unproject(newTargetScreen, PV, viewport).xyz
+      sOrigin  = project(Camera.panOrigin, PV, viewport)
+      sTarget  = vec(sOrigin.x - sΔ.x, sOrigin.y + sΔ.y, sOrigin.z)
+      wTarget  = unproject(sTarget, PV, viewport)
 
-      newPos = newTargetWorld - Camera.forward
+      wΔ = wTarget - Camera.panOrigin
+      f = Camera.forward.normalize()
+      shift = wΔ.projectOn(yaxis).projectOn(f)
+      shifted = wTarget - shift
 
-    Camera.position.x = newPos.x
-    Camera.position.z = newPos.z
+    Camera.position = shifted - Camera.forward
 
 proc getViewRot*(c: CameraSystem): mat4 =
   result = c.getView()
