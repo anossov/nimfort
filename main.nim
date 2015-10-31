@@ -44,6 +44,7 @@ proc gameloop*() =
       break
 
     updateTime()
+    processECSMessages()
     updateInput()
     updateWorld()
     updateTransforms()

@@ -2,6 +2,9 @@ import logging
 import tables
 import typetraits
 import strutils
+import sequtils
+
+import systems/messaging
 
 type
   EntityHandle* = int32
@@ -13,6 +16,7 @@ type
 
   EntityManager = ref object
     entities: seq[Entity]
+    listener: Listener
 
   Component* = object of RootObj
     entity*: EntityHandle
@@ -28,7 +32,9 @@ var Entities*: EntityManager
 proc initEntityManager*() =
   Entities = EntityManager(
     entities: newSeq[Entity](),
+    listener: newListener(),
   )
+  Entities.listener.listen("e")
 
 proc newEntity*(name: string): EntityHandle =
   Entities.entities.add(Entity(
@@ -45,11 +51,17 @@ proc addComponent*(em: EntityManager, e: EntityHandle, c: ComponentHandle, ctype
 proc `[]`*(e: EntityHandle, ctype: string): ComponentHandle =
   return Entities.entities[e].components[ctype]
 
+proc exists*(e: EntityHandle): bool =
+  return e >= 0 and e < Entities.entities.len
+
 proc has*(e: EntityHandle, ctype: string): bool =
   return Entities.entities[e].components.hasKey(ctype)
 
 proc name*(e: EntityHandle): string =
   return Entities.entities[e].name
+
+proc listComponents*(e: EntityHandle): seq[string] =
+  return toSeq(Entities.entities[e].components.keys)
 
 proc newComponentStore*[T](): ComponentStore[T] =
   result = ComponentStore[T](
@@ -82,3 +94,31 @@ template ImplementComponent*(Type: typedesc, accessor: expr) {.immediate.} =
 
   proc `Type Store`*(): ComponentStore[Type] =
     return `accessor Store`
+
+
+proc parseEntity(m: Event): EntityHandle =
+  result = m.payload.parseInt().EntityHandle
+  if not result.exists:
+    raise newException(ValueError, "No such entity: " & $result)
+
+
+proc processECSMessages*() =
+  for m in Entities.listener.getMessages():
+    try:
+      case m.name:
+
+      of "name":
+          Messages.emit("info", m.parseEntity().name)
+
+      of "find":
+        for i, e in Entities.entities:
+          if e.name == m.payload:
+            Messages.emit("info", $i)
+
+      of "components":
+        let e = m.parseEntity()
+        Messages.emit("info", e.listComponents().join(", "))
+
+      else: discard
+    except ValueError:
+      Messages.emit("error", getCurrentExceptionMsg())

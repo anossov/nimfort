@@ -31,7 +31,7 @@ type
 var UI*: GUI
 
 const
-  textScale  = 0.5
+  textScale  = 0.4
   textColor  = vec(0.5, 0.5, 0.5, 1.0)
   errorColor = vec(1.0, 0.1, 0.1, 1.0)
   infoColor  = vec(0.1, 0.6, 0.1, 1.0)
@@ -115,11 +115,11 @@ proc updateUi*() =
     of "char":
       try:
         if e.payload.len > 8:
-          raise newException(ValueError, "")
+          raise newException(ValueError, "Character code too long")
         let c = e.payload.parseHexInt.Rune.toUTF8
         console.label.update(t & c)
       except ValueError:
-        Messages.emit("error", "Invalid character code: " & e.payload)
+        Messages.emit("error", getCurrentExceptionMsg())
 
     of "info":
       UI.consoleAdd(e.payload, infoColor)
