@@ -52,6 +52,11 @@ proc vec*(x, y, z, w: float32): vec4 {.inline.} =
   result.z = z
   result.w = w
 
+proc vec*(v: vec2, z: float32): vec3 {.inline} =
+  result.x = v.x
+  result.y = v.y
+  result.z = z
+
 proc vec*(v: vec3, w: float32): vec4 {.inline} =
   result.x = v.x
   result.y = v.y

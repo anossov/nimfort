@@ -141,7 +141,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
 
   for kind, shader in mpairs(pass.shaders):
     shader.use()
-    shader.getUniform("eye").set(Camera.position)
+    shader.getUniform("eye").set(Camera.transform.position)
 
     for light in LightStore().data:
       if light.kind != kind:
@@ -178,14 +178,14 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
 
   for i in GhettoIBLStore().data:
     pass.IBL.use()
-    pass.IBL.getUniform("eye").set(Camera.position)
+    pass.IBL.getUniform("eye").set(Camera.transform.position)
     pass.IBL.getUniform("lightColor").set(i.color)
     i.cubemap.use(3)
     Screen.quad.render()
 
   for i in AmbientCubeStore().data:
     pass.ambient.use()
-    pass.ambient.getUniform("eye").set(Camera.position)
+    pass.ambient.getUniform("eye").set(Camera.transform.position)
     pass.ambient.getUniform("colors[0]").set(i.colors[0])
     pass.ambient.getUniform("colors[1]").set(i.colors[1])
     pass.ambient.getUniform("colors[2]").set(i.colors[2])

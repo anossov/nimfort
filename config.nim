@@ -17,6 +17,9 @@ const
     ("RMB-down", "camera.drag"),
     ("RMB-up", "camera.release"),
 
+    ("SCROLL_UP", "camera.zoom-"),
+    ("SCROLL_DOWN", "camera.zoom+"),
+
     ("ENTER-down", "console.submit"),
     ("KP_ENTER-down", "console.submit"),
     ("BACKSPACE-down", "console.erase"),

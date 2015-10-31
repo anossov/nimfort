@@ -5,13 +5,15 @@ import config
 import math
 import systems/input
 import systems/messaging
+import systems/transform
+import renderer/screen
 
 type
   CameraSystem* = ref object
-    position*: vec3
-    forward*: vec3
+    transform*: Transform
     projection: mat4
     listener: Listener
+    zoom: float
     panning: bool
     panCursorOrigin: vec2
     panOrigin: vec3
@@ -21,16 +23,15 @@ var Camera*: CameraSystem
 
 
 proc getProjection*(c: CameraSystem): mat4 = c.projection
-proc getView*(c: CameraSystem): mat4 = lookAt(c.position, c.position + c.forward, yaxis)
+proc getView*(c: CameraSystem): mat4 = c.transform.getView()
 
 
 proc initCamera*() =
-  let ar = windowWidth / windowHeight
   Camera = CameraSystem(
-    projection: orthographic(-15 * ar, 15 * ar, -15, 15, 1, 50),
+    zoom: 15,
+    projection: orthographic(-15 * Screen.aspectRatio, 15 * Screen.aspectRatio, -15, 15, 1, 50),
     #projection: perspective(50.0, windowWidth / windowHeight, 3, 50),
-    position: vec(-15, 15, -8),
-    forward: vec(15, -15, 8),
+    transform: newTransform(p=vec(-15, 15, -8), f=vec(15, -15, 8)),
     listener: newListener()
   )
   Camera.listener.listen("camera")
@@ -40,7 +41,7 @@ proc updateCamera*() =
     case e.name:
     of "drag":
       Camera.panning = true
-      Camera.panOrigin = Camera.position + Camera.forward
+      Camera.panOrigin = Camera.transform.position + Camera.transform.forward
       Camera.panCursorOrigin = Input.cursorPos
 
     of "release":
@@ -48,36 +49,58 @@ proc updateCamera*() =
 
     of "pick":
       let
-        viewport = vec(0.0, 0.0, windowWidth, windowHeight)
         p        = Input.cursorPos
         PV       = Camera.getProjection() * Camera.getView()
-        near     = unproject(vec(p.x, windowHeight-p.y, 0.0), PV, viewport)
-        far      = unproject(vec(p.x, windowHeight-p.y, 1.0), PV, viewport)
+        near     = unproject(vec(p, 0.0), PV, Screen.viewport)
+        far      = unproject(vec(p, 1.0), PV, Screen.viewport)
         D        = far - near
-        t        = (-0.5 - near.dot(yaxis)) / D.dot(yaxis)
+        t        = (-0.5 - near.y) / D.y
         pick     = near + D * t
       Messages.emit("info", $pick)
+
+    of "zoom+":
+      Messages.emit("camera.zoom", $(Camera.zoom + 1.0))
+
+    of "zoom-":
+      if Camera.zoom > 2.0:
+        Messages.emit("camera.zoom", $(Camera.zoom - 1.0))
+
+    of "zoom":
+      if not Camera.panning:
+        try:
+          let
+            z = parseFloat(e.payload)
+            f = Camera.transform.forward
+            p = Camera.transform.position
+            t = p + f * ((-0.5 - p.y) / f.y)
+            h = (Camera.transform.up * z).y
+            shift = (h + 5.0) / Camera.transform.up.y
+            far = 2 * shift + 5
+          Camera.projection = orthographic(-Screen.aspectRatio * z, Screen.aspectRatio * z, -z, z, 1, far)
+          Camera.transform.position = t - f * (shift + 1)
+          Camera.zoom = z
+        except ValueError:
+          Messages.emit("Invalid zoom")
 
     else: discard
 
   if Camera.panning and Input.cursorPos != Camera.panCursorOrigin:
-    Camera.position = Camera.panOrigin - Camera.forward
+    Camera.transform.position = Camera.panOrigin - Camera.transform.forward
     let
-      viewport = vec(0.0, 0.0, windowWidth, windowHeight)
       sΔ       = Input.cursorPos - Camera.panCursorOrigin
       PV       = Camera.getProjection() * Camera.getView()
-      sOrigin  = project(Camera.panOrigin, PV, viewport)
-      sTarget  = vec(sOrigin.x - sΔ.x, sOrigin.y + sΔ.y, sOrigin.z)
-      wTarget  = unproject(sTarget, PV, viewport)
+      sOrigin  = project(Camera.panOrigin, PV, Screen.viewport)
+      sTarget  = sOrigin - vec(sΔ, 0.0)
+      wTarget  = unproject(sTarget, PV, Screen.viewport)
 
       wΔ = wTarget - Camera.panOrigin
 
-      f = Camera.forward.normalize()
+      f = Camera.transform.forward
 
-      shift = f * (-wΔ.y / (yaxis.dot(-f)))
+      shift = f * (wΔ.y / f.y)
       shifted = wTarget - shift
 
-    Camera.position = shifted - Camera.forward
+    Camera.transform.position = shifted - Camera.transform.forward
 
 proc getViewRot*(c: CameraSystem): mat4 =
   result = c.getView()

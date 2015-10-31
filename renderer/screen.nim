@@ -7,6 +7,8 @@ type ScreenInfo = ref object
   pixelSize*: vec2
   width*: int32
   height*: int32
+  viewport*: vec4
+  aspectRatio*: float
   projection*: mat4
   quad*: Mesh
 
@@ -31,6 +33,8 @@ proc initScreen*() =
     size: size,
     width: size.x.int32,
     height: size.y.int32,
+    viewport: vec(0.0, 0.0, size.x, size.y),
+    aspectRatio: size.x / size.y,
     pixelSize: vec(1.0 / size.x, 1.0 / size.y),
     projection: orthographic(0.0, size.x, 0.0, size.y),
     quad: quad,

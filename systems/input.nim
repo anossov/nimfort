@@ -31,10 +31,16 @@ var Input*: InputSystem
 
 
 proc cursorMoved(i: InputSystem; x, y: float) =
-  i.cursorPos = vec(x, y)
+  i.cursorPos = vec(x, windowHeight - y)
 
 proc charEvent(i: InputSystem, code: Rune) =
   Messages.emit("input.char",  code.int.toHex(8))
+
+proc scrollEvent(i: InputSystem, x, y: float) =
+  if y > 0:
+    Messages.emit("input.SCROLL_UP")
+  else:
+    Messages.emit("input.SCROLL_DOWN")
 
 proc buttonEvent(i: InputSystem; b: Button) =
   var parts = newSeq[string]()
@@ -209,6 +215,9 @@ proc charCallback(win: GLFWwindow; codepoint: cuint) {.cdecl.} =
 proc mbCallback(win: GLFWwindow; button, action, mods: cint) {.cdecl.} =
   Input.buttonEvent(Button(device: Mouse, code: button, action: action, mods: mods))
 
+proc scrollCallback(win: GLFWwindow; xoffset, yoffset: cdouble) {.cdecl.} =
+  Input.scrollEvent(xoffset, yoffset)
+
 proc mapInput*(input: string, event: string) =
   Input.binds[input] = event
 
@@ -224,6 +233,7 @@ proc initInputSystem*() =
   discard glfw.setKeyCallback(Window, keyCallback)
   discard glfw.setCharCallback(Window, charCallback)
   discard glfw.setMouseButtonCallback(Window, mbCallback)
+  discard glfw.setScrollCallback(Window, scrollCallback)
 
   for b, e in items(bindings):
     mapInput(b, e)

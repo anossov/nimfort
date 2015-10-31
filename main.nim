@@ -29,8 +29,8 @@ proc startup*() =
   initInputSystem()
   initTimeSystem()
   initResources()
-  initCamera()
   initRenderSystem()
+  initCamera()
   initGUI()
   initWorld()
 
