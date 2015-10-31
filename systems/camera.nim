@@ -47,17 +47,6 @@ proc updateCamera*() =
     of "release":
       Camera.panning = false
 
-    of "pick":
-      let
-        p        = Input.cursorPos
-        PV       = Camera.getProjection() * Camera.getView()
-        near     = unproject(vec(p, 0.0), PV, Screen.viewport)
-        far      = unproject(vec(p, 1.0), PV, Screen.viewport)
-        D        = far - near
-        t        = (-0.5 - near.y) / D.y
-        pick     = near + D * t
-      Messages.emit("info", $pick)
-
     of "zoom+":
       Messages.emit("camera.zoom", $(Camera.zoom + 1.0))
 
@@ -110,3 +99,15 @@ proc getViewRot*(c: CameraSystem): mat4 =
   result[12] = 0.0
   result[13] = 0.0
   result[14] = 0.0
+
+
+proc pickGround*(c: CameraSystem, groundLevel: float32): vec3 =
+  let
+    p        = Input.cursorPos
+    PV       = Camera.getProjection() * Camera.getView()
+    near     = unproject(vec(p, 0.0), PV, Screen.viewport)
+    far      = unproject(vec(p, 1.0), PV, Screen.viewport)
+    D        = far - near
+    t        = (groundLevel - near.y) / D.y
+
+  result = near + D * t

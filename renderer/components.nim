@@ -7,6 +7,7 @@ import math
 import gl/texture
 import systems/camera
 import systems/resources
+import systems/transform
 import config
 
 type
@@ -15,6 +16,10 @@ type
     textures*: seq[Texture]
     shadows*: bool
     emissionIntensity*: float
+
+  Overlay* = object of Component
+    mesh*: Mesh
+    color*: vec4
 
   LightType* = enum
     Point
@@ -41,10 +46,15 @@ type
     cubemap*: Texture
     color*: vec3
 
+  LabelAlign* = enum
+    AlignLeft
+    AlignRight
+
   Label* = object of Component
     text*: string
     color*: vec4
     mesh*: TextMesh
+    align*: LabelAlign
     texture*: Texture
     fade*: bool
     fadeTime*: float
@@ -119,9 +129,12 @@ proc getProjection*(light: Light): mat4 =
 
 proc update*(t: var Label, s: string) =
   if t.text != s:
+    let xpos = t.entity.transform.position.x + t.mesh.width * t.entity.transform.scale.x
     t.text = s
     t.mesh.update(s)
-
+    if t.align == AlignRight:
+      t.entity.transform.position.x = xpos - t.mesh.width * t.entity.transform.scale.x
+      t.entity.transform.updateMatrix()
 
 ImplementComponent(Light, light)
 ImplementComponent(AmbientCube, ambientCube)
@@ -129,3 +142,4 @@ ImplementComponent(Model, model)
 ImplementComponent(Label, label)
 ImplementComponent(Skybox, skybox)
 ImplementComponent(GhettoIBL, ibl)
+ImplementComponent(Overlay, overlay)

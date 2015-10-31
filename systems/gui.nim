@@ -1,7 +1,7 @@
 import logging
 import strutils
 import unicode
-
+import math
 import tables
 import text
 import vector
@@ -10,6 +10,7 @@ import systems/ecs
 import systems/messaging
 import systems/resources
 import systems/timekeeping
+import systems/input
 import systems/camera
 import systems/transform
 import renderer/components
@@ -27,6 +28,8 @@ type
     topLine: int
     consoleListener: Listener
 
+    cursor: EntityHandle
+
 
 var UI*: GUI
 
@@ -36,6 +39,8 @@ const
   errorColor = vec(1.0, 0.1, 0.1, 1.0)
   infoColor  = vec(0.1, 0.6, 0.1, 1.0)
 
+  cursorColor = vec(0, 1, 1, 0.3)
+
   paddingLeft           = 30.0
   paddingTop            = -20.0
   lineHeight            = 30.0
@@ -44,7 +49,7 @@ const
   consoleScrollDuration = 0.1
 
 
-proc newText(ui: var GUI, name: string, x, y: float32; text="", color=textColor, scale=textScale): EntityHandle =
+proc newText(ui: var GUI, name: string, x, y: float32; text="", align=AlignLeft, color=textColor, scale=textScale): EntityHandle =
   var ox = 0.0
   var oy = 0.0
 
@@ -56,13 +61,13 @@ proc newText(ui: var GUI, name: string, x, y: float32; text="", color=textColor,
     e = newEntity("ui-text-" & name)
     t = newTransform(p=vec(ox + x, oy + y, 0.0), s=scale)
 
-  e.attach(Label(text: text, color: color, mesh: m, texture: ui.font.textures[0]))
+  e.attach(Label(text: text, color: color, mesh: m, align: align, texture: ui.font.textures[0]))
   e.attach(t)
 
   return e
 
-proc addText(ui: var GUI, name: string, x, y: float32; text="", color=textColor, scale=textScale) =
-  ui.texts[name] = ui.newText(name, x, y, text, color, scale)
+proc addText(ui: var GUI, name: string, x, y: float32; text="", align=AlignLeft, color=textColor, scale=textScale) =
+  ui.texts[name] = ui.newText(name, x, y, text, align, color, scale)
 
 proc initGUI*()=
   UI = GUI(
@@ -72,6 +77,7 @@ proc initGUI*()=
     consoleLines: newSeq[EntityHandle](),
   )
 
+  UI.addText("cursor-pos", -paddingLeft, paddingTop, align=AlignRight)
   UI.addText("frametime", paddingLeft, paddingTop)
   UI.addText("console", consolePos.x, consolePos.y)
 
@@ -85,6 +91,12 @@ proc initGUI*()=
   UI.consoleListener.listen("error")
   UI.consoleListener.listen("info")
   UI.consoleListener.listen("console")
+
+  UI.cursor = newEntity("cursor")
+  UI.cursor.attach(newTransform())
+  UI.cursor.attach(Overlay(mesh: getMesh("cursor"), color: cursorColor))
+
+  Input.hideCursor()
 
   info("UI ok")
 
@@ -103,6 +115,7 @@ proc consoleAdd(ui: GUI, text: string, color=textColor) =
   for i, line in ui.consoleLines:
     let h = (n + i - UI.topLine) mod n + 1
     line.transform.animate(p=vec(consolePos.x, consolePos.y + h.float * lineHeight, 0.0), duration=consoleScrollDuration)
+
 
 proc updateUi*() =
   UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
@@ -141,3 +154,10 @@ proc updateUi*() =
       console.label.update(t[0..high(t)-1])
 
     else: discard
+
+  let p = Camera.pickGround(-0.5) + vec(0, 0.5, 0)
+
+  UI.cursor.transform.position = vec(p.x.round.float, p.y.round.float, p.z.round.float)
+  UI.cursor.transform.updateMatrix()
+
+  UI.texts["cursor-pos"].label.update($UI.cursor.transform.position)

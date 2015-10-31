@@ -96,19 +96,20 @@ template ImplementComponent*(Type: typedesc, accessor: expr) {.immediate.} =
     return `accessor Store`
 
 
-proc parseEntity(m: Event): EntityHandle =
-  result = m.payload.parseInt().EntityHandle
+proc parseEntity*(pp: var PayloadParser): EntityHandle =
+  result = pp.parseInt().EntityHandle
   if not result.exists:
     raise newException(ValueError, "No such entity: " & $result)
 
 
 proc processECSMessages*() =
   for m in Entities.listener.getMessages():
+    var p = m.parser()
     try:
       case m.name:
 
       of "name":
-          Messages.emit("info", m.parseEntity().name)
+          Messages.emit("info", p.parseEntity().name)
 
       of "find":
         for i, e in Entities.entities:
@@ -116,7 +117,7 @@ proc processECSMessages*() =
             Messages.emit("info", $i)
 
       of "components":
-        let e = m.parseEntity()
+        let e = p.parseEntity()
         Messages.emit("info", e.listComponents().join(", "))
 
       else: discard

@@ -30,6 +30,7 @@ type
     skybox: Program
     IBL: Program
     ambient: Program
+    overlay: Program
 
 proc newGeometryPass*(): GeometryPass =
   var p, n, a: Texture
@@ -93,6 +94,7 @@ proc newLightingPass*(): LightingPass =
     skybox: getShader("skybox"),
     IBL: s_ibl,
     ambient: s_amb,
+    overlay: getShader("overlay"),
   )
 
 
@@ -194,10 +196,19 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
     pass.ambient.getUniform("colors[5]").set(i.colors[5])
     Screen.quad.render()
 
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
   pass.emission.use()
   pass.emission.getUniform("transform").set(identity())
   Screen.quad.render()
+
+  pass.overlay.use()
+  pass.overlay.getUniform("view").set(Camera.getView())
+  pass.overlay.getUniform("projection").set(Camera.getProjection())
+  for i in OverlayStore().data:
+    pass.overlay.getUniform("model").set(i.entity.transform.matrix)
+    pass.overlay.getUniform("color").set(i.color)
+    i.mesh.render()
 
   glDepthFunc(GL_EQUAL)
   for sb in SkyboxStore().data:

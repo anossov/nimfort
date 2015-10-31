@@ -118,21 +118,15 @@ proc initWorld*() =
 
 proc updateWorld*() =
   for m in TheWorld.listener.getMessages():
+    var p = m.parser()
     try:
       case m.name:
       of "move":
-        let parts = m.payload.split(' ')
-
-        if parts.len != 4:
-          raise newException(ValueError, "Usage: move entity x y z")
-
         let
-          e = parts[0].parseInt().EntityHandle
-          x = parts[1].parseFloat()
-          y = parts[2].parseFloat()
-          z = parts[3].parseFloat()
+          e = p.parseEntity()
+          v = p.parseVec3()
         if e.exists and e.has("Transform"):
-          e.transform.position = vec(x, y, z)
+          e.transform.position = v
           e.transform.updateMatrix()
         else:
           raise newException(ValueError, "No such entity")

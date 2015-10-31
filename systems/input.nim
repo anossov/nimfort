@@ -247,6 +247,10 @@ proc updateInput*() =
 
 
 proc hideCursor*(i: InputSystem) =
+  glfw.setInputMode(Window, CURSOR, CURSOR_HIDDEN)
+
+
+proc disableCursor*(i: InputSystem) =
   glfw.setInputMode(Window, CURSOR, CURSOR_DISABLED)
 
 

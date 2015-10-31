@@ -1,10 +1,16 @@
 import logging
 import tables
 import strutils
+import parseutils
+import vector
 
 
 type
   Event* = tuple[name: string, payload: string]
+
+  PayloadParser* = object
+    payload*: string
+    position*: int
 
   Listener* = ref object
     queue: seq[Event]
@@ -68,3 +74,28 @@ iterator getMessages*(listener: var Listener): Event =
 
 proc hasMessages*(listener: Listener): bool =
   listener.queue.len > 0
+
+
+proc parser*(e: Event): PayloadParser = PayloadParser(payload: e.payload, position: 0)
+
+proc skip*(pp: var PayloadParser) =
+  pp.position += skipWhitespace(pp.payload, pp.position)
+
+proc parseInt*(pp: var PayloadParser): int =
+  pp.skip()
+  let n = parseInt(pp.payload, result, pp.position)
+  if n == 0:
+    raise newException(ValueError, "Invalid integer")
+  pp.position += n
+
+proc parseFloat*(pp: var PayloadParser): float =
+  pp.skip()
+  let n = parseFloat(pp.payload, result, pp.position)
+  if n == 0:
+    raise newException(ValueError, "Invalid float")
+  pp.position += n
+
+proc parseVec3*(pp: var PayloadParser): vec3 =
+  result.x = pp.parseFloat()
+  result.y = pp.parseFloat()
+  result.z = pp.parseFloat()
