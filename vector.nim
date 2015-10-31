@@ -258,6 +258,8 @@ proc normalize*(v: vec3): vec3 {.inline.} =
 
 proc angle*(a, b: vec3): float32 = arccos(a.dot(b) / (a.norm * b.norm))
 
+proc distance*(a, b: vec3): float32 = norm(b - a)
+
 proc projectOn*(a, b: vec3): vec3 =
   result = b * a.dot(b)
 

@@ -9,7 +9,7 @@ void main() {
     float shadow = 1.0;
 
     if (hasShadowmap) {
-      float bias = max(0.002 * (1.0 - dot(n, l)), 0.0002);
+      float bias = max(0.004 * (1.0 - dot(n, l)), 0.002);
       shadow = calcShadow(lightSpace * vec4(posf, 1.0), bias);
     }
 

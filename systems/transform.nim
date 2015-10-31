@@ -3,6 +3,7 @@ import systems/ecs
 import systems/timekeeping
 import vector
 import math
+import random
 
 type
   Transform* = object of Component
@@ -28,6 +29,13 @@ type
     rvector*: vec3
     center*: vec3
     period*: float32
+
+  RandomMovement* = object of Component
+    min*: vec3
+    max*: vec3
+    smin*: float
+    smax*: float
+
 
 proc updateMatrix*(t: var Transform) =
   let p = t.position
@@ -67,6 +75,7 @@ proc getView*(t: Transform): mat4 =
 ImplementComponent(Transform, transform)
 ImplementComponent(LookAtConstraint, lookat)
 ImplementComponent(CircleMovement, circleMovement)
+ImplementComponent(RandomMovement, randomMovement)
 ImplementComponent(Animation, animation)
 
 
@@ -80,6 +89,7 @@ proc animate*(t: Transform, p: vec3, duration: float) =
   t.entity.animation.duration = duration
   t.entity.animation.done = false
   t.entity.animation.time = 0.0
+
 
 proc updateTransforms*() =
   for i in circleMovementStore.data:
@@ -108,3 +118,14 @@ proc updateTransforms*() =
       i.entity.transform.position = i.tFrom.position + distance * progress
 
     i.entity.transform.updateMatrix()
+
+  for i in randomMovementStore.data:
+    if i.entity.animation.done:
+      let
+        x = random(i.min.x, i.max.x)
+        y = random(i.min.y, i.max.y)
+        z = random(i.min.z, i.max.z)
+        t = vec(x, y, z)
+        s = random(i.smin, i.smax)
+        d = distance(i.entity.transform.position, t)
+      i.entity.transform.animate(p=t, duration=d / s)

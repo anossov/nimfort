@@ -71,11 +71,11 @@ proc initWorld*() =
       .attach(newTransform(p=vec(3, 3, -8), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
       .attach(newPointLight((c * 12).xyz, radius=5))
       .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=20))
-
-    TheWorld.handles[i].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=6.0)
+      .attach(RandomMovement(min: vec(-100, 0.0, -100), max: vec(100, 0.0, 100), smin: 20, smax: 20))
+      .attach(Animation(done: true))
 
   TheWorld.add("sun")
-    .attach(newTransform(f=vec(3, -8, -4.4), p=vec(-3, 5, 5), u=yaxis, s=5.0))
+    .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis, s=5.0))
     .attach(newDirLight(color=vec(0.1, 0.1, 0.1), shadows=true))
 
   TheWorld.add("amb").attach(newAmbientCube(
@@ -117,6 +117,4 @@ proc initWorld*() =
 
 
 proc updateWorld*() =
-  for i in 0..N:
-    if TheWorld.handles[i].animation.done:
-      TheWorld.handles[i].transform.animate(p=vec(random(-20.0, 20.0), 1, random(-20.0, 20.0)), duration=random(0.5, 10.0))
+  discard

@@ -38,10 +38,10 @@ proc render*(r: var TextRenderer, proj: mat4) =
     i.texture.use(0)
 
     var shadowT = i.entity.transform.matrix
-    shadowT[12] -= 1
-    shadowT[13] -= 1
+    shadowT[12] -= 2
+    shadowT[13] -= 2
     r.shader.getUniform("model").set(shadowT)
-    r.shader.getUniform("textColor").set(vec(0.1, 0.1, 0.1, i.color[3]))
+    r.shader.getUniform("textColor").set(vec(0.0, 0.0, 0.0, i.color[3]))
     i.mesh.mesh.render()
 
     r.shader.getUniform("model").set(i.entity.transform.matrix)
