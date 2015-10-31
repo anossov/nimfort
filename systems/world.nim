@@ -12,13 +12,14 @@ import systems/resources
 import systems/timekeeping
 import systems/transform
 import systems/messaging
+import systems/camera
 import renderer/rendering
 import renderer/components
 
 type
   World* = ref object
     listener: Listener
-
+    cursor*: ivec3
 
 var TheWorld*: World
 
@@ -76,7 +77,7 @@ proc initWorld*() =
 
   newEntity("sun")
     .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis, s=5.0))
-    .attach(newDirLight(color=vec(0.1, 0.1, 0.1), shadows=true))
+    .attach(newDirLight(color=vec(0.2, 0.2, 0.2), shadows=true))
 
   newEntity("amb").attach(newAmbientCube(
     posx=vec(0.001, 0.002, 0.001),
@@ -105,7 +106,7 @@ proc initWorld*() =
     ))
 
   newEntity("b")
-    .attach(newTransform(p=vec(3, -0.5, 3), s=0.1))
+    .attach(newTransform(p=vec(3, 0, 3), s=0.5))
     .attach(newModel(
         getMesh("ball"),
         albedo=getColorTexture(vec(1.0, 0.0, 0.0, 1.0)),
@@ -115,22 +116,19 @@ proc initWorld*() =
   info("World ok")
 
 
-
 proc updateWorld*() =
+  let p = Camera.pickGround(-0.5) + vec(0, 0.5, 0)
+  TheWorld.cursor = ivec(p.x.round, p.y.round, p.z.round)
+
   for m in TheWorld.listener.getMessages():
     var p = m.parser()
     try:
       case m.name:
       of "move":
-        let
-          e = p.parseEntity()
-          v = p.parseVec3()
-        if e.exists and e.has("Transform"):
-          e.transform.position = v
+        let e = p.parseEntity()
+        if e.has("Transform"):
+          e.transform.position = TheWorld.cursor.toFloat()
           e.transform.updateMatrix()
-        else:
-          raise newException(ValueError, "No such entity")
-
       else: discard
 
     except ValueError:

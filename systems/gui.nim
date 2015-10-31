@@ -11,8 +11,8 @@ import systems/messaging
 import systems/resources
 import systems/timekeeping
 import systems/input
-import systems/camera
 import systems/transform
+import systems/world
 import renderer/components
 import renderer/rendering
 import renderer/screen
@@ -157,7 +157,7 @@ proc updateUi*() =
 
   let p = Camera.pickGround(-0.5) + vec(0, 0.5, 0)
 
-  UI.cursor.transform.position = vec(p.x.round.float, p.y.round.float, p.z.round.float)
+  UI.cursor.transform.position = vec(TheWorld.cursor.x.float, TheWorld.cursor.y.float, TheWorld.cursor.z.float)
   UI.cursor.transform.updateMatrix()
 
-  UI.texts["cursor-pos"].label.update($UI.cursor.transform.position)
+  UI.texts["cursor-pos"].label.update($TheWorld.cursor)

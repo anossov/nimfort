@@ -11,6 +11,7 @@ type
   mat4* {.bycopy pure.} = array[16, float32]
 
   ivec2* {.bycopy pure.} = array[2, int32]
+  ivec3* {.bycopy pure.} = array[3, int32]
 
 template x*(v: vec2 | vec3 | vec4): float32 = v[0]
 template y*(v: vec2 | vec3 | vec4): float32 = v[1]
@@ -22,16 +23,20 @@ template `z=`*(v: vec3 | vec4, f: float32)        = v[2] = f
 template `w=`*(v: vec4, f: float32)               = v[3] = f
 template value_ptr*(m: var vec2 | vec3 | vec4 | mat3 | mat4): ptr float32 = addr m[0]
 
-template x*(v: ivec2): int32 = v[0]
-template y*(v: ivec2): int32 = v[1]
-template `x=`*(v: ivec2, i: int32) = v[0] = i
-template `y=`*(v: ivec2, i: int32) = v[1] = i
+template x*(v: ivec2 | ivec3): int32 = v[0]
+template y*(v: ivec2 | ivec3): int32 = v[1]
+template z*(v: ivec3): int32 = v[2]
+template `x=`*(v: ivec2 | ivec3, i: int32) = v[0] = i
+template `y=`*(v: ivec2 | ivec3, i: int32) = v[1] = i
+template `z=`*(v: ivec3, i: int32) = v[2] = i
 
 template xyz*(v: vec4): vec3 = vec(v.x, v.y, v.z)
 
 proc `$`*(v: vec2): string = "($1, $2)".format(v.x, v.y)
 proc `$`*(v: vec3): string = "($1, $2, $3)".format(v.x, v.y, v.z)
 proc `$`*(v: vec4): string = "($1, $2, $3, $4)".format(v.x, v.y, v.z, v.w)
+proc `$`*(v: ivec2): string = "($1, $2)".format(v.x, v.y)
+proc `$`*(v: ivec3): string = "($1, $2, $3)".format(v.x, v.y, v.z)
 
 proc vec*(x, y: float32): vec2 {.inline.} =
   result.x = x
@@ -40,6 +45,16 @@ proc vec*(x, y: float32): vec2 {.inline.} =
 proc ivec*(x, y: int32): ivec2 {.inline.} =
   result.x = x
   result.y = y
+
+proc ivec*(x, y, z: int32): ivec3 {.inline.} =
+  result.x = x
+  result.y = y
+  result.z = z
+
+proc ivec*(x, y, z: int): ivec3 {.inline.} =
+  result.x = x.int32
+  result.y = y.int32
+  result.z = z.int32
 
 proc vec*(x, y, z: float32): vec3 {.inline.} =
   result.x = x
@@ -66,6 +81,11 @@ proc vec*(v: vec3, w: float32): vec4 {.inline} =
 proc toFloat*(v: ivec2): vec2 {.inline.} =
   result.x = v.x.float32
   result.y = v.y.float32
+
+proc toFloat*(v: ivec3): vec3 {.inline.} =
+  result.x = v.x.float32
+  result.y = v.y.float32
+  result.z = v.z.float32
 
 proc mat*(c1, c2, c3, c4: vec4): mat4 =
   result[0..3] = c1
