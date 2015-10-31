@@ -75,10 +75,10 @@ proc render*() =
   var dfb = Framebuffer(target: FramebufferTarget.Both, id: 0)
 
   for m in r.listener.getMessages():
-    if r.debugmode == m:
+    if r.debugmode == m.name:
       r.debugmode = ""
     else:
-      r.debugmode = m
+      r.debugmode = m.name
 
   if r.debugmode == "wire":
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)

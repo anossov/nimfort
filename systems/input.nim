@@ -34,7 +34,7 @@ proc cursorMoved(i: InputSystem; x, y: float) =
   i.cursorPos = vec(x, y)
 
 proc charEvent(i: InputSystem, code: Rune) =
-  Messages.emit("input.char." & code.int.toHex(8))
+  Messages.emit("input.char",  code.int.toHex(8))
 
 proc buttonEvent(i: InputSystem; b: Button) =
   var parts = newSeq[string]()
@@ -232,8 +232,8 @@ proc initInputSystem*() =
 
 proc updateInput*() =
   for m in Input.listener.getMessages():
-    if Input.binds.hasKey(m):
-      Messages.emit(Input.binds[m])
+    if Input.binds.hasKey(m.name):
+      Messages.emit(Input.binds[m.name])
 
 
 proc hideCursor*(i: InputSystem) =

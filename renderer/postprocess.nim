@@ -58,7 +58,7 @@ proc newTonemapping*(): Tonemapping =
 
 proc perform*(pass: var Tonemapping, fb_out: var Framebuffer) =
   for m in pass.listener.getMessages():
-    case m:
+    case m.name:
       of "exposure-up": pass.exposure += 1.0
       of "exposure-down": pass.exposure -= 1.0
       else: discard

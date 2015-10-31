@@ -13,8 +13,14 @@ const
     ("control-KP_ADD-down", "camera.exposure-up"),
     ("control-KP_SUBTRACT-down", "camera.exposure-down"),
 
+    ("LMB-down", "camera.pick"),
     ("RMB-down", "camera.drag"),
     ("RMB-up", "camera.release"),
+
+    ("ENTER-down", "console.submit"),
+    ("KP_ENTER-down", "console.submit"),
+    ("BACKSPACE-down", "console.erase"),
+    ("BACKSPACE-repeat", "console.erase"),
   ]
 
   bloomScale*     = 3

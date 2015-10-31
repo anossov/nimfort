@@ -1,4 +1,5 @@
 import logging
+import strutils
 import vector
 import config
 import math
@@ -8,7 +9,7 @@ import systems/messaging
 type
   CameraSystem* = ref object
     position*: vec3
-    forward: vec3
+    forward*: vec3
     projection: mat4
     listener: Listener
     panning: bool
@@ -29,20 +30,34 @@ proc initCamera*() =
     projection: orthographic(-15 * ar, 15 * ar, -15, 15, 1, 50),
     #projection: perspective(50.0, windowWidth / windowHeight, 3, 50),
     position: vec(-15, 15, -8),
-    forward: vec(15, -25, 8),
+    forward: vec(15, -15, 8),
     listener: newListener()
   )
   Camera.listener.listen("camera")
 
 proc updateCamera*() =
   for e in Camera.listener.getMessages():
-    case e:
+    case e.name:
     of "drag":
       Camera.panning = true
       Camera.panOrigin = Camera.position + Camera.forward
       Camera.panCursorOrigin = Input.cursorPos
+
     of "release":
       Camera.panning = false
+
+    of "pick":
+      let
+        viewport = vec(0.0, 0.0, windowWidth, windowHeight)
+        p        = Input.cursorPos
+        PV       = Camera.getProjection() * Camera.getView()
+        near     = unproject(vec(p.x, windowHeight-p.y, 0.0), PV, viewport)
+        far      = unproject(vec(p.x, windowHeight-p.y, 1.0), PV, viewport)
+        D        = far - near
+        t        = (-0.5 - near.dot(yaxis)) / D.dot(yaxis)
+        pick     = near + D * t
+      Messages.emit("info", $pick)
+
     else: discard
 
   if Camera.panning and Input.cursorPos != Camera.panCursorOrigin:

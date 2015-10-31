@@ -104,6 +104,14 @@ proc initWorld*() =
         roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
     ))
 
+  TheWorld.add("b")
+    .attach(newTransform(p=vec(3, -0.5, 3), s=0.1))
+    .attach(newModel(
+        getMesh("ball"),
+        albedo=w,
+        roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
+    ))
+
   info("World ok")
 
 
