@@ -20,6 +20,8 @@ type
   World* = ref object
     listener: Listener
     cursor*: ivec3
+    selection*: array[2, ivec3]
+    selecting*: bool
 
 var TheWorld*: World
 
@@ -124,12 +126,24 @@ proc updateWorld*() =
     var p = m.parser()
     try:
       case m.name:
+
       of "move":
         let e = p.parseEntity()
         if e.has("Transform"):
           e.transform.position = TheWorld.cursor.toFloat()
           e.transform.updateMatrix()
+
+      of "selection-start":
+        TheWorld.selection[0] = TheWorld.cursor
+        TheWorld.selecting = true
+
+      of "selection-end":
+        TheWorld.selecting = false
+
       else: discard
 
     except ValueError:
       Messages.emit("error", getCurrentExceptionMsg())
+
+  if TheWorld.selecting:
+    TheWorld.selection[1] = TheWorld.cursor

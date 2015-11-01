@@ -29,6 +29,7 @@ type
     consoleListener: Listener
 
     cursor: EntityHandle
+    selection: EntityHandle
 
 
 var UI*: GUI
@@ -39,7 +40,8 @@ const
   errorColor = vec(1.0, 0.1, 0.1, 1.0)
   infoColor  = vec(0.1, 0.6, 0.1, 1.0)
 
-  cursorColor = vec(0, 1, 1, 0.3)
+  cursorColor    = vec(0, 1, 1, 0.3)
+  selectionColor = vec(0.3, 1, 0.3, 0.1)
 
   paddingLeft           = 30.0
   paddingTop            = -20.0
@@ -95,6 +97,10 @@ proc initGUI*()=
   UI.cursor = newEntity("cursor")
   UI.cursor.attach(newTransform())
   UI.cursor.attach(Overlay(mesh: getMesh("cursor"), color: cursorColor))
+
+  UI.selection = newEntity("selection")
+  UI.selection.attach(newTransform(s=vec(1, 0.1, 1)))
+  UI.selection.attach(Overlay(mesh: getMesh("cube"), color: selectionColor))
 
   Input.hideCursor()
 
@@ -155,9 +161,16 @@ proc updateUi*() =
 
     else: discard
 
-  let p = Camera.pickGround(-0.5) + vec(0, 0.5, 0)
-
   UI.cursor.transform.position = vec(TheWorld.cursor.x.float, TheWorld.cursor.y.float, TheWorld.cursor.z.float)
   UI.cursor.transform.updateMatrix()
 
   UI.texts["cursor-pos"].label.update($TheWorld.cursor)
+
+  let
+    a = TheWorld.selection[0].toFloat()
+    b = TheWorld.selection[1].toFloat()
+  UI.selection.transform.position = (a + b) * 0.5
+  UI.selection.transform.position.y -= 0.5
+  UI.selection.transform.scale.x = abs(b.x - a.x) + 1
+  UI.selection.transform.scale.z = abs(b.z - a.z) + 1
+  UI.selection.transform.updateMatrix()
