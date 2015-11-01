@@ -29,6 +29,7 @@ var TheWorld*: World
 const
   N = 12
   S = 100
+  NT = 200
 
 
 proc terrain(): Mesh =
@@ -74,13 +75,26 @@ proc initWorld*() =
       .attach(newTransform(p=vec(0, 3, 0), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
       .attach(newPointLight((c * 12).xyz, radius=5))
       .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=20))
-      .attach(RandomMovement(min: vec(-100, 0.0, -100), max: vec(100, 0.0, 100), smin: 20, smax: 20))
+      .attach(RandomMovement(min: vec(-100, 0.0, -100), max: vec(100, 0.0, 100), smin: 4, smax: 6))
       .attach(Animation(done: true))
-      .attach(Bounce(min: 2.0, max: 4.0, period: 1.0))
+      .attach(Bounce(min: 2.5, max: 3.0, period: 1.0))
+
+  for i in 0..NT:
+    let
+      p = vec(random(-100, 100).floor, 0, random(-100, 100).floor)
+      f = vec(random(-1, 1), 0, random(-1, 1))
+      s = random(0.7, 1.5)
+    newEntity("tree")
+    .attach(newTransform(p=p, f=f, s=s))
+    .attach(newModel(
+      getMesh("tree"),
+      albedo=getColorTexture(vec(0.5, 0.25, 0.15, 1.0)),
+      roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0)),
+    ))
 
   newEntity("sun")
     .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis))
-    .attach(newDirLight(color=vec(0.2, 0.2, 0.2), shadows=true))
+    .attach(newDirLight(color=vec(0.1, 0.1, 0.12), shadows=true))
 
   newEntity("amb").attach(newAmbientCube(
     posx=vec(0.001, 0.002, 0.001),
@@ -95,7 +109,7 @@ proc initWorld*() =
     .attach(newTransform())
     .attach(newModel(
       terrain(),
-      albedo=getColorTexture(vec(0.5, 0.5, 0.5, 1.0)),
+      albedo=getTexture("grass"),
       roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0)),
       normal=getTexture("bevel"),
     ))

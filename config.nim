@@ -25,6 +25,11 @@ const
     ("KP_ENTER-down", "console.submit"),
     ("BACKSPACE-down", "console.erase"),
     ("BACKSPACE-repeat", "console.erase"),
+
+    ("UP-down", "console.history-back"),
+    ("DOWN-down", "console.history-forward"),
+    ("UP-repeat", "console.history-back"),
+    ("DOWN-repeat", "console.history-forward"),
   ]
 
   bloomScale*     = 3

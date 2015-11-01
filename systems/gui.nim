@@ -27,7 +27,8 @@ type
     consoleLines: seq[EntityHandle]
     topLine: int
     consoleListener: Listener
-
+    consoleHistory: seq[string]
+    consoleHistoryP: int
     cursor: EntityHandle
     selection: EntityHandle
 
@@ -41,7 +42,7 @@ const
   infoColor  = vec(0.1, 0.6, 0.1, 1.0)
 
   cursorColor    = vec(0, 1, 1, 0.3)
-  selectionColor = vec(0.3, 1, 0.3, 0.1)
+  selectionColor = vec(0.8, 0.0, 0.8, 0.2)
 
   paddingLeft           = 30.0
   paddingTop            = -20.0
@@ -77,6 +78,7 @@ proc initGUI*()=
     font: getFont("liberationsans"),
     texts: initTable[string, EntityHandle](),
     consoleLines: newSeq[EntityHandle](),
+    consoleHistory: newSeq[string](),
   )
 
   UI.addText("cursor-pos", -paddingLeft, paddingTop, align=AlignRight)
@@ -139,6 +141,16 @@ proc updateUi*() =
       except ValueError:
         Messages.emit("error", getCurrentExceptionMsg())
 
+    of "history-back":
+      if UI.consoleHistory.len > 0 and UI.consoleHistoryP > 0:
+        UI.consoleHistoryP -= 1
+        console.label.update(UI.consoleHistory[UI.consoleHistoryP])
+
+    of "history-forward":
+      if UI.consoleHistory.len > 0 and UI.consoleHistoryP < UI.consoleHistory.high:
+        UI.consoleHistoryP += 1
+        console.label.update(UI.consoleHistory[UI.consoleHistoryP])
+
     of "info":
       UI.consoleAdd(e.payload, infoColor)
 
@@ -154,6 +166,9 @@ proc updateUi*() =
         Messages.emit(t)
       console.label.update("")
       UI.consoleAdd(t)
+      if UI.consoleHistory.len == 0 or UI.consoleHistory[UI.consoleHistory.high] != t:
+        UI.consoleHistory.add(t)
+      UI.consoleHistoryP = UI.consoleHistory.len
 
     of "erase":
       console.label.update(t[0..high(t)-1])
