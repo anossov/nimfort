@@ -76,6 +76,7 @@ proc initWorld*() =
       .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=20))
       .attach(RandomMovement(min: vec(-100, 0.0, -100), max: vec(100, 0.0, 100), smin: 20, smax: 20))
       .attach(Animation(done: true))
+      .attach(Bounce(min: 2.0, max: 4.0, period: 1.0))
 
   newEntity("sun")
     .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis, s=5.0))
@@ -108,12 +109,13 @@ proc initWorld*() =
     ))
 
   newEntity("b")
-    .attach(newTransform(p=vec(3, 0, 3), s=0.5))
+    .attach(newTransform(p=vec(3, 0, 3), s=0.4))
     .attach(newModel(
         getMesh("ball"),
         albedo=getColorTexture(vec(1.0, 0.0, 0.0, 1.0)),
         roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
     ))
+    .attach(Bounce(min: 0.3, max: 0.5, period: 2.0))
 
   info("World ok")
 

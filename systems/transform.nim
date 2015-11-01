@@ -36,6 +36,11 @@ type
     smin*: float
     smax*: float
 
+  Bounce* = object of Component
+    min*: float
+    max*: float
+    period*: float
+
 
 proc updateMatrix*(t: var Transform) =
   let p = t.position
@@ -77,6 +82,7 @@ ImplementComponent(LookAtConstraint, lookat)
 ImplementComponent(CircleMovement, circleMovement)
 ImplementComponent(RandomMovement, randomMovement)
 ImplementComponent(Animation, animation)
+ImplementComponent(Bounce, bounce)
 
 
 proc animate*(t: Transform, p: vec3, duration: float) =
@@ -129,3 +135,8 @@ proc updateTransforms*() =
         s = random(i.smin, i.smax)
         d = distance(i.entity.transform.position, t)
       i.entity.transform.animate(p=t, duration=d / s)
+
+  for i in bounceStore.data:
+    let t = sin(Time.totalTime * 2 * PI / i.period)
+    i.entity.transform.position.y = i.min + (i.max - i.min) * t
+    i.entity.transform.updateMatrix()

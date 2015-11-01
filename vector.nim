@@ -488,7 +488,6 @@ proc unproject*(point: vec3, PV: mat4, viewport: vec4): vec3 =
 # determinant
 # reflect
 # refract
-# point distance
 # vector rotate directly
 # quaternions
 # noise
