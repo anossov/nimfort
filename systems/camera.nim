@@ -24,7 +24,12 @@ var Camera*: CameraSystem
 
 proc getProjection*(c: CameraSystem): mat4 = c.projection
 proc getView*(c: CameraSystem): mat4 = c.transform.getView()
+proc getProjectionView*(c: CameraSystem): mat4 = c.getProjection() * c.getView()
 
+proc projectNDC*(c: CameraSystem, p: vec3): vec3 = (c.getProjectionView() * vec(p, 1.0)).xyz
+proc unprojectNDC*(c: CameraSystem, p: vec3): vec3 = (c.getProjectionView().inverse * vec(p, 1.0)).xyz
+proc project*(c: CameraSystem, p: vec3): vec3 = project(p, c.getProjectionView(), Screen.viewport)
+proc unproject*(c: CameraSystem, p: vec3): vec3 = unproject(p, c.getProjectionView(), Screen.viewport)
 
 proc initCamera*() =
   Camera = CameraSystem(
@@ -77,10 +82,9 @@ proc updateCamera*() =
     Camera.transform.position = Camera.panOrigin - Camera.transform.forward
     let
       sΔ       = Input.cursorPos - Camera.panCursorOrigin
-      PV       = Camera.getProjection() * Camera.getView()
-      sOrigin  = project(Camera.panOrigin, PV, Screen.viewport)
+      sOrigin  = Camera.project(Camera.panOrigin)
       sTarget  = sOrigin - vec(sΔ, 0.0)
-      wTarget  = unproject(sTarget, PV, Screen.viewport)
+      wTarget  = Camera.unproject(sTarget)
 
       wΔ = wTarget - Camera.panOrigin
 
@@ -103,11 +107,20 @@ proc getViewRot*(c: CameraSystem): mat4 =
 
 proc pickGround*(c: CameraSystem, groundLevel: float32): vec3 =
   let
-    p        = Input.cursorPos
-    PV       = Camera.getProjection() * Camera.getView()
-    near     = unproject(vec(p, 0.0), PV, Screen.viewport)
-    far      = unproject(vec(p, 1.0), PV, Screen.viewport)
-    D        = far - near
-    t        = (groundLevel - near.y) / D.y
+    near = c.unproject(vec(Input.cursorPos, 0.0))
+    far  = c.unproject(vec(Input.cursorPos, 1.0))
+    D    = far - near
+    t    = (groundLevel - near.y) / D.y
 
   result = near + D * t
+
+proc frustum*(c: CameraSystem): array[8, vec3] =
+  result[0] = c.unprojectNDC(vec(-1, -1, -1))
+  result[1] = c.unprojectNDC(vec( 1, -1, -1))
+  result[2] = c.unprojectNDC(vec(-1,  1, -1))
+  result[3] = c.unprojectNDC(vec( 1,  1, -1))
+
+  result[4] = c.unprojectNDC(vec(-1, -1,  1))
+  result[5] = c.unprojectNDC(vec( 1, -1,  1))
+  result[6] = c.unprojectNDC(vec(-1,  1,  1))
+  result[7] = c.unprojectNDC(vec( 1,  1,  1))

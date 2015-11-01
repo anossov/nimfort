@@ -154,7 +154,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
 
         shader.getUniform("lightPos").set(t.position)
         shader.getUniform("lightDir").set(t.forward)
-        shader.getUniform("lightSpace").set(light.getProjection() * t.getView())
+        shader.getUniform("lightSpace").set(light.getSpace())
         shader.getUniform("hasShadowmap").set(not light.shadowMap.isEmpty())
 
         case light.kind:

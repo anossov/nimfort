@@ -119,12 +119,50 @@ proc newSkybox*(t: Texture, intensity=ones3): Skybox =
 proc newGhettoIBL*(t: Texture, c: vec3): GhettoIBL =
   GhettoIBL(cubemap: t, color: c)
 
-proc getProjection*(light: Light): mat4 =
-  if light.kind == Directional:
-    return orthographic(-Camera.zoom * 2, Camera.zoom * 2, -Camera.zoom * 2, Camera.zoom * 2, 2, 150.0)
-  if light.kind == Spot:
-    return perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
-  return identity()
+
+proc getSpace*(light: Light): mat4 =
+  case light.kind:
+  of Directional:
+    let
+      frustumCenter = Camera.unprojectNDC(vec(0, 0, 0))
+      frustum = Camera.frustum
+
+    let frustumDiag = distance(frustum[0], frustum[7])
+
+    light.entity.transform.position = frustumCenter - light.entity.transform.forward * frustumDiag
+    light.entity.transform.updateMatrix()
+
+    let
+      lv = light.entity.transform.matrix
+      ilv = lv.inverse
+      v = light.entity.transform.getView()
+
+    var fbb: array[2, vec3]
+    fbb[0] = vec(Inf, Inf, Inf)
+    fbb[1] = vec(-Inf, -Inf, -Inf)
+    for corner in frustum:
+      let p = ilv * vec(corner, 1.0)
+      if p.x <= fbb[0].x:
+        fbb[0].x = p.x
+      if p.y <= fbb[0].y:
+        fbb[0].y = p.y
+      if p.z <= fbb[0].z:
+        fbb[0].z = p.z
+
+      if p.x >= fbb[1].x:
+        fbb[1].x = p.x
+      if p.y >= fbb[1].y:
+        fbb[1].y = p.y
+      if p.z >= fbb[1].z:
+        fbb[1].z = p.z
+
+    let p = orthographic(fbb[0].x, fbb[1].x, fbb[0].y, fbb[1].y, -fbb[1].z, -fbb[0].z)
+    return p * light.entity.transform.getView()
+  of Spot:
+    let p = perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
+    return p * light.entity.transform.getView()
+  else:
+    return identity()
 
 
 proc update*(t: var Label, s: string) =

@@ -41,11 +41,6 @@ proc render*(sm: var ShadowMap, light: var Light) =
   if not light.shadows:
     return
 
-  if light.kind == Directional:
-    let ct = (Camera.transform.position + Camera.transform.forward * Camera.zoom)
-    light.entity.transform.position = ct - light.entity.transform.forward * Camera.zoom
-    light.entity.transform.updateMatrix()
-
   sm.fb.use()
 
   if light.shadowMap.isEmpty():
@@ -59,7 +54,7 @@ proc render*(sm: var ShadowMap, light: var Light) =
   glViewport(0, 0, shadowMapSize, shadowMapSize)
 
   sm.shader.use()
-  sm.shader.getUniform("lightspace").set(light.getProjection() * light.entity.transform.getView())
+  sm.shader.getUniform("lightspace").set(light.getSpace())
 
   for i in ModelStore().data:
     if not i.shadows:
