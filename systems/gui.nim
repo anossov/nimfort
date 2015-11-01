@@ -80,6 +80,7 @@ proc initGUI*()=
   )
 
   UI.addText("cursor-pos", -paddingLeft, paddingTop, align=AlignRight)
+  UI.addText("selection", -paddingLeft, paddingTop - lineHeight, align=AlignRight)
   UI.addText("frametime", paddingLeft, paddingTop)
   UI.addText("console", consolePos.x, consolePos.y)
 
@@ -124,8 +125,6 @@ proc consoleAdd(ui: GUI, text: string, color=textColor) =
 
 
 proc updateUi*() =
-  UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
-
   var console = UI.texts["console"]
   let t = console.label.text
 
@@ -164,13 +163,16 @@ proc updateUi*() =
   UI.cursor.transform.position = vec(TheWorld.cursor.x.float, TheWorld.cursor.y.float, TheWorld.cursor.z.float)
   UI.cursor.transform.updateMatrix()
 
-  UI.texts["cursor-pos"].label.update($TheWorld.cursor)
-
   let
     a = TheWorld.selection[0].toFloat()
     b = TheWorld.selection[1].toFloat()
+    ss = abs(a - b) + 1
   UI.selection.transform.position = (a + b) * 0.5
   UI.selection.transform.position.y -= 0.5
-  UI.selection.transform.scale.x = abs(b.x - a.x) + 1
-  UI.selection.transform.scale.z = abs(b.z - a.z) + 1
+  UI.selection.transform.scale.x = ss.x
+  UI.selection.transform.scale.z = ss.z
   UI.selection.transform.updateMatrix()
+
+  UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
+  UI.texts["cursor-pos"].label.update($TheWorld.cursor)
+  UI.texts["selection"].label.update("$1 × $2".format(ss.x.int, ss.z.int))

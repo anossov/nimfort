@@ -121,6 +121,11 @@ proc identity*(): mat4 =
   result[15] = 1.0
 
 
+proc abs*(v: vec3): vec3 =
+  result.x = abs(v.x)
+  result.y = abs(v.y)
+  result.z = abs(v.z)
+
 proc inverse*(v: vec2): vec2 {.inline.} =
   result.x = 1.0 / v.x
   result.y = 1.0 / v.y
