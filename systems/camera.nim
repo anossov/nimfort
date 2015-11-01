@@ -13,7 +13,7 @@ type
     transform*: Transform
     projection: mat4
     listener: Listener
-    zoom: float
+    zoom*: float
     panning: bool
     panCursorOrigin: vec2
     panOrigin: vec3

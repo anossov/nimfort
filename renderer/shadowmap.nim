@@ -8,6 +8,7 @@ import mesh
 import systems/resources
 import renderer/components
 import systems/transform
+import systems/camera
 import config
 
 type
@@ -39,6 +40,11 @@ proc createShadowMap(sm: var ShadowMap, light: var Light) =
 proc render*(sm: var ShadowMap, light: var Light) =
   if not light.shadows:
     return
+
+  if light.kind == Directional:
+    let ct = (Camera.transform.position + Camera.transform.forward * Camera.zoom)
+    light.entity.transform.position = ct - light.entity.transform.forward * Camera.zoom
+    light.entity.transform.updateMatrix()
 
   sm.fb.use()
 
