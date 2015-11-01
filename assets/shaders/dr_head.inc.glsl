@@ -2,9 +2,10 @@
 
 out vec4 outColor;
 
-uniform sampler2D gPosition;
+uniform sampler2D gEmission;
 uniform sampler2D gNormalMetalness;
 uniform sampler2D gAlbedoRoughness;
+uniform sampler2D gDepth;
 
 uniform sampler2DShadow shadowMap;
 
@@ -15,6 +16,7 @@ uniform vec3 lightColor;
 uniform mat4 lightSpace;
 uniform bool hasShadowmap;
 uniform vec2 invBufferSize;
+uniform mat4 invPV;
 
 const float PI = 3.1415926536;
 
@@ -31,4 +33,12 @@ float calcShadow(vec4 fpLS, float bias) {
     }
 
     return texture(shadowMap, posfLP);
+}
+
+vec3 getPosition() {
+  vec2 uv = gl_FragCoord.xy * invBufferSize;
+  float zw = texture(gDepth, uv).r * 2 - 1;
+  vec4 H = vec4(uv.x * 2 - 1, (uv.y) * 2 - 1, zw, 1);
+  vec4 D = invPV * H;
+  return D.xyz / D.w;
 }

@@ -20,7 +20,8 @@ type
     fb: Framebuffer
     albedo*: Texture
     normal*: Texture
-    position*: Texture
+    emission*: Texture
+    depth*: Texture
     shader: Program
 
   LightingPass* = ref object
@@ -33,16 +34,17 @@ type
     overlay: Program
 
 proc newGeometryPass*(): GeometryPass =
-  var p, n, a: Texture
+  var e, n, a, d: Texture
   var b = newFramebuffer()
-  p = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, false)
+  e = newTexture2d(Screen.width, Screen.height, TextureFormat.Red, PixelType.Float, false)
   n = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, false)
   a = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Ubyte, false)
+  d = newTexture2d(Screen.width, Screen.height, TextureFormat.DepthStencil, PixelType.Uint24_8, false)
 
-  b.attach(p)
+  b.attach(e)
   b.attach(n)
   b.attach(a)
-  b.attachDepthStencilRBO(Screen.width, Screen.height)
+  b.attach(d, depth=true, stencil=true)
 
   debug("GBuffer: ", b.check())
 
@@ -56,9 +58,10 @@ proc newGeometryPass*(): GeometryPass =
 
   return GeometryPass(
     fb: b,
-    position: p,
+    emission: e,
     normal: n,
     albedo: a,
+    depth: d,
     shader: s,
   )
 
@@ -82,6 +85,7 @@ proc newLightingPass*(): LightingPass =
     shader.getUniform("gNormalMetalness").set(1)
     shader.getUniform("gAlbedoRoughness").set(2)
     shader.getUniform("shadowMap").set(3)
+    shader.getUniform("gDepth").set(4)
     shader.getUniform("invBufferSize").set(Screen.pixelSize)
 
   s_ibl.use()
@@ -135,15 +139,17 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
   glEnable(GL_DEPTH_TEST)
   glDepthMask(false)
 
-  gp.position.use(0)
+  gp.emission.use(0)
   gp.normal.use(1)
   gp.albedo.use(2)
+  gp.depth.use(4)
 
   let PV = Camera.getProjection() * Camera.getView();
 
   for kind, shader in mpairs(pass.shaders):
     shader.use()
     shader.getUniform("eye").set(Camera.transform.position)
+    shader.getUniform("invPV").set(Camera.getProjectionView().inverse)
 
     for light in LightStore().data:
       if light.kind != kind:

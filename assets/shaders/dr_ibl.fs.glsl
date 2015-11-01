@@ -2,7 +2,7 @@ uniform samplerCube cubemap;
 
 void main() {
     vec2 uv = gl_FragCoord.xy * invBufferSize;
-    vec3 posf = texture(gPosition, uv).rgb;
+    vec3 posf = getPosition();
     vec4 _nm = texture(gNormalMetalness, uv);
 
     vec3 n = _nm.rgb;
