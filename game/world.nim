@@ -91,7 +91,7 @@ proc initWorld*() =
 
   newEntity("sun")
     .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis))
-    .attach(newDirLight(color=vec(0.1, 0.1, 0.12), shadows=true))
+    .attach(newDirLight(color=vec(0.1, 0.1, 0.12)*1, shadows=true))
 
   newEntity("amb").attach(newAmbientCube(
     posx=vec(0.001, 0.002, 0.001),

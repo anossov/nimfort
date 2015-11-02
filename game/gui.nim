@@ -37,9 +37,9 @@ var UI*: GUI
 
 const
   textScale  = 0.4
-  textColor  = vec(0.5, 0.5, 0.5, 1.0)
+  textColor  = vec(0.9, 0.9, 0.9, 1.0)
   errorColor = vec(1.0, 0.1, 0.1, 1.0)
-  infoColor  = vec(0.1, 0.6, 0.1, 1.0)
+  infoColor  = vec(0.1, 1.0, 0.1, 1.0)
 
   cursorColor    = vec(0, 1, 1, 0.3)
   selectionColor = vec(0.8, 0.0, 0.8, 0.2)

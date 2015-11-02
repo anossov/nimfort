@@ -16,6 +16,8 @@ const float E = 0.02;
 const float F = 0.30;
 const float W = 11.2;
 
+const float invGamma = 0.454545;
+
 vec3 Uncharted2Tonemap(vec3 x)
 {
     return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
@@ -33,5 +35,7 @@ void main() {
 
 	//color = color / (color + vec3(1.0));
 
-    outColor = vec4(color, 1.0);
+  color = pow(color, vec3(invGamma));
+
+  outColor = vec4(color, 1.0);
 }

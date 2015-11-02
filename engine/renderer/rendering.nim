@@ -60,7 +60,6 @@ proc initRenderSystem*() =
   glClearColor(0.0, 0.0, 0.0, 0.0)
   glEnable(GL_CULL_FACE)
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
-  glEnable(GL_FRAMEBUFFER_SRGB)
 
   Renderer.listener = newListener()
   Renderer.listener.listen("debug")

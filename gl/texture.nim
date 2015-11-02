@@ -121,7 +121,7 @@ proc newTexture2d*(w, h: int32, f: TextureFormat, t: PixelType, filter=true): Te
   if f == TextureFormat.RGB and t == PixelType.Float:
     internalformat = GL_RGB16F
   elif f == TextureFormat.RGBA and t == PixelType.Float:
-    internalformat = GL_RGBA32F
+    internalformat = GL_RGBA16F
   elif f == TextureFormat.RGBA and t == PixelType.Ubyte:
     internalformat = GL_RGBA8
   elif f == TextureFormat.Depth and t == PixelType.Float:
