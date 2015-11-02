@@ -1,14 +1,17 @@
 #version 400 core
 
+in vec2 uvf;
+in vec4 posf;
+
 out vec4 outColor;
 
-uniform sampler2D gEmission;
-uniform sampler2D gAlbedoRoughness;
-uniform vec2 invBufferSize;
+uniform sampler2D albedo;
+uniform sampler2D emission;
+
+uniform float emissionIntensity;
 
 void main() {
-    vec2 uv = gl_FragCoord.xy * invBufferSize;
-    float emission = texture(gEmission, uv).r;
-    vec3 albedo = texture(gAlbedoRoughness, uv).rgb;
-    outColor = vec4(albedo * emission, 1.0) * clamp(emission, 0.0, 1.0);
+    float emission = texture(emission, uvf).r;
+    vec3 albedo = texture(albedo, uvf).rgb;
+    outColor = vec4(albedo * emission * emissionIntensity, 1.0) * clamp(emission, 0.0, 1.0);
 }

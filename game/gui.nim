@@ -184,8 +184,8 @@ proc updateUi*() =
     ss = abs(a - b) + 1
   UI.selection.transform.position = (a + b) * 0.5
   UI.selection.transform.position.y -= 0.5
-  UI.selection.transform.scale.x = ss.x
-  UI.selection.transform.scale.z = ss.z
+  UI.selection.transform.scale.x = ss.x + 0.05
+  UI.selection.transform.scale.z = ss.z + 0.05
   UI.selection.transform.updateMatrix()
 
   UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))

@@ -2,7 +2,6 @@
 
 out vec4 outColor;
 
-uniform sampler2D gEmission;
 uniform sampler2D gNormalMetalness;
 uniform sampler2D gAlbedoRoughness;
 uniform sampler2D gDepth;

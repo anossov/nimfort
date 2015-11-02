@@ -71,8 +71,8 @@ proc initWorld*() =
     newEntity("point-" & $i)
       .attach(newTransform(p=vec(0, 3, 0), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
       .attach(newPointLight((c * 12).xyz, radius=5))
-      .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=20))
-      .attach(RandomMovement(min: vec(-100, 0.0, -100), max: vec(100, 0.0, 100), smin: 4, smax: 6))
+      .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=20, emissionOnly=true))
+      .attach(RandomMovement(min: vec(-100, 0.0, -100), max: vec(100, 0.0, 100), smin: 1, smax: 3))
       .attach(Animation(done: true))
       .attach(Bounce(min: 2.5, max: 3.0, period: 1.0))
 
@@ -91,7 +91,7 @@ proc initWorld*() =
 
   newEntity("sun")
     .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis))
-    .attach(newDirLight(color=vec(0.1, 0.1, 0.12)*1, shadows=true))
+    .attach(newDirLight(color=vec(0.1, 0.1, 0.12)*5, shadows=true))
 
   newEntity("amb").attach(newAmbientCube(
     posx=vec(0.001, 0.002, 0.001),

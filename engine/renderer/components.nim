@@ -20,6 +20,7 @@ type
     textures*: seq[Texture]
     shadows*: bool
     emissionIntensity*: float
+    emissionOnly*: bool
 
   Overlay* = object of Component
     mesh*: Mesh
@@ -70,7 +71,8 @@ proc newModel*(m: Mesh,
                metalness=emptyTexture(),
                emission=emptyTexture(),
                emissionIntensity=0.0,
-               shadows=true): Model =
+               shadows=true,
+               emissionOnly=false): Model =
   result = Model(
     mesh: m,
     textures: newSeq[Texture](5),
@@ -82,6 +84,7 @@ proc newModel*(m: Mesh,
   result.textures[4] = emission
   result.shadows = shadows
   result.emissionIntensity = emissionIntensity
+  result.emissionOnly = emissionOnly
 
 proc newAmbientCube*(posx=ones3, negx=ones3, posy=ones3, negy=ones3, posz=ones3, negz=ones3): AmbientCube =
   AmbientCube(

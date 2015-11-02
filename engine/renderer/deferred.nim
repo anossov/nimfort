@@ -23,7 +23,6 @@ type
     fb: Framebuffer
     albedo*: Texture
     normal*: Texture
-    emission*: Texture
     depth*: Texture
     shader: Program
 
@@ -37,14 +36,13 @@ type
     overlay: Program
 
 proc newGeometryPass*(): GeometryPass =
-  var e, n, a, d: Texture
+  var n, a, d: Texture
   var b = newFramebuffer()
-  e = newTexture2d(Screen.width, Screen.height, TextureFormat.Red, PixelType.Float, false)
+
   n = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float, false)
   a = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Ubyte, false)
   d = newTexture2d(Screen.width, Screen.height, TextureFormat.DepthStencil, PixelType.Uint24_8, false)
 
-  b.attach(e)
   b.attach(n)
   b.attach(a)
   b.attach(d, depth=true, stencil=true)
@@ -57,11 +55,9 @@ proc newGeometryPass*(): GeometryPass =
   s.getUniform("normal").set(1)
   s.getUniform("roughness").set(2)
   s.getUniform("metalness").set(3)
-  s.getUniform("emission").set(4)
 
   return GeometryPass(
     fb: b,
-    emission: e,
     normal: n,
     albedo: a,
     depth: d,
@@ -81,18 +77,21 @@ proc newLightingPass*(): LightingPass =
 
   var lightshaders = [p, d, s]
 
-  var shaders = [p, d, s, e, s_ibl, s_amb];
+  var shaders = [p, d, s, s_ibl, s_amb];
   for shader in mitems(shaders):
     shader.use()
-    shader.getUniform("gPosition").set(0)
-    shader.getUniform("gNormalMetalness").set(1)
-    shader.getUniform("gAlbedoRoughness").set(2)
+    shader.getUniform("gNormalMetalness").set(0)
+    shader.getUniform("gAlbedoRoughness").set(1)
+    shader.getUniform("gDepth").set(2)
     shader.getUniform("shadowMap").set(3)
-    shader.getUniform("gDepth").set(4)
     shader.getUniform("invBufferSize").set(Screen.pixelSize)
 
   s_ibl.use()
-  s_ibl.getUniform("cubemap").set(3)
+  s_ibl.getUniform("cubemap").set(4)
+
+  e.use()
+  e.getUniform("albedo").set(0)
+  e.getUniform("emission").set(1)
 
   return LightingPass(
     shaders: lightshaders,
@@ -118,9 +117,10 @@ proc perform*(pass: var GeometryPass) =
   pass.shader.getUniform("projection").set(Camera.getProjection())
 
   for i in ModelStore().data:
+    if i.emissionOnly: continue
+
     var model = i.entity.transform.matrix
     pass.shader.getUniform("model").set(model)
-    pass.shader.getUniform("emissionIntensity").set(i.emissionIntensity)
     for i, t in pairs(i.textures):
       t.use(i)
     i.mesh.render()
@@ -142,10 +142,9 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
   glEnable(GL_DEPTH_TEST)
   glDepthMask(false)
 
-  gp.emission.use(0)
-  gp.normal.use(1)
-  gp.albedo.use(2)
-  gp.depth.use(4)
+  gp.normal.use(0)
+  gp.albedo.use(1)
+  gp.depth.use(2)
 
   let PV = Camera.getProjection() * Camera.getView();
 
@@ -169,13 +168,10 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
         case light.kind:
         of Point:
           shader.getUniform("radius").set(light.radius)
-          shader.getUniform("transform").set(PV * translate(t.position) * scale(light.radius))
         of Spot:
-          shader.getUniform("transform").set(identity())
           shader.getUniform("cosSpotAngle").set(cos(light.spotAngle.radians))
           shader.getUniform("cosSpotFalloff").set(cos(light.spotFalloff.radians))
-        else:
-          shader.getUniform("transform").set(identity())
+        else: discard
 
       shader.getUniform("lightColor").set(light.color)
 
@@ -183,15 +179,17 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
 
       case light.kind:
       of Point:
+        shader.getUniform("transform").set(PV * translate(light.entity.transform.position) * scale(light.radius))
         pass.ball.render()
       else:
+        shader.getUniform("transform").set(identity())
         Screen.quad.render()
 
   for i in GhettoIBLStore().data:
     pass.IBL.use()
     pass.IBL.getUniform("eye").set(Camera.transform.position)
     pass.IBL.getUniform("lightColor").set(i.color)
-    i.cubemap.use(3)
+    i.cubemap.use(4)
     Screen.quad.render()
 
   for i in AmbientCubeStore().data:
@@ -207,10 +205,6 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
 
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-  pass.emission.use()
-  pass.emission.getUniform("transform").set(identity())
-  Screen.quad.render()
-
   pass.overlay.use()
   pass.overlay.getUniform("view").set(Camera.getView())
   pass.overlay.getUniform("projection").set(Camera.getProjection())
@@ -219,12 +213,25 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
     pass.overlay.getUniform("color").set(i.color)
     i.mesh.render()
 
+  glDepthFunc(GL_LEQUAL)
+  pass.emission.use()
+  pass.emission.getUniform("view").set(Camera.getView())
+  pass.emission.getUniform("projection").set(Camera.getProjection())
+
+  for i in ModelStore().data:
+    if i.emissionIntensity == 0.0: continue
+    pass.emission.getUniform("model").set(i.entity.transform.matrix)
+    pass.emission.getUniform("emissionIntensity").set(i.emissionIntensity)
+    i.textures[0].use(0)
+    i.textures[4].use(1)
+    i.mesh.render()
+
   glDepthFunc(GL_EQUAL)
   for sb in SkyboxStore().data:
     pass.skybox.use()
     pass.skybox.getUniform("projection").set(Camera.getProjection())
     pass.skybox.getUniform("view").set(Camera.getView())
     pass.skybox.getUniform("intensity").set(sb.intensity)
-    sb.cubemap.use(3)
+    sb.cubemap.use(4)
     Screen.quad.render()
   glDepthFunc(GL_LESS)

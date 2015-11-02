@@ -110,9 +110,6 @@ proc render*() =
       of "metalness":
         r.geometryPass.normal.use(0)
         r.debug.getUniform("alpha").set(true)
-      of "emission":
-        r.geometryPass.emission.use(0)
-        r.debug.getUniform("alpha").set(false)
       of "depth":
         r.geometryPass.depth.use(0)
         r.debug.getUniform("alpha").set(false)

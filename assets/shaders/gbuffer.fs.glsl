@@ -1,8 +1,7 @@
 #version 400 core
 
-layout (location = 0) out vec4 gEmission;
-layout (location = 1) out vec4 gNormalMetalness;
-layout (location = 2) out vec4 gAlbedoRoughness;
+layout (location = 0) out vec4 gNormalMetalness;
+layout (location = 1) out vec4 gAlbedoRoughness;
 
 in vec2 uvf;
 in vec4 posf;
@@ -13,13 +12,10 @@ uniform sampler2D albedo;
 uniform sampler2D normal;
 uniform sampler2D roughness;
 uniform sampler2D metalness;
-uniform sampler2D emission;
-uniform float emissionIntensity;
+
 
 void main()
 {
-    gEmission.r = texture(emission, uvf).r * emissionIntensity;
-
     vec3 n = texture(normal, uvf).rgb;
     if (n != vec3(0.0)) {
         n = normalize(n * 2.0 - 1.0);
