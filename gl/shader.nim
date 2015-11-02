@@ -1,7 +1,8 @@
 import opengl
-import vector
 import tables
 import logging
+
+import engine/vector
 
 type
   ShaderType* {.pure.} = enum

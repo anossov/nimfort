@@ -1,13 +1,14 @@
 import unicode
 import logging
-import messaging
 import strutils
-import glfw/wrapper as glfw
-import vector
 import strtabs
+import glfw/wrapper as glfw
+
 import config
 
-import systems/windowing
+import engine/vector
+import engine/messaging
+import engine/windowing
 
 
 type

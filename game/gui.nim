@@ -3,19 +3,19 @@ import strutils
 import unicode
 import math
 import tables
-import text
-import vector
 
-import systems/ecs
-import systems/messaging
-import systems/resources
-import systems/timekeeping
-import systems/input
-import systems/transform
-import systems/world
-import renderer/components
-import renderer/rendering
-import renderer/screen
+import engine/text
+import engine/vector
+import engine/ecs
+import engine/messaging
+import engine/resources
+import engine/timekeeping
+import engine/input
+import engine/transform
+import engine/renderer/components
+import engine/renderer/screen
+
+import game/game
 
 
 type
@@ -175,12 +175,12 @@ proc updateUi*() =
 
     else: discard
 
-  UI.cursor.transform.position = vec(TheWorld.cursor.x.float, TheWorld.cursor.y.float, TheWorld.cursor.z.float)
+  UI.cursor.transform.position = vec(TheGame.cursor.x.float, TheGame.cursor.y.float, TheGame.cursor.z.float)
   UI.cursor.transform.updateMatrix()
 
   let
-    a = TheWorld.selection[0].toFloat()
-    b = TheWorld.selection[1].toFloat()
+    a = TheGame.selection[0].toFloat()
+    b = TheGame.selection[1].toFloat()
     ss = abs(a - b) + 1
   UI.selection.transform.position = (a + b) * 0.5
   UI.selection.transform.position.y -= 0.5
@@ -189,5 +189,5 @@ proc updateUi*() =
   UI.selection.transform.updateMatrix()
 
   UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
-  UI.texts["cursor-pos"].label.update($TheWorld.cursor)
+  UI.texts["cursor-pos"].label.update($TheGame.cursor)
   UI.texts["selection"].label.update("$1 × $2".format(ss.x.int, ss.z.int))

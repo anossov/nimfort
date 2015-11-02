@@ -1,27 +1,24 @@
 import logging
-import mesh
 import math
-import gl/texture
-import objfile
-import vector
 import strutils
 import random
 
-import systems/ecs
-import systems/resources
-import systems/timekeeping
-import systems/transform
-import systems/messaging
-import systems/camera
-import renderer/rendering
-import renderer/components
+import engine/vector
+import engine/mesh
+import engine/ecs
+import engine/resources
+import engine/timekeeping
+import engine/transform
+import engine/messaging
+import engine/camera
+import engine/renderer/rendering
+import engine/renderer/components
+
 
 type
   World* = ref object
     listener: Listener
-    cursor*: ivec3
-    selection*: array[2, ivec3]
-    selecting*: bool
+
 
 var TheWorld*: World
 
@@ -135,31 +132,4 @@ proc initWorld*() =
 
 
 proc updateWorld*() =
-  let p = Camera.pickGround(-0.5) + vec(0, 0.5, 0)
-  TheWorld.cursor = ivec(p.x.round, p.y.round, p.z.round)
-
-  for m in TheWorld.listener.getMessages():
-    var p = m.parser()
-    try:
-      case m.name:
-
-      of "move":
-        let e = p.parseEntity()
-        if e.has("Transform"):
-          e.transform.position = TheWorld.cursor.toFloat()
-          e.transform.updateMatrix()
-
-      of "selection-start":
-        TheWorld.selection[0] = TheWorld.cursor
-        TheWorld.selecting = true
-
-      of "selection-end":
-        TheWorld.selecting = false
-
-      else: discard
-
-    except ValueError:
-      Messages.emit("error", getCurrentExceptionMsg())
-
-  if TheWorld.selecting:
-    TheWorld.selection[1] = TheWorld.cursor
+  discard

@@ -1,25 +1,27 @@
 import logging
 import opengl
 import strutils
-import vector
 import math
+
 import gl/framebuffer
 import gl/shader
 import gl/texture
-import mesh
-import systems/ecs
-import systems/messaging
-import systems/timekeeping
-import systems/camera
-import systems/resources
 
-import renderer/components
-import renderer/screen
-import renderer/deferred
-import renderer/shadowmap
-import renderer/textrenderer
-import renderer/postprocess
-import renderer/smaa
+import engine/vector
+import engine/mesh
+import engine/ecs
+import engine/messaging
+import engine/timekeeping
+import engine/camera
+import engine/resources
+
+import engine/renderer/components
+import engine/renderer/screen
+import engine/renderer/deferred
+import engine/renderer/shadowmap
+import engine/renderer/textrenderer
+import engine/renderer/postprocess
+import engine/renderer/smaa
 
 type
   RenderSystem* = ref object

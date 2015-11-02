@@ -1,19 +1,22 @@
 import logging
-import config
 import opengl
+import math
+
+import config
+
 import gl/framebuffer
 import gl/texture
 import gl/shader
-import math
-import mesh
-import vector
-import systems/ecs
-import systems/resources
-import systems/camera
-import systems/transform
-import renderer/components
-import renderer/shadowMap
-import renderer/screen
+
+import engine/mesh
+import engine/vector
+import engine/ecs
+import engine/resources
+import engine/camera
+import engine/transform
+import engine/renderer/components
+import engine/renderer/shadowMap
+import engine/renderer/screen
 
 type
   GeometryPass* = ref object

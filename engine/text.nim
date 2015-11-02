@@ -4,13 +4,16 @@ import tables
 import hashes
 import strutils
 import unicode
+import nimPNG
+import opengl
+
 import gl/texture
 import gl/buffer
 import gl/shader
-import opengl
-import vector
-import mesh
-import nimPNG
+
+import engine/vector
+import engine/mesh
+
 
 type
   Char = object

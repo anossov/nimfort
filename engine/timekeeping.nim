@@ -1,7 +1,7 @@
 import logging
 import glfw/wrapper as glfw
 
-import systems/messaging
+import engine/messaging
 
 
 type

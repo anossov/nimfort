@@ -1,6 +1,7 @@
-import systems/windowing
-import vector
-import mesh
+import engine/windowing
+import engine/vector
+import engine/mesh
+
 
 type ScreenInfo = ref object
   size*: vec2

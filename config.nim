@@ -13,8 +13,8 @@ const
     ("control-KP_ADD-down", "camera.exposure-up"),
     ("control-KP_SUBTRACT-down", "camera.exposure-down"),
 
-    ("LMB-down", "world.selection-start"),
-    ("LMB-up", "world.selection-end"),
+    ("LMB-down", "game.selection-start"),
+    ("LMB-up", "game.selection-end"),
     ("RMB-down", "camera.drag"),
     ("RMB-up", "camera.release"),
 

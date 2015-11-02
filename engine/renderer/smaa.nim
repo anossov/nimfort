@@ -1,13 +1,17 @@
 import logging
 import opengl
+
 import config
-import systems/resources
+
 import gl/texture
 import gl/framebuffer
 import gl/shader
-import mesh
-import vector
-import renderer/screen
+
+import engine/resources
+import engine/mesh
+import engine/vector
+import engine/renderer/screen
+
 
 const
   AREATEX_WIDTH    = 160

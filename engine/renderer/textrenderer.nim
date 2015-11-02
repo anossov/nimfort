@@ -1,13 +1,16 @@
 import logging
 import opengl
+
 import gl/shader
 import gl/texture
-import mesh
-import vector
-import systems/timekeeping
-import systems/resources
-import systems/transform
-import renderer/components
+
+import engine/mesh
+import engine/vector
+import engine/timekeeping
+import engine/resources
+import engine/transform
+import engine/renderer/components
+
 
 type
   TextRenderer* = object

@@ -1,21 +1,24 @@
 import tables
 import logging
 import strutils
+
 import config
 
 addHandler(newFileLogger("debug.log", fmtStr=verboseFmtStr, mode=fmWrite, levelThreshold=logLevel, bufSize=0))
 
-import systems/windowing
-import systems/ecs
-import systems/gui
-import systems/world
-import systems/timekeeping
-import systems/messaging
-import systems/input
-import systems/resources
-import systems/camera
-import systems/transform
-import renderer/rendering
+import engine/windowing
+import engine/ecs
+import engine/timekeeping
+import engine/messaging
+import engine/input
+import engine/resources
+import engine/camera
+import engine/transform
+import engine/renderer/rendering
+
+import game/gui
+import game/world
+import game/game
 
 
 when defined(profiler) or defined(memProfiler):
@@ -31,6 +34,7 @@ proc startup*() =
   initResources()
   initRenderSystem()
   initCamera()
+  initGame()
   initGUI()
   initWorld()
 
@@ -47,6 +51,7 @@ proc gameloop*() =
     processECSMessages()
     updateInput()
     updateWorld()
+    updateGame()
     updateTransforms()
     updateCamera()
     updateUi()

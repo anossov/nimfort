@@ -1,9 +1,12 @@
 import logging
 import strutils
 import glfw/wrapper as glfw
-import vector
-import systems/messaging
+
 import config
+
+import engine/vector
+import engine/messaging
+
 
 var Window*: GLFWwindow
 

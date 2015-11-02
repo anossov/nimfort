@@ -2,7 +2,8 @@ import logging
 import tables
 import strutils
 import parseutils
-import vector
+
+import engine/vector
 
 
 type

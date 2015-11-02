@@ -4,7 +4,8 @@ import typetraits
 import strutils
 import sequtils
 
-import systems/messaging
+import engine/messaging
+
 
 type
   EntityHandle* = int32

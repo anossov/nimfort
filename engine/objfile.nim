@@ -1,7 +1,9 @@
 import logging
 import strutils
 import tables
-import mesh
+
+import engine/mesh
+
 
 proc tof32(s: string): float32 = s.parseFloat.float32
 
@@ -13,7 +15,7 @@ proc loadObj*(path: string): Mesh =
     map = initTable[string, uint32]()
 
   result = newMesh()
-  
+
   for line in lines(path):
     var fields = line.split
     if len(fields) < 1:

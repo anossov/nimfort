@@ -1,15 +1,17 @@
 import logging
 import strutils
-import text
-import objfile
-import mesh
 import nimBMP
 import opengl
 import tables
-import vector
 
 import gl/texture
 import gl/shader
+
+import engine/vector
+import engine/text
+import engine/objfile
+import engine/mesh
+
 
 type
   ResourceManager = ref object

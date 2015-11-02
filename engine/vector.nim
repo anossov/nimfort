@@ -3,6 +3,7 @@ import opengl
 import math
 import strutils
 
+
 type
   vec2* {.bycopy pure.} = array[2, float32]
   vec3* {.bycopy pure.} = array[3, float32]

@@ -5,7 +5,8 @@ import gl/buffer
 import gl/shader
 import gl/texture
 
-import vector
+import engine/vector
+
 
 const NO = GL_FALSE.GLboolean
 
@@ -26,7 +27,7 @@ type
     ebo: Buffer
 
 
-proc newMesh*(): Mesh = 
+proc newMesh*(): Mesh =
   result = Mesh(
     vertices: newSeq[Vertex](),
     indices: newSeq[uint32](),
@@ -35,7 +36,7 @@ proc newMesh*(): Mesh =
   )
 
 
-proc calculateTangents*(m: var Mesh) = 
+proc calculateTangents*(m: var Mesh) =
   let numFaces = m.indices.len div 3
 
   var

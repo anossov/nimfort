@@ -1,14 +1,18 @@
 import logging
-import systems/ecs
-import vector
-import text
-import mesh
 import math
-import gl/texture
-import systems/camera
-import systems/resources
-import systems/transform
+
 import config
+
+import gl/texture
+
+import engine/ecs
+import engine/vector
+import engine/text
+import engine/mesh
+import engine/camera
+import engine/resources
+import engine/transform
+
 
 type
   Model* = object of Component

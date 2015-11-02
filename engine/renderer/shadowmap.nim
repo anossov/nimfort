@@ -1,15 +1,19 @@
 import logging
 import opengl
+
+import config
+
 import gl/shader
 import gl/framebuffer
 import gl/texture
-import vector
-import mesh
-import systems/resources
-import renderer/components
-import systems/transform
-import systems/camera
-import config
+
+import engine/vector
+import engine/mesh
+import engine/resources
+import engine/transform
+import engine/camera
+import engine/renderer/components
+
 
 type
   ShadowMap* = ref object

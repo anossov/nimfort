@@ -1,14 +1,18 @@
 import logging
-import systems/resources
-import systems/messaging
+import opengl
+
+import config
+
 import gl/framebuffer
 import gl/shader
 import gl/texture
-import mesh
-import config
-import opengl
-import vector
-import renderer/screen
+
+import engine/mesh
+import engine/resources
+import engine/messaging
+import engine/vector
+import engine/renderer/screen
+
 
 type
   Tonemapping* = ref object

@@ -1,9 +1,11 @@
 import logging
-import systems/ecs
-import systems/timekeeping
-import vector
 import math
 import random
+
+import engine/ecs
+import engine/timekeeping
+import engine/vector
+
 
 type
   Transform* = object of Component

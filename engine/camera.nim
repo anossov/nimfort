@@ -1,12 +1,15 @@
 import logging
 import strutils
-import vector
-import config
 import math
-import systems/input
-import systems/messaging
-import systems/transform
-import renderer/screen
+
+import config
+
+import engine/vector
+import engine/input
+import engine/messaging
+import engine/transform
+import engine/renderer/screen
+
 
 type
   CameraSystem* = ref object
