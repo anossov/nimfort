@@ -1,3 +1,4 @@
+
 import logging
 import opengl
 
@@ -13,6 +14,7 @@ import engine/resources
 import engine/transform
 import engine/camera
 import engine/renderer/components
+import engine/geometry/aabb
 
 
 type
@@ -60,9 +62,14 @@ proc render*(sm: var ShadowMap, light: var Light) =
   sm.shader.use()
   sm.shader.getUniform("lightspace").set(light.getSpace())
 
+  let camera_bb = light.boundingBox
+
   for i in ModelStore().data:
     if not i.shadows:
       continue
     var model = i.entity.transform.matrix
+    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+    if bb.outside(camera_bb): continue
+
     sm.shader.getUniform("model").set(model)
     i.mesh.render()

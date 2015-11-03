@@ -1,8 +1,8 @@
 import logging
 
 const
-  windowWidth*    = 1600
-  windowHeight*   = 1200
+  windowWidth*    = 1920
+  windowHeight*   = 1080
   windowTitle*    = "Nimfort"
 
   shadowMapSize*  = 2048

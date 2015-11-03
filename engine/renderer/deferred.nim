@@ -17,6 +17,7 @@ import engine/transform
 import engine/renderer/components
 import engine/renderer/shadowMap
 import engine/renderer/screen
+import engine/geometry/aabb
 
 type
   GeometryPass* = ref object
@@ -119,10 +120,14 @@ proc perform*(pass: var GeometryPass) =
   pass.shader.getUniform("view").set(Camera.getView())
   pass.shader.getUniform("projection").set(Camera.getProjection())
 
+  let camera_bb = newAABB(Camera.frustum)
+
   for i in ModelStore().data:
     if i.emissionOnly: continue
-
     var model = i.entity.transform.matrix
+    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+    if bb.outside(camera_bb): continue
+
     pass.shader.getUniform("model").set(model)
     for i, t in pairs(i.textures):
       t.use(i)
@@ -150,7 +155,9 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
   gp.depth.use(2)
   ao.use(5)
 
-  let PV = Camera.getProjection() * Camera.getView();
+  let PV = Camera.getProjection() * Camera.getView()
+
+  let camera_bb = newAABB(Camera.frustum)
 
   for kind, shader in mpairs(pass.shaders):
     shader.use()
@@ -158,8 +165,8 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
     shader.getUniform("invPV").set(Camera.getProjectionView().inverse)
 
     for light in LightStore().data:
-      if light.kind != kind:
-        continue
+      if light.kind != kind: continue
+      if light.boundingBox.outside(camera_bb): continue
 
       if light.entity.has("Transform"):
         let t = light.entity.transform
@@ -224,7 +231,10 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
 
   for i in ModelStore().data:
     if i.emissionIntensity == 0.0: continue
-    pass.emission.getUniform("model").set(i.entity.transform.matrix)
+    let model = i.entity.transform.matrix
+    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+    if bb.outside(camera_bb): continue
+    pass.emission.getUniform("model").set(model)
     pass.emission.getUniform("emissionIntensity").set(i.emissionIntensity)
     i.textures[0].use(0)
     i.textures[4].use(1)

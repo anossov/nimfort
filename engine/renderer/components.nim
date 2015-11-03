@@ -12,6 +12,7 @@ import engine/mesh
 import engine/camera
 import engine/resources
 import engine/transform
+import engine/geometry/aabb
 
 
 type
@@ -21,6 +22,7 @@ type
     shadows*: bool
     emissionIntensity*: float
     emissionOnly*: bool
+    bb*: AABB
 
   Overlay* = object of Component
     mesh*: Mesh
@@ -76,6 +78,7 @@ proc newModel*(m: Mesh,
   result = Model(
     mesh: m,
     textures: newSeq[Texture](5),
+    bb: newAABB()
   )
   result.textures[0] = albedo
   result.textures[1] = normal
@@ -85,6 +88,8 @@ proc newModel*(m: Mesh,
   result.shadows = shadows
   result.emissionIntensity = emissionIntensity
   result.emissionOnly = emissionOnly
+  for v in m.vertices:
+    result.bb.add(v.position)
 
 proc newAmbientCube*(posx=ones3, negx=ones3, posy=ones3, negy=ones3, posz=ones3, negz=ones3): AmbientCube =
   AmbientCube(
@@ -144,32 +149,38 @@ proc getSpace*(light: Light): mat4 =
       ilv = lv.inverse
       v = light.entity.transform.getView()
 
-    var fbb: array[2, vec3]
-    fbb[0] = vec(Inf, Inf, Inf)
-    fbb[1] = vec(-Inf, -Inf, -Inf)
+    var bb = newAABB()
     for corner in frustum:
       let p = ilv * vec(corner, 1.0)
-      if p.x <= fbb[0].x:
-        fbb[0].x = p.x
-      if p.y <= fbb[0].y:
-        fbb[0].y = p.y
-      if p.z <= fbb[0].z:
-        fbb[0].z = p.z
+      bb.add(p.xyz)
 
-      if p.x >= fbb[1].x:
-        fbb[1].x = p.x
-      if p.y >= fbb[1].y:
-        fbb[1].y = p.y
-      if p.z >= fbb[1].z:
-        fbb[1].z = p.z
-
-    let p = orthographic(fbb[0].x, fbb[1].x, fbb[0].y, fbb[1].y, -fbb[1].z, -fbb[0].z)
+    let p = orthographic(bb.min.x, bb.max.x, bb.min.y, bb.max.y, -bb.max.z, -bb.min.z)
     return p * light.entity.transform.getView()
   of Spot:
     let p = perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
     return p * light.entity.transform.getView()
   else:
     return identity()
+
+proc frustum*(light: Light): array[8, vec3] =
+  let m = light.getSpace().inverse
+  result[0] = (m * vec(-1, -1, -1, 1.0)).xyz
+  result[1] = (m * vec( 1, -1, -1, 1.0)).xyz
+  result[2] = (m * vec(-1,  1, -1, 1.0)).xyz
+  result[3] = (m * vec( 1,  1, -1, 1.0)).xyz
+  result[4] = (m * vec(-1, -1,  1, 1.0)).xyz
+  result[5] = (m * vec( 1, -1,  1, 1.0)).xyz
+  result[6] = (m * vec(-1,  1,  1, 1.0)).xyz
+  result[7] = (m * vec( 1,  1,  1, 1.0)).xyz
+
+
+proc boundingBox*(light: Light): AABB =
+  case light.kind:
+  of Point:
+    let p = light.entity.transform.position
+    return newAABB(p - light.radius, p + light.radius)
+  else:
+    return newAABB(light.frustum)
 
 
 proc update*(t: var Label, s: string) =

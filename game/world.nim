@@ -26,7 +26,7 @@ var TheWorld*: World
 const
   N = 12
   S = 100
-  NT = 200
+  NT = 500
 
 
 proc terrain(): Mesh =
@@ -54,7 +54,6 @@ proc terrain(): Mesh =
         uint32(x * 4 + 2),
       ])
       x += 1
-
 
   result.buildBuffers()
 
