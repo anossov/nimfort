@@ -462,6 +462,25 @@ proc inverse*(m: mat4): mat4 =
   result = Inverse * OneOverDeterminant
 
 
+proc transpose*(m: mat4): mat4 =
+  result[0] = m[0]
+  result[1] = m[4]
+  result[2] = m[8]
+  result[3] = m[12]
+  result[4] = m[1]
+  result[5] = m[5]
+  result[6] = m[9]
+  result[7] = m[13]
+  result[8] = m[2]
+  result[9] = m[6]
+  result[10] = m[10]
+  result[11] = m[14]
+  result[12] = m[3]
+  result[13] = m[7]
+  result[14] = m[11]
+  result[15] = m[15]
+
+
 proc project*(point: vec3, PV: mat4, viewport: vec4): vec3 =
   var tmp = PV * vec(point, 1.0)
   tmp = tmp / tmp.w;

@@ -93,6 +93,9 @@ proc newLightingPass*(): LightingPass =
   e.getUniform("albedo").set(0)
   e.getUniform("emission").set(1)
 
+  s_amb.use()
+  s_amb.getUniform("AO").set(5)
+
   return LightingPass(
     shaders: lightshaders,
     emission: e,
@@ -125,7 +128,7 @@ proc perform*(pass: var GeometryPass) =
       t.use(i)
     i.mesh.render()
 
-proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuffer) =
+proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, output: var Framebuffer) =
   gp.fb.use(FramebufferTarget.Read)
   output.use(FramebufferTarget.Draw)
   glBlitFramebuffer(0, 0, Screen.width, Screen.height,
@@ -145,6 +148,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, output: var Framebuf
   gp.normal.use(0)
   gp.albedo.use(1)
   gp.depth.use(2)
+  ao.use(5)
 
   let PV = Camera.getProjection() * Camera.getView();
 

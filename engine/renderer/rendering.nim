@@ -22,6 +22,7 @@ import engine/renderer/shadowmap
 import engine/renderer/textrenderer
 import engine/renderer/postprocess
 import engine/renderer/smaa
+import engine/renderer/ssao
 
 type
   RenderSystem* = ref object
@@ -32,6 +33,7 @@ type
     bloom: Bloom
     tonemapping: Tonemapping
     smaa: SMAA
+    ssao: SSAO
     listener: Listener
     debug: Program
 
@@ -53,6 +55,7 @@ proc initRenderSystem*() =
     bloom: newBloom(),
     tonemapping: newTonemapping(),
     smaa: newSMAA(),
+    ssao: newSSAO(),
     debug: getShader("debug"),
     debugmode: "",
   )
@@ -90,7 +93,9 @@ proc render*() =
   for light in mitems(LightStore().data):
     r.shadowMap.render(light)
 
-  r.lightingPass.perform(r.geometryPass, r.bloom.fb_in)
+  r.ssao.perform(r.geometryPass.depth, r.geometryPass.normal)
+
+  r.lightingPass.perform(r.geometryPass, r.ssao.occlusion, r.bloom.fb_in)
   r.bloom.perform(r.tonemapping.fb_in)
   r.tonemapping.perform(r.smaa.fb_in)
   r.smaa.perform(dfb)
@@ -118,6 +123,9 @@ proc render*() =
         r.debug.getUniform("alpha").set(false)
       of "brightpass":
         r.bloom.t_bright.use(0)
+        r.debug.getUniform("alpha").set(false)
+      of "occlusion":
+        r.ssao.occlusion.use(0)
         r.debug.getUniform("alpha").set(false)
       else:
         discard

@@ -130,6 +130,8 @@ proc newTexture2d*(w, h: int32, f: TextureFormat, t: PixelType, filter=true): Te
     internalformat = GL_DEPTH24_STENCIL8
   elif f == TextureFormat.Red and t == PixelType.Float:
     internalformat = GL_R16F
+  elif f == TextureFormat.Red and t == PixelType.Ubyte:
+    internalformat = GL_R8
   else:
     assert true, "Unsupported format"
 

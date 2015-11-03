@@ -1,9 +1,11 @@
 uniform vec3 colors[6];
+uniform sampler2D AO;
 
 void main() {
     vec2 uv = gl_FragCoord.xy * invBufferSize;
     vec3 a = texture(gAlbedoRoughness, uv).rgb;
     vec3 n = texture(gNormalMetalness, uv).rgb;
+    float ao = texture(AO, uv).r;
 
     float nox = dot(n, vec3(1.0, 0.0, 0.0));
     float noy = dot(n, vec3(0.0, 1.0, 0.0));
@@ -15,5 +17,5 @@ void main() {
 
     vec3 E = ex + ey + ez;
 
-    outColor = vec4(E * a, 1.0);
+    outColor = vec4(E * a * ao, 1.0);
 }

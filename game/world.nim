@@ -91,15 +91,15 @@ proc initWorld*() =
 
   newEntity("sun")
     .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis))
-    .attach(newDirLight(color=vec(0.1, 0.1, 0.12)*5, shadows=true))
+    .attach(newDirLight(color=vec(1, 1, 1), shadows=true))
 
   newEntity("amb").attach(newAmbientCube(
-    posx=vec(0.001, 0.002, 0.001),
-    negx=vec(0.001, 0.002, 0.001),
-    posy=vec(0.01, 0.01, 0.03),
+    posx=vec(0.01, 0.02, 0.01),
+    negx=vec(0.01, 0.02, 0.01),
+    posy=vec(0.03, 0.04, 0.05),
     negy=vec(0.01, 0.0, 0.0),
-    posz=vec(0.001, 0.002, 0.001),
-    negz=vec(0.001, 0.002, 0.001),
+    posz=vec(0.01, 0.02, 0.1),
+    negz=vec(0.01, 0.02, 0.01),
   ))
 
   newEntity("terrain")
@@ -113,6 +113,14 @@ proc initWorld*() =
 
   newEntity("c")
     .attach(newTransform())
+    .attach(newModel(
+        getMesh("cube"),
+        albedo=w,
+        roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
+    ))
+
+  newEntity("c2")
+    .attach(newTransform(s=4, p=vec(-5, 1.5, 5)))
     .attach(newModel(
         getMesh("cube"),
         albedo=w,

@@ -41,8 +41,8 @@ const
   errorColor = vec(1.0, 0.1, 0.1, 1.0)
   infoColor  = vec(0.1, 1.0, 0.1, 1.0)
 
-  cursorColor    = vec(0, 1, 1, 0.3)
-  selectionColor = vec(0.8, 0.0, 0.8, 0.2)
+  cursorColor    = vec(1, 1, 1, 0.5)
+  selectionColor = vec(0.8, 0.0, 0.8, 0.4)
 
   paddingLeft           = 30.0
   paddingTop            = -20.0
