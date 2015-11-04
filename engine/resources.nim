@@ -1,4 +1,5 @@
 import logging
+import os
 import strutils
 import nimBMP
 import opengl
@@ -53,7 +54,11 @@ proc getShader*(name: string, vs_prepend: openarray[string] = [], fs_prepend: op
     fss.add(fs)
     vss.add(vs)
 
-    Resources.shaders[name] = createProgram(vss, fss)
+    var gss: string = nil
+    if fileExists("assets/shaders/$1.gs.glsl" % name):
+      gss = readFile("assets/shaders/$1.gs.glsl" % name)
+
+    Resources.shaders[name] = createProgram(vss, fss, gss)
 
   return Resources.shaders[name]
 

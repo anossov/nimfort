@@ -22,7 +22,7 @@ type
     colors: GLsizei
 
 
-proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false, level=0, tt=ord TextureTarget.Texture2d) =
+proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false, level=0) =
   var ap: GLenum
 
   if depth and stencil:
@@ -39,7 +39,7 @@ proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false, level=
     ap = ((ord AttachmentPoint.Color) + fb.colors).GLenum
     fb.colors += 1
 
-  glFramebufferTexture2D(ord fb.target, ap, tt.GLenum, t.id, level.GLint)
+  glFramebufferTexture(ord fb.target, ap, t.id, level.GLint)
 
   if fb.colors > 0:
     var bufs = newSeq[GLenum](fb.colors)

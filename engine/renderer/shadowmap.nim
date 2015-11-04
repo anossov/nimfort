@@ -1,6 +1,6 @@
-
 import logging
 import opengl
+import strutils
 
 import config
 
@@ -22,17 +22,17 @@ type
   ShadowMap* = ref object
     fb: Framebuffer
     shader: Program
+    shaderCube: Program
 
 
 proc newShadowMap*(): ShadowMap =
   var
     b = newFramebuffer()
-    s = getShader("shadowmap")
 
   glDrawBuffer(GL_NONE)
   glReadBuffer(GL_NONE)
 
-  return ShadowMap(fb: b, shader: s)
+  return ShadowMap(fb: b, shader: getShader("shadowmap"), shaderCube: getShader("shadowcubemap"))
 
 
 proc createShadowMap(sm: var ShadowMap, light: var Light) =
@@ -41,7 +41,7 @@ proc createShadowMap(sm: var ShadowMap, light: var Light) =
   if light.kind == Point:
     t = newTexture(TextureTarget.CubeMap)
     let
-      size = (shadowMapSize shr 2).int32
+      size = (shadowMapSize shr 3).int32
       f = ord TextureFormat.Depth
       pt = ord PixelType.Float
     for face in cubeMapFaces:
@@ -55,9 +55,6 @@ proc createShadowMap(sm: var ShadowMap, light: var Light) =
 
   light.shadowMap = t
 
-const
-  targetscube = @cubeMapFaces
-  targets2d = @[ord TextureTarget.Texture2d]
 
 proc render*(sm: var ShadowMap, light: var Light) =
   if not light.shadows:
@@ -71,32 +68,31 @@ proc render*(sm: var ShadowMap, light: var Light) =
   glEnable(GL_DEPTH_TEST)
   glDepthMask(true)
 
+  sm.fb.attach(light.shadowMap, depth=true)
+  glClear(GL_DEPTH_BUFFER_BIT)
+
+  var s: Program
+
   if light.kind == Point:
-    glViewport(0, 0, shadowMapSize shr 2, shadowMapSize shr 2)
+    s = sm.shadercube
+    glViewport(0, 0, shadowMapSize shr 3, shadowMapSize shr 3)
+    s.use()
+    for i, f in cubeMapFaces:
+      s.getUniform("shadowMatrices[$1]".format(i)).set(light.getFaceSpace(f))
   else:
+    s = sm.shader
     glViewport(0, 0, shadowMapSize, shadowMapSize)
-
-  sm.shader.use()
-
-  var targets = if light.kind == Point: targetscube else: targets2d
+    s.use()
+    s.getUniform("lightspace").set(light.getSpace())
 
   let camera_bb = light.boundingBox
 
-  for t in targets:
-    sm.fb.attach(light.shadowMap, depth=true, tt=t)
-    glClear(GL_DEPTH_BUFFER_BIT)
+  for i in ModelStore().data:
+    if not i.shadows:
+      continue
+    var model = i.entity.transform.matrix
+    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+    if bb.outside(camera_bb): continue
 
-    if light.kind == Point:
-      sm.shader.getUniform("lightspace").set(light.getFaceSpace(t))
-    else:
-      sm.shader.getUniform("lightspace").set(light.getSpace())
-
-    for i in ModelStore().data:
-      if not i.shadows:
-        continue
-      var model = i.entity.transform.matrix
-      let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
-      if bb.outside(camera_bb): continue
-
-      sm.shader.getUniform("model").set(model)
-      i.mesh.render()
+    s.getUniform("model").set(model)
+    i.mesh.render()

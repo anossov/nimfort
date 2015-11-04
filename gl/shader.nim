@@ -41,6 +41,7 @@ type
 
     fs: Shader
     vs: Shader
+    gs: Shader
 
     uniforms: Table[string, Uniform]
 
@@ -100,16 +101,22 @@ proc getUniform*(p: var Program, name: string): Uniform =
   p.uniforms[name] = p.findUniform(name)
   return p.uniforms[name]
 
-proc createProgram*(vs: string, fs: string): Program =
+proc createProgram*(vs: string, fs: string, gs: string): Program =
   result = Program(
     id: glCreateProgram(),
     uniforms: initTable[string, Uniform](),
     vs: createShader(ShaderType.Vertex, vs),
     fs: createShader(ShaderType.Fragment, fs),
+    gs: Shader(shaderType: ShaderType.Geometry)
   )
 
   glAttachShader(result.id, result.fs.id)
   glAttachShader(result.id, result.vs.id)
+
+  if gs != nil:
+    result.gs = createShader(ShaderType.Geometry, gs)
+    glAttachShader(result.id, result.gs.id)
+
   glLinkProgram(result.id)
 
   if result.getInfo(ProgramInfo.LinkStatus) == GL_FALSE:
