@@ -8,6 +8,16 @@ void main() {
     vec3 n = _nm.rgb;
     vec3 l = normalize(lightPos.xyz - posf);
 
+    float shadow = 1.0;
+
+    if (hasShadowmap) {
+      shadow = calcCubeShadow(-l, posf);
+    }
+
+    if (shadow == 0.0) {
+        discard;
+    }
+
     vec4 _ar = texture(gAlbedoRoughness, uv);
     float metalness = _nm.a;
     vec3  albedo    = _ar.rgb;
@@ -21,5 +31,5 @@ void main() {
     float attenuation = falloff_num * falloff_num / (ld * ld + 1);
     attenuation = attenuation * attenuation;
 
-    outColor = vec4(color * attenuation, 1.0);
+    outColor = vec4(color * attenuation * shadow, 1.0);
 }

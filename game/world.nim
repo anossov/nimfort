@@ -24,8 +24,8 @@ var TheWorld*: World
 
 
 const
-  N = 12
-  S = 100
+  N = 20
+  S = 50
   NT = 500
 
 
@@ -69,17 +69,17 @@ proc initWorld*() =
     let c = vec(random(0.4, 1.0), random(0.4, 1.0), random(0.4, 1.0), 1.0)
     newEntity("point-" & $i)
       .attach(newTransform(p=vec(0, 3, 0), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
-      .attach(newPointLight((c * 12).xyz, radius=5))
-      .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=20, emissionOnly=true))
-      .attach(RandomMovement(min: vec(-100, 0.0, -100), max: vec(100, 0.0, 100), smin: 1, smax: 3))
+      .attach(newPointLight((c * 24).xyz, radius=8, shadows=true))
+      .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=5, emissionOnly=true))
+      .attach(RandomMovement(min: vec(-S, 0.0, -S), max: vec(S, 0.0, S), smin: 1, smax: 3))
       .attach(Animation(done: true))
-      .attach(Bounce(min: 2.5, max: 3.0, period: 1.0))
+   #   .attach(Bounce(min: 2.5, max: 3.0, period: 1.0))
 
   for i in 0..NT:
     let
-      p = vec(random(-100, 100).floor, 0, random(-100, 100).floor)
+      p = vec(random(-S, S).floor, 0, random(-S, S).floor)
       f = vec(random(-1, 1), 0, random(-1, 1))
-      s = random(0.7, 1.5)
+      s = random(1.0, 1.5)
     newEntity("tree")
     .attach(newTransform(p=p, f=f, s=s))
     .attach(newModel(
@@ -90,16 +90,17 @@ proc initWorld*() =
 
   newEntity("sun")
     .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis))
-    .attach(newDirLight(color=vec(1, 1, 1), shadows=true))
+  #  .attach(newDirLight(color=vec(1, 1, 1), shadows=true))
 
-  newEntity("amb").attach(newAmbientCube(
-    posx=vec(0.01, 0.02, 0.01),
-    negx=vec(0.01, 0.02, 0.01),
-    posy=vec(0.03, 0.04, 0.05),
-    negy=vec(0.01, 0.0, 0.0),
-    posz=vec(0.01, 0.02, 0.1),
-    negz=vec(0.01, 0.02, 0.01),
-  ))
+
+  # newEntity("amb").attach(newAmbientCube(
+  #   posx=vec(0.01, 0.02, 0.01),
+  #   negx=vec(0.01, 0.02, 0.01),
+  #   posy=vec(0.03, 0.04, 0.05),
+  #   negy=vec(0.01, 0.0, 0.0),
+  #   posz=vec(0.01, 0.02, 0.1),
+  #   negz=vec(0.01, 0.02, 0.01),
+  # ))
 
   newEntity("terrain")
     .attach(newTransform())
@@ -108,6 +109,7 @@ proc initWorld*() =
       albedo=getTexture("grass"),
       roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0)),
       normal=getTexture("bevel"),
+      shadows=false,
     ))
 
   newEntity("c")

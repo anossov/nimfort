@@ -85,6 +85,7 @@ proc newLightingPass*(): LightingPass =
     shader.getUniform("gAlbedoRoughness").set(1)
     shader.getUniform("gDepth").set(2)
     shader.getUniform("shadowMap").set(3)
+    shader.getUniform("shadowMapCube").set(3)
     shader.getUniform("invBufferSize").set(Screen.pixelSize)
 
   s_ibl.use()
@@ -178,6 +179,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
 
         case light.kind:
         of Point:
+          shader.getUniform("lightProjection").set(perspective(90.0, 1.0, 0.1, light.radius))
           shader.getUniform("radius").set(light.radius)
         of Spot:
           shader.getUniform("cosSpotAngle").set(cos(light.spotAngle.radians))

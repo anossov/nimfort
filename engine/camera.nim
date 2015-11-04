@@ -74,7 +74,7 @@ proc updateCamera*() =
             shift = (h + 5.0) / Camera.transform.up.y
             far = 2 * shift + 5
           Camera.projection = orthographic(-Screen.aspectRatio * z, Screen.aspectRatio * z, -z, z, 1, far)
-          Camera.transform.position = t - f * (shift + 1)
+          Camera.transform.position = t - f * (shift + 8)
           Camera.zoom = z
         except ValueError:
           Messages.emit("Invalid zoom")

@@ -23,6 +23,7 @@ import engine/renderer/textrenderer
 import engine/renderer/postprocess
 import engine/renderer/smaa
 import engine/renderer/ssao
+import engine/geometry/aabb
 
 type
   RenderSystem* = ref object
@@ -90,7 +91,9 @@ proc render*() =
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
   r.geometryPass.perform()
 
+  let camera_bb = newAABB(Camera.frustum)
   for light in mitems(LightStore().data):
+    if light.boundingBox.outside(camera_bb): continue
     r.shadowMap.render(light)
 
   r.ssao.perform(r.geometryPass.depth, r.geometryPass.normal)

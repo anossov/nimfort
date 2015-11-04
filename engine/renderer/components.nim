@@ -1,5 +1,6 @@
 import logging
 import math
+import opengl
 
 import config
 
@@ -99,11 +100,12 @@ proc newAmbientCube*(posx=ones3, negx=ones3, posy=ones3, negy=ones3, posz=ones3,
 proc newAmbientLight*(color=ones3): AmbientCube =
   newAmbientCube(color, color, color, color, color, color)
 
-proc newPointLight*(color=ones3, radius=1.0): Light =
+proc newPointLight*(color=ones3, radius=1.0, shadows=false): Light =
   Light(
     kind: Point,
     radius: radius,
     color: color,
+    shadows: shadows,
     shadowMap: emptyTexture(),
   )
 
@@ -130,6 +132,35 @@ proc newSkybox*(t: Texture, intensity=ones3): Skybox =
 
 proc newGhettoIBL*(t: Texture, c: vec3): GhettoIBL =
   GhettoIBL(cubemap: t, color: c)
+
+proc getFaceSpace*(light: Light, face: int): mat4 =
+  var f, u: vec3
+  case face:
+    of GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+      f = vec(1, 0, 0)
+      u = vec(0, -1, 0)
+    of GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+      f = vec(-1, 0, 0)
+      u = vec(0, -1, 0)
+    of GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+      f = vec(0, 1, 0)
+      u = vec(0, 0, 1)
+    of GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+      f = vec(0, -1, 0)
+      u = vec(0, 0, -1)
+    of GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+      f = vec(0, 0, 1)
+      u = vec(0, -1, 0)
+    of GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+      f = vec(0, 0, -1)
+      u = vec(0, -1, 0)
+    else: discard
+
+  let p = light.entity.transform.position
+  let view = lookAt(p, p + f, u)
+  let proj = perspective(90.0, 1.0, 0.1, light.radius)
+
+  return proj * view
 
 
 proc getSpace*(light: Light): mat4 =
@@ -159,6 +190,8 @@ proc getSpace*(light: Light): mat4 =
   of Spot:
     let p = perspective(light.spotFalloff * 2, 1.0, 1, 80.0)
     return p * light.entity.transform.getView()
+  of Point:
+    return translate(-light.entity.transform.position)
   else:
     return identity()
 
@@ -199,3 +232,4 @@ ImplementComponent(Label, label)
 ImplementComponent(Skybox, skybox)
 ImplementComponent(GhettoIBL, ibl)
 ImplementComponent(Overlay, overlay)
+

@@ -7,6 +7,7 @@ uniform sampler2D gAlbedoRoughness;
 uniform sampler2D gDepth;
 
 uniform sampler2DShadow shadowMap;
+uniform samplerCubeShadow shadowMapCube;
 
 uniform vec3 eye;
 uniform vec3 lightPos;
@@ -19,6 +20,7 @@ uniform mat4 invPV;
 
 const float PI = 3.1415926536;
 
+uniform mat4 lightProjection;
 
 float calcShadow(vec4 fpLS, float bias) {
     vec3 posfLP = fpLS.xyz / fpLS.w;
@@ -32,6 +34,15 @@ float calcShadow(vec4 fpLS, float bias) {
     }
 
     return texture(shadowMap, posfLP);
+}
+
+float calcCubeShadow(vec3 dir, vec3 pos) {
+  vec3 abp = abs(lightSpace * vec4(pos, 1.0)).xyz;
+  float z = -max(abp.x, max(abp.y, abp.z));
+  vec4 pclip = lightProjection * vec4(0.0, 0.0, z, 1.0);
+  float d = (pclip.z / pclip.w) * 0.5 + 0.5 - 0.003 / pclip.w;
+
+  return texture(shadowMapCube, vec4(dir, d));
 }
 
 vec3 getPosition() {

@@ -8,6 +8,7 @@ import gl/shader
 import gl/framebuffer
 import gl/texture
 
+import engine/ecs
 import engine/vector
 import engine/mesh
 import engine/resources
@@ -35,13 +36,28 @@ proc newShadowMap*(): ShadowMap =
 
 
 proc createShadowMap(sm: var ShadowMap, light: var Light) =
-  var t = newTexture2d(shadowMapSize, shadowMapSize, TextureFormat.Depth, PixelType.Float)
+  var t: Texture
+
+  if light.kind == Point:
+    t = newTexture(TextureTarget.CubeMap)
+    let
+      size = (shadowMapSize shr 2).int32
+      f = ord TextureFormat.Depth
+      pt = ord PixelType.Float
+    for face in cubeMapFaces:
+      glTexImage2D(face.GLenum, 0, GL_DEPTH_COMPONENT.GLint, size, size, 0, f.GLenum, pt.GLenum, nil)
+    t.filter(true)
+  else:
+    t = newTexture2d(shadowMapSize, shadowMapSize, TextureFormat.Depth, PixelType.Float)
+
   t.clampToBorder(vec(1, 1, 1, 1))
   glTexParameteri(ord t.target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE)
 
-  sm.fb.attach(t, depth=true)
   light.shadowMap = t
 
+const
+  targetscube = @cubeMapFaces
+  targets2d = @[ord TextureTarget.Texture2d]
 
 proc render*(sm: var ShadowMap, light: var Light) =
   if not light.shadows:
@@ -52,24 +68,35 @@ proc render*(sm: var ShadowMap, light: var Light) =
   if light.shadowMap.isEmpty():
     sm.createShadowMap(light)
 
-  sm.fb.attach(light.shadowMap, depth=true)
-
   glEnable(GL_DEPTH_TEST)
   glDepthMask(true)
-  glClear(GL_DEPTH_BUFFER_BIT)
-  glViewport(0, 0, shadowMapSize, shadowMapSize)
+
+  if light.kind == Point:
+    glViewport(0, 0, shadowMapSize shr 2, shadowMapSize shr 2)
+  else:
+    glViewport(0, 0, shadowMapSize, shadowMapSize)
 
   sm.shader.use()
-  sm.shader.getUniform("lightspace").set(light.getSpace())
+
+  var targets = if light.kind == Point: targetscube else: targets2d
 
   let camera_bb = light.boundingBox
 
-  for i in ModelStore().data:
-    if not i.shadows:
-      continue
-    var model = i.entity.transform.matrix
-    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
-    if bb.outside(camera_bb): continue
+  for t in targets:
+    sm.fb.attach(light.shadowMap, depth=true, tt=t)
+    glClear(GL_DEPTH_BUFFER_BIT)
 
-    sm.shader.getUniform("model").set(model)
-    i.mesh.render()
+    if light.kind == Point:
+      sm.shader.getUniform("lightspace").set(light.getFaceSpace(t))
+    else:
+      sm.shader.getUniform("lightspace").set(light.getSpace())
+
+    for i in ModelStore().data:
+      if not i.shadows:
+        continue
+      var model = i.entity.transform.matrix
+      let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+      if bb.outside(camera_bb): continue
+
+      sm.shader.getUniform("model").set(model)
+      i.mesh.render()
