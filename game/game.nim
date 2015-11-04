@@ -37,7 +37,7 @@ proc updateGame*() =
 
       of "move":
         let e = p.parseEntity()
-        if e.has("Transform"):
+        if e.has(CTransform):
           e.transform.position = TheGame.cursor.toFloat()
           e.transform.updateMatrix()
 

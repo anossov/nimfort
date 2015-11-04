@@ -41,7 +41,7 @@ proc createShadowMap(sm: var ShadowMap, light: var Light) =
   if light.kind == Point:
     t = newTexture(TextureTarget.CubeMap)
     let
-      size = (shadowMapSize shr 3).int32
+      size = cubeShadowMapSize.int32
       f = ord TextureFormat.Depth
       pt = ord PixelType.Float
     for face in cubeMapFaces:
@@ -75,7 +75,7 @@ proc render*(sm: var ShadowMap, light: var Light) =
 
   if light.kind == Point:
     s = sm.shadercube
-    glViewport(0, 0, shadowMapSize shr 3, shadowMapSize shr 3)
+    glViewport(0, 0, cubeShadowMapSize, cubeShadowMapSize)
     s.use()
     for i, f in cubeMapFaces:
       s.getUniform("shadowMatrices[$1]".format(i)).set(light.getFaceSpace(f))
@@ -91,7 +91,7 @@ proc render*(sm: var ShadowMap, light: var Light) =
     if not i.shadows:
       continue
     var model = i.entity.transform.matrix
-    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+    let bb = newAABB(model * i.bb.min, model * i.bb.max)
     if bb.outside(camera_bb): continue
 
     s.getUniform("model").set(model)

@@ -1,8 +1,8 @@
 import engine/vector
 
 type AABB* = object
-  min*: vec3
-  max*: vec3
+  min*: vec4
+  max*: vec4
 
 
 proc add*(bb: var AABB, p: vec3) =
@@ -14,9 +14,9 @@ proc add*(bb: var AABB, p: vec3) =
   if p.z > bb.max.z: bb.max.z = p.z
 
 
-proc newAABB*(): AABB = AABB(min: vec(Inf, Inf, Inf), max: vec(-Inf, -Inf, -Inf))
+proc newAABB*(): AABB = AABB(min: vec(Inf, Inf, Inf, 1.0), max: vec(-Inf, -Inf, -Inf, 1.0))
 
-proc newAABB*(min, max: vec3): AABB = AABB(min: min, max: max)
+proc newAABB*(min, max: vec4): AABB = AABB(min: min, max: max)
 
 proc newAABB*(points: openarray[vec3]): AABB =
   result = newAABB()

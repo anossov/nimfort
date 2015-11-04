@@ -5,7 +5,8 @@ const
   windowHeight*   = 1080
   windowTitle*    = "Nimfort"
 
-  shadowMapSize*  = 2048
+  shadowMapSize*     = 2048
+  cubeShadowMapSize* = 256
 
   bindings*       = [
     ("ESCAPE-down", "quit"),

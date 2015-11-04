@@ -126,7 +126,7 @@ proc perform*(pass: var GeometryPass) =
   for i in ModelStore().data:
     if i.emissionOnly: continue
     var model = i.entity.transform.matrix
-    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+    let bb = newAABB(model * i.bb.min, model * i.bb.max)
     if bb.outside(camera_bb): continue
 
     pass.shader.getUniform("model").set(model)
@@ -169,7 +169,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
       if light.kind != kind: continue
       if light.boundingBox.outside(camera_bb): continue
 
-      if light.entity.has("Transform"):
+      if light.entity.has(CTransform):
         let t = light.entity.transform
 
         shader.getUniform("lightPos").set(t.position)
@@ -234,7 +234,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
   for i in ModelStore().data:
     if i.emissionIntensity == 0.0: continue
     let model = i.entity.transform.matrix
-    let bb = newAABB((model * vec(i.bb.min, 1.0)).xyz, (model * vec(i.bb.max, 1.0)).xyz)
+    let bb = newAABB(model * i.bb.min, model * i.bb.max)
     if bb.outside(camera_bb): continue
     pass.emission.getUniform("model").set(model)
     pass.emission.getUniform("emissionIntensity").set(i.emissionIntensity)

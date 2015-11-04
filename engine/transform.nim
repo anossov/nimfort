@@ -88,7 +88,7 @@ ImplementComponent(Bounce, bounce)
 
 
 proc animate*(t: Transform, p: vec3, duration: float) =
-  if not t.entity.has("Animation"):
+  if not t.entity.has(CAnimation):
     t.entity.attach(Animation())
 
   t.entity.animation.tFrom = t

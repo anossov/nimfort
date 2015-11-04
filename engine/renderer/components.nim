@@ -211,7 +211,7 @@ proc boundingBox*(light: Light): AABB =
   case light.kind:
   of Point:
     let p = light.entity.transform.position
-    return newAABB(p - light.radius, p + light.radius)
+    return newAABB(vec(p - light.radius, 1.0), vec(p + light.radius, 1.0))
   else:
     return newAABB(light.frustum)
 

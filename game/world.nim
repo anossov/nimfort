@@ -73,7 +73,7 @@ proc initWorld*() =
       .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=5, emissionOnly=true))
       .attach(RandomMovement(min: vec(-S, 0.0, -S), max: vec(S, 0.0, S), smin: 1, smax: 3))
       .attach(Animation(done: true))
-   #   .attach(Bounce(min: 2.5, max: 3.0, period: 1.0))
+      .attach(Bounce(min: 2.5, max: 3.0, period: 1.0))
 
   for i in 0..NT:
     let
@@ -93,14 +93,14 @@ proc initWorld*() =
   #  .attach(newDirLight(color=vec(1, 1, 1), shadows=true))
 
 
-  # newEntity("amb").attach(newAmbientCube(
-  #   posx=vec(0.01, 0.02, 0.01),
-  #   negx=vec(0.01, 0.02, 0.01),
-  #   posy=vec(0.03, 0.04, 0.05),
-  #   negy=vec(0.01, 0.0, 0.0),
-  #   posz=vec(0.01, 0.02, 0.1),
-  #   negz=vec(0.01, 0.02, 0.01),
-  # ))
+  newEntity("amb").attach(newAmbientCube(
+    posx=vec(0.01, 0.02, 0.01),
+    negx=vec(0.01, 0.02, 0.01),
+    posy=vec(0.03, 0.04, 0.05),
+    negy=vec(0.01, 0.0, 0.0),
+    posz=vec(0.01, 0.02, 0.1),
+    negz=vec(0.01, 0.02, 0.01),
+  ))
 
   newEntity("terrain")
     .attach(newTransform())

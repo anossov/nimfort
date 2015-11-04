@@ -289,7 +289,7 @@ proc distance*(a, b: vec3): float32 = norm(b - a)
 proc projectOn*(a, b: vec3): vec3 =
   result = b * a.dot(b)
 
-proc `*`*(a: mat4, b: vec4): vec4 =
+proc `*`*(a: mat4, b: vec4): vec4 {.inline.} =
   result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3]
   result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3]
   result[2] = a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3]
