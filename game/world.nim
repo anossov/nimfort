@@ -24,7 +24,6 @@ var TheWorld*: World
 
 
 const
-  N = 20
   S = 50
   NT = 500
 
@@ -65,15 +64,12 @@ proc initWorld*() =
   )
   TheWorld.listener.listen("world")
 
-  for i in 0..N:
-    let c = vec(random(0.4, 1.0), random(0.4, 1.0), random(0.4, 1.0), 1.0)
-    newEntity("point-" & $i)
-      .attach(newTransform(p=vec(0, 3, 0), f=vec(0, -1.0, 0.0), u=xaxis, s=0.1))
-      .attach(newPointLight((c * 24).xyz, radius=8, shadows=true))
-      .attach(newModel(getMesh("ball"), getColorTexture(c), emission=w, emissionIntensity=5, emissionOnly=true))
-      .attach(RandomMovement(min: vec(-S, 0.0, -S), max: vec(S, 0.0, S), smin: 1, smax: 3))
-      .attach(Animation(done: true))
-      .attach(Bounce(min: 2.5, max: 3.0, period: 1.0))
+  newEntity("point")
+    .attach(newTransform(s=0.1))
+    .attach(newPointLight(ones3 * 23, radius=8, shadows=true))
+    .attach(newModel(getMesh("ball"), w, emission=w, emissionIntensity=5, emissionOnly=true))
+    .attach(CircleMovement(axis: yaxis, rvector: xaxis*15, center: vec(0, 1, 0), period: 10))
+
 
   for i in 0..NT:
     let

@@ -5,6 +5,7 @@ import math
 import tables
 
 import engine/text
+import engine/mesh
 import engine/vector
 import engine/ecs
 import engine/messaging
@@ -32,12 +33,15 @@ type
     cursor: EntityHandle
     selection: EntityHandle
 
+    debug: bool
+
 
 var UI*: GUI
 
 const
   textScale  = 0.4
   textColor  = vec(0.9, 0.9, 0.9, 1.0)
+  debugColor = vec(0.9, 0.9, 0.4, 1.0)
   errorColor = vec(1.0, 0.1, 0.1, 1.0)
   infoColor  = vec(0.1, 1.0, 0.1, 1.0)
 
@@ -83,7 +87,8 @@ proc initGUI*()=
 
   UI.addText("cursor-pos", -paddingLeft, paddingTop, align=AlignRight)
   UI.addText("selection", -paddingLeft, paddingTop - lineHeight, align=AlignRight)
-  UI.addText("frametime", paddingLeft, paddingTop)
+  UI.addText("frametime", paddingLeft, paddingTop, color=debugColor)
+  UI.addText("meshes", paddingLeft, paddingTop - lineHeight, color=debugColor)
   UI.addText("console", consolePos.x, consolePos.y)
 
   for i in 1..10:
@@ -96,6 +101,7 @@ proc initGUI*()=
   UI.consoleListener.listen("error")
   UI.consoleListener.listen("info")
   UI.consoleListener.listen("console")
+  UI.consoleListener.listen("gui")
 
   UI.cursor = newEntity("cursor")
   UI.cursor.attach(newTransform())
@@ -173,6 +179,9 @@ proc updateUi*() =
     of "erase":
       console.label.update(t[0..high(t)-1])
 
+    of "debug-info":
+      UI.debug = not UI.debug
+
     else: discard
 
   UI.cursor.transform.position = vec(TheGame.cursor.x.float, TheGame.cursor.y.float, TheGame.cursor.z.float)
@@ -188,6 +197,12 @@ proc updateUi*() =
   UI.selection.transform.scale.z = ss.z + 0.05
   UI.selection.transform.updateMatrix()
 
-  UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
   UI.texts["cursor-pos"].label.update($TheGame.cursor)
   UI.texts["selection"].label.update("$1 × $2".format(ss.x.int, ss.z.int))
+
+  if UI.debug:
+    UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
+    UI.texts["meshes"].label.update("Meshes rendered: $1".format(meshesRendered))
+  else:
+    UI.texts["frametime"].label.update("")
+    UI.texts["meshes"].label.update("")

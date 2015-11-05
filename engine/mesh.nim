@@ -27,6 +27,9 @@ type
     ebo: Buffer
 
 
+var meshesRendered*: int
+
+
 proc newMesh*(): Mesh =
   result = Mesh(
     vertices: newSeq[Vertex](),
@@ -108,6 +111,7 @@ proc buildBuffers*(m: var Mesh) =
 proc render*(m: Mesh) =
   m.vao.use()
   glDrawElements(GL_TRIANGLES, len(m.indices).GLsizei, GL_UNSIGNED_INT, nil)
+  meshesRendered.inc
 
 
 proc deleteBuffers*(m: var Mesh) =

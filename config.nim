@@ -31,6 +31,8 @@ const
     ("DOWN-down", "console.history-forward"),
     ("UP-repeat", "console.history-back"),
     ("DOWN-repeat", "console.history-forward"),
+
+    ("F1-down", "gui.debug-info"),
   ]
 
   bloomScale*     = 3

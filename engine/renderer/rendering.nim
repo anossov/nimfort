@@ -76,6 +76,8 @@ proc initRenderSystem*() =
 # Hi-Z Screen-Space Cone-Traced Reflections
 
 proc render*() =
+  meshesRendered = 0
+
   var r = Renderer
   var dfb = Framebuffer(target: FramebufferTarget.Both, id: 0)
 
