@@ -109,7 +109,7 @@ proc newLightingPass*(): LightingPass =
   )
 
 
-proc perform*(pass: var GeometryPass) =
+proc fillGBuffer*(pass: var GeometryPass) =
   pass.fb.use(FramebufferTarget.Both)
   glEnable(GL_DEPTH_TEST)
   glDepthMask(true)
@@ -118,23 +118,71 @@ proc perform*(pass: var GeometryPass) =
   glViewport(0, 0, Screen.width, Screen.height)
 
   pass.shader.use()
-  pass.shader.getUniform("view").set(Camera.getView())
-  pass.shader.getUniform("projection").set(Camera.getProjection())
-
-  let camera_bb = newAABB(Camera.frustum)
+  pass.shader.getUniform("view").set(Camera.view)
+  pass.shader.getUniform("projection").set(Camera.projection)
 
   for i in ModelStore().data:
     if i.emissionOnly: continue
     var model = i.entity.transform.matrix
     let bb = newAABB(model * i.bb.min, model * i.bb.max)
-    if bb.outside(camera_bb): continue
+    if bb.outside(Camera.boundingBox): continue
 
     pass.shader.getUniform("model").set(model)
     for i, t in pairs(i.textures):
       t.use(i)
     i.mesh.render()
 
-proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, output: var Framebuffer) =
+
+proc renderSkybox(pass: LightingPass) =
+  glDepthFunc(GL_EQUAL)
+  for sb in SkyboxStore().data:
+    pass.skybox.use()
+    pass.skybox.getUniform("projection").set(Camera.projection)
+    pass.skybox.getUniform("view").set(Camera.view)
+    pass.skybox.getUniform("intensity").set(sb.intensity)
+    sb.cubemap.use(4)
+    Screen.quad.render()
+  glDepthFunc(GL_LESS)
+
+proc renderEmission(pass: LightingPass) =
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+  glDepthFunc(GL_LEQUAL)
+  pass.emission.use()
+  pass.emission.getUniform("view").set(Camera.view)
+  pass.emission.getUniform("projection").set(Camera.projection)
+
+  for i in ModelStore().data:
+    if i.emissionIntensity == 0.0: continue
+    let model = i.entity.transform.matrix
+    let bb = newAABB(model * i.bb.min, model * i.bb.max)
+    if bb.outside(Camera.boundingBox): continue
+    pass.emission.getUniform("model").set(model)
+    pass.emission.getUniform("emissionIntensity").set(i.emissionIntensity)
+    i.textures[0].use(0)
+    i.textures[4].use(1)
+    i.mesh.render()
+
+proc renderAmbient(pass: LightingPass) =
+  pass.ambient.use()
+  for i in AmbientCubeStore().data:
+    pass.ambient.getUniform("eye").set(Camera.transform.position)
+    pass.ambient.getUniform("colors[0]").set(i.colors[0])
+    pass.ambient.getUniform("colors[1]").set(i.colors[1])
+    pass.ambient.getUniform("colors[2]").set(i.colors[2])
+    pass.ambient.getUniform("colors[3]").set(i.colors[3])
+    pass.ambient.getUniform("colors[4]").set(i.colors[4])
+    pass.ambient.getUniform("colors[5]").set(i.colors[5])
+    Screen.quad.render()
+
+proc renderIBL(pass: LightingPass) =
+  pass.IBL.use()
+  for i in GhettoIBLStore().data:
+    pass.IBL.getUniform("eye").set(Camera.transform.position)
+    pass.IBL.getUniform("lightColor").set(i.color)
+    i.cubemap.use(4)
+    Screen.quad.render()
+
+proc doLighting*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, output: var Framebuffer) =
   gp.fb.use(FramebufferTarget.Read)
   output.use(FramebufferTarget.Draw)
   glBlitFramebuffer(0, 0, Screen.width, Screen.height,
@@ -156,18 +204,16 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
   gp.depth.use(2)
   ao.use(5)
 
-  let PV = Camera.getProjection() * Camera.getView()
-
-  let camera_bb = newAABB(Camera.frustum)
+  let PV = Camera.projectionView
 
   for kind, shader in mpairs(pass.shaders):
     shader.use()
     shader.getUniform("eye").set(Camera.transform.position)
-    shader.getUniform("invPV").set(Camera.getProjectionView().inverse)
+    shader.getUniform("invPV").set(Camera.projectionViewInverse)
 
     for light in LightStore().data:
       if light.kind != kind: continue
-      if light.boundingBox.outside(camera_bb): continue
+      if light.boundingBox.outside(Camera.boundingBox): continue
 
       if light.entity.has(CTransform):
         let t = light.entity.transform
@@ -198,56 +244,7 @@ proc perform*(pass: var LightingPass, gp: var GeometryPass, ao: var Texture, out
         shader.getUniform("transform").set(identity())
         Screen.quad.render()
 
-  for i in GhettoIBLStore().data:
-    pass.IBL.use()
-    pass.IBL.getUniform("eye").set(Camera.transform.position)
-    pass.IBL.getUniform("lightColor").set(i.color)
-    i.cubemap.use(4)
-    Screen.quad.render()
-
-  for i in AmbientCubeStore().data:
-    pass.ambient.use()
-    pass.ambient.getUniform("eye").set(Camera.transform.position)
-    pass.ambient.getUniform("colors[0]").set(i.colors[0])
-    pass.ambient.getUniform("colors[1]").set(i.colors[1])
-    pass.ambient.getUniform("colors[2]").set(i.colors[2])
-    pass.ambient.getUniform("colors[3]").set(i.colors[3])
-    pass.ambient.getUniform("colors[4]").set(i.colors[4])
-    pass.ambient.getUniform("colors[5]").set(i.colors[5])
-    Screen.quad.render()
-
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-  pass.overlay.use()
-  pass.overlay.getUniform("view").set(Camera.getView())
-  pass.overlay.getUniform("projection").set(Camera.getProjection())
-  for i in OverlayStore().data:
-    pass.overlay.getUniform("model").set(i.entity.transform.matrix)
-    pass.overlay.getUniform("color").set(i.color)
-    i.mesh.render()
-
-  glDepthFunc(GL_LEQUAL)
-  pass.emission.use()
-  pass.emission.getUniform("view").set(Camera.getView())
-  pass.emission.getUniform("projection").set(Camera.getProjection())
-
-  for i in ModelStore().data:
-    if i.emissionIntensity == 0.0: continue
-    let model = i.entity.transform.matrix
-    let bb = newAABB(model * i.bb.min, model * i.bb.max)
-    if bb.outside(camera_bb): continue
-    pass.emission.getUniform("model").set(model)
-    pass.emission.getUniform("emissionIntensity").set(i.emissionIntensity)
-    i.textures[0].use(0)
-    i.textures[4].use(1)
-    i.mesh.render()
-
-  glDepthFunc(GL_EQUAL)
-  for sb in SkyboxStore().data:
-    pass.skybox.use()
-    pass.skybox.getUniform("projection").set(Camera.getProjection())
-    pass.skybox.getUniform("view").set(Camera.getView())
-    pass.skybox.getUniform("intensity").set(sb.intensity)
-    sb.cubemap.use(4)
-    Screen.quad.render()
-  glDepthFunc(GL_LESS)
+  pass.renderIBL()
+  pass.renderAmbient()
+  pass.renderEmission()
+  pass.renderSkybox()

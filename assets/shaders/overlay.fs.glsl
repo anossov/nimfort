@@ -7,5 +7,5 @@ uniform vec4 color;
 
 void main()
 {
-    outColor = vec4(color.rgb * color.a, color.a);
+    outColor = vec4(color.rgb, color.a);
 }

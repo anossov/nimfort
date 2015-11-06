@@ -21,25 +21,18 @@ const
 
 type
   SMAA* = ref object
-    fb_in*: Framebuffer
     fb_blend: Framebuffer
     fb_edge: Framebuffer
     s_edge: Program
     s_blend: Program
     s_nh: Program
 
-    t_in: Texture
     t_edge*: Texture
     t_blend: Texture
     t_area: Texture
     t_search: Texture
 
 proc newSMAA*(): SMAA =
-  var in_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float)
-  var in_fbo = newFramebuffer()
-  in_fbo.attach(in_tex)
-  debug("SMAA input: ", in_fbo.check())
-
   var edge_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float)
   var blend_tex = newTexture2d(Screen.width, Screen.height, TextureFormat.RGBA, PixelType.Float)
 
@@ -56,7 +49,6 @@ proc newSMAA*(): SMAA =
   search_tex.clampToEdge()
 
   var stencil = newTexture2d(Screen.width, Screen.height, TextureFormat.DepthStencil, PixelType.Uint24_8, false)
-
 
   var edge_fbo = newFramebuffer()
   edge_fbo.attach(edge_tex)
@@ -89,7 +81,6 @@ proc newSMAA*(): SMAA =
   return SMAA(
     fb_edge: edge_fbo,
     fb_blend: blend_fbo,
-    fb_in: in_fbo,
     s_edge: edge_shader,
     s_blend: blend_shader,
     s_nh: nh_shader,
@@ -97,11 +88,10 @@ proc newSMAA*(): SMAA =
     t_blend: blend_tex,
     t_area: area_tex,
     t_search: search_tex,
-    t_in: in_tex,
   )
 
 
-proc perform*(pass: SMAA, fb_out: var Framebuffer) =
+proc perform*(pass: SMAA, t_in: Texture, fb_out: var Framebuffer) =
   pass.fb_edge.use()
 
   glViewport(0, 0, Screen.width, Screen.height)
@@ -114,7 +104,7 @@ proc perform*(pass: SMAA, fb_out: var Framebuffer) =
   glStencilFunc(GL_ALWAYS, 1, 0xFF)
 
   pass.s_edge.use()
-  pass.t_in.use(0)
+  t_in.use(0)
 
   Screen.quad.render()
 
@@ -137,7 +127,7 @@ proc perform*(pass: SMAA, fb_out: var Framebuffer) =
   glDisable(GL_STENCIL_TEST)
 
   pass.s_nh.use()
-  pass.t_in.use(0)
+  t_in.use(0)
   pass.t_blend.use(1)
 
   Screen.quad.render()

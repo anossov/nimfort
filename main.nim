@@ -17,7 +17,6 @@ import engine/transform
 import engine/renderer/rendering
 
 import game/gui
-import game/world
 import game/game
 
 
@@ -36,7 +35,6 @@ proc startup*() =
   initCamera()
   initGame()
   initGUI()
-  initWorld()
 
 
 proc gameloop*() =
@@ -50,7 +48,6 @@ proc gameloop*() =
     updateTime()
     processECSMessages()
     updateInput()
-    updateWorld()
     updateGame()
     updateTransforms()
     updateCamera()

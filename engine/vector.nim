@@ -89,10 +89,23 @@ proc toFloat*(v: ivec3): vec3 {.inline.} =
   result.z = v.z.float32
 
 proc mat*(c1, c2, c3, c4: vec4): mat4 =
-  result[0..3] = c1
-  result[4..7] = c2
-  result[8..11] = c3
-  result[12..15] = c4
+  result[0] = c1[0]
+  result[1] = c1[1]
+  result[2] = c1[2]
+  result[3] = c1[3]
+  result[4] = c2[0]
+  result[5] = c2[1]
+  result[6] = c2[2]
+  result[7] = c2[3]
+  result[8] = c3[0]
+  result[9] = c3[1]
+  result[10] = c3[2]
+  result[11] = c3[3]
+  result[12] = c4[0]
+  result[13] = c4[1]
+  result[14] = c4[2]
+  result[15] = c4[3]
+
 
 proc mat_from_rows*(r1, r2, r3, r4: vec4): mat4 =
   mat(

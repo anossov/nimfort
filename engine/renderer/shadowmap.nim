@@ -96,3 +96,10 @@ proc render*(sm: var ShadowMap, light: var Light) =
 
     s.getUniform("model").set(model)
     i.mesh.render()
+
+
+proc renderShadowMaps*(sm: var ShadowMap) =
+  let camera_bb = newAABB(Camera.frustum)
+  for light in mitems(LightStore().data):
+    if light.boundingBox.outside(camera_bb): continue
+    sm.render(light)

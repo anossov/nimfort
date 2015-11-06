@@ -49,5 +49,4 @@ proc render*(r: var TextRenderer, proj: mat4) =
 
     r.shader.getUniform("model").set(i.entity.transform.matrix)
     r.shader.getUniform("textColor").set(i.color)
-    i.texture.use(0)
     i.mesh.mesh.render()

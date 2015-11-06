@@ -14,6 +14,7 @@ import engine/messaging
 import engine/timekeeping
 import engine/camera
 import engine/resources
+import engine/transform
 
 import engine/renderer/components
 import engine/renderer/screen
@@ -27,7 +28,7 @@ import engine/geometry/aabb
 
 type
   RenderSystem* = ref object
-    shadowMap: ShadowMap
+    shadowMaps: ShadowMap
     geometryPass: GeometryPass
     lightingPass: LightingPass
     textRenderer: TextRenderer
@@ -37,6 +38,13 @@ type
     ssao: SSAO
     listener: Listener
     debug: Program
+    overlay: Program
+
+    fb1: Framebuffer
+    fb2: Framebuffer
+    color1: Texture
+    color2: Texture
+    depth: Texture
 
     debugMode: string
 
@@ -51,15 +59,30 @@ proc initRenderSystem*() =
   Renderer = RenderSystem(
     geometryPass: newGeometryPass(),
     lightingPass: newLightingPass(),
-    shadowMap: newShadowMap(),
+    shadowMaps: newShadowMap(),
     textRenderer: newTextRenderer(),
     bloom: newBloom(),
     tonemapping: newTonemapping(),
     smaa: newSMAA(),
     ssao: newSSAO(),
     debug: getShader("debug"),
+    overlay: getShader("overlay"),
     debugmode: "",
+
+    fb1: newFramebuffer(),
+    fb2: newFramebuffer(),
+    color1: newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float),
+    color2: newTexture2d(Screen.width, Screen.height, TextureFormat.RGB, PixelType.Float),
   )
+
+  Renderer.depth = Renderer.geometryPass.depth
+  Renderer.fb1.use()
+  Renderer.fb1.attach(Renderer.color1)
+  Renderer.fb1.attach(Renderer.depth, depth=true)
+
+  Renderer.fb2.use()
+  Renderer.fb2.attach(Renderer.color2)
+  Renderer.fb2.attach(Renderer.depth, depth=true)
 
   glClearColor(0.0, 0.0, 0.0, 0.0)
   glEnable(GL_CULL_FACE)
@@ -75,36 +98,20 @@ proc initRenderSystem*() =
 # HBAO
 # Hi-Z Screen-Space Cone-Traced Reflections
 
-proc render*() =
-  meshesRendered = 0
+proc renderOverlays*(r: RenderSystem, fb_out: var Framebuffer) =
+  fb_out.use()
+  glEnable(GL_DEPTH_TEST)
+  glEnable(GL_BLEND)
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+  r.overlay.use()
+  r.overlay.getUniform("view").set(Camera.view)
+  r.overlay.getUniform("projection").set(Camera.projection)
+  for i in OverlayStore().data:
+    r.overlay.getUniform("model").set(i.entity.transform.matrix)
+    r.overlay.getUniform("color").set(i.color)
+    i.mesh.render()
 
-  var r = Renderer
-  var dfb = Framebuffer(target: FramebufferTarget.Both, id: 0)
-
-  for m in r.listener.getMessages():
-    if r.debugmode == m.name:
-      r.debugmode = ""
-    else:
-      r.debugmode = m.name
-
-  if r.debugmode == "wire":
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-  else:
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-  r.geometryPass.perform()
-
-  let camera_bb = newAABB(Camera.frustum)
-  for light in mitems(LightStore().data):
-    if light.boundingBox.outside(camera_bb): continue
-    r.shadowMap.render(light)
-
-  r.ssao.perform(r.geometryPass.depth, r.geometryPass.normal)
-
-  r.lightingPass.perform(r.geometryPass, r.ssao.occlusion, r.bloom.fb_in)
-  r.bloom.perform(r.tonemapping.fb_in)
-  r.tonemapping.perform(r.smaa.fb_in)
-  r.smaa.perform(dfb)
-
+proc renderDebug*(r: RenderSystem) =
   if r.debugmode != "":
     r.debug.use()
     case r.debugmode:
@@ -136,4 +143,29 @@ proc render*() =
         discard
     Screen.quad.render()
 
+proc render*() =
+  meshesRendered = 0
+
+  var r = Renderer
+
+  for m in r.listener.getMessages():
+    if r.debugmode == m.name:
+      r.debugmode = ""
+    else:
+      r.debugmode = m.name
+
+  if r.debugmode == "wire":
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+  else:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+  r.geometryPass.fillGBuffer()
+  r.shadowMaps.renderShadowMaps()
+  r.ssao.perform(r.geometryPass.depth, r.geometryPass.normal)
+  r.lightingPass.doLighting(r.geometryPass, r.ssao.occlusion, r.fb1)
+  r.bloom.perform(r.color1, r.fb2)
+  r.tonemapping.perform(r.color2, r.fb1)
+  r.renderOverlays(r.fb1)
+  r.smaa.perform(r.color1, defaultFramebuffer)
+  r.renderDebug()
   r.textRenderer.render(Screen.projection)

@@ -9,12 +9,20 @@ import engine/input
 import engine/messaging
 import engine/transform
 import engine/renderer/screen
+import engine/geometry/aabb
 
 
 type
   CameraSystem* = ref object
     transform*: Transform
-    projection: mat4
+
+    projection*: mat4
+    view*: mat4
+    projectionView*: mat4
+    projectionViewInverse*: mat4
+    frustum*: array[8, vec3]
+    boundingBox*: AABB
+
     listener: Listener
     zoom*: float
     panning: bool
@@ -24,15 +32,22 @@ type
 
 var Camera*: CameraSystem
 
+proc projectNDC*(c: CameraSystem, p: vec3): vec3 = (c.projectionView * vec(p, 1.0)).xyz
+proc unprojectNDC*(c: CameraSystem, p: vec3): vec3 = (c.projectionViewInverse * vec(p, 1.0)).xyz
+proc project*(c: CameraSystem, p: vec3): vec3 = project(p, c.projectionView, Screen.viewport)
+proc unproject*(c: CameraSystem, p: vec3): vec3 = unproject(p, c.projectionView, Screen.viewport)
 
-proc getProjection*(c: CameraSystem): mat4 = c.projection
-proc getView*(c: CameraSystem): mat4 = c.transform.getView()
-proc getProjectionView*(c: CameraSystem): mat4 = c.getProjection() * c.getView()
+proc getFrustum(c: CameraSystem): array[8, vec3] =
+  result[0] = c.unprojectNDC(vec(-1, -1, -1))
+  result[1] = c.unprojectNDC(vec( 1, -1, -1))
+  result[2] = c.unprojectNDC(vec(-1,  1, -1))
+  result[3] = c.unprojectNDC(vec( 1,  1, -1))
 
-proc projectNDC*(c: CameraSystem, p: vec3): vec3 = (c.getProjectionView() * vec(p, 1.0)).xyz
-proc unprojectNDC*(c: CameraSystem, p: vec3): vec3 = (c.getProjectionView().inverse * vec(p, 1.0)).xyz
-proc project*(c: CameraSystem, p: vec3): vec3 = project(p, c.getProjectionView(), Screen.viewport)
-proc unproject*(c: CameraSystem, p: vec3): vec3 = unproject(p, c.getProjectionView(), Screen.viewport)
+  result[4] = c.unprojectNDC(vec(-1, -1,  1))
+  result[5] = c.unprojectNDC(vec( 1, -1,  1))
+  result[6] = c.unprojectNDC(vec(-1,  1,  1))
+  result[7] = c.unprojectNDC(vec( 1,  1,  1))
+
 
 proc initCamera*() =
   Camera = CameraSystem(
@@ -43,6 +58,7 @@ proc initCamera*() =
     listener: newListener()
   )
   Camera.listener.listen("camera")
+
 
 proc updateCamera*() =
   for e in Camera.listener.getMessages():
@@ -98,8 +114,15 @@ proc updateCamera*() =
 
     Camera.transform.position = shifted - Camera.transform.forward
 
+  Camera.transform.updateMatrix()
+  Camera.view = Camera.transform.getView()
+  Camera.projectionView = Camera.projection * Camera.view
+  Camera.projectionViewInverse = Camera.projectionView.inverse
+  Camera.frustum = Camera.getFrustum()
+  Camera.boundingBox = newAABB(Camera.frustum)
+
 proc getViewRot*(c: CameraSystem): mat4 =
-  result = c.getView()
+  result = c.view
   result[3] = 0.0
   result[7] = 0.0
   result[11] = 0.0
@@ -117,13 +140,3 @@ proc pickGround*(c: CameraSystem, groundLevel: float32): vec3 =
 
   result = near + D * t
 
-proc frustum*(c: CameraSystem): array[8, vec3] =
-  result[0] = c.unprojectNDC(vec(-1, -1, -1))
-  result[1] = c.unprojectNDC(vec( 1, -1, -1))
-  result[2] = c.unprojectNDC(vec(-1,  1, -1))
-  result[3] = c.unprojectNDC(vec( 1,  1, -1))
-
-  result[4] = c.unprojectNDC(vec(-1, -1,  1))
-  result[5] = c.unprojectNDC(vec( 1, -1,  1))
-  result[6] = c.unprojectNDC(vec(-1,  1,  1))
-  result[7] = c.unprojectNDC(vec( 1,  1,  1))

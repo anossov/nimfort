@@ -103,15 +103,10 @@ proc perform*(pass: SSAO, depth: Texture, normals: Texture) =
   pass.noise.use(2)
   pass.shader.use()
 
-  let
-    V = Camera.getView()
-    P = Camera.getProjection()
-    PV = P * V
-    invPV = PV.inverse
-  pass.shader.getUniform("view").set(V)
-  pass.shader.getUniform("projection").set(P)
-  pass.shader.getUniform("invPV").set(invPV)
-  pass.shader.getUniform("normalToView").set(V.inverse.transpose)
+  pass.shader.getUniform("view").set(Camera.view)
+  pass.shader.getUniform("projection").set(Camera.projection)
+  pass.shader.getUniform("invPV").set(Camera.projectionViewInverse)
+  pass.shader.getUniform("normalToView").set(Camera.view.inverse.transpose)
 
   Screen.quad.render()
 

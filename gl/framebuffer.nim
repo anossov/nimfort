@@ -22,6 +22,9 @@ type
     colors: GLsizei
 
 
+var defaultFramebuffer* = Framebuffer(target: FramebufferTarget.Both, id: 0)
+
+
 proc attach*(fb: var Framebuffer, t: Texture, depth=false, stencil=false, level=0) =
   var ap: GLenum
 

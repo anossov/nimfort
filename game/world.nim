@@ -2,6 +2,7 @@ import logging
 import math
 import strutils
 import random
+import tables
 
 import engine/vector
 import engine/mesh
@@ -14,19 +15,23 @@ import engine/camera
 import engine/renderer/rendering
 import engine/renderer/components
 
+const
+  chunkSize = 32
+  S = 32
 
 type
+  Block = object
+    material: int
+    entities: seq[EntityHandle]
+
+  Chunk* = ref object
+    x: int
+    y: int
+    blocks: array[chunkSize * chunkSize, Block]
+    entity: EntityHandle
+
   World* = ref object
-    listener: Listener
-
-
-var TheWorld*: World
-
-
-const
-  S = 50
-  NT = 500
-
+    chunks: Table[ivec2, Chunk]
 
 proc terrain(): Mesh =
   result = newMesh()
@@ -57,46 +62,11 @@ proc terrain(): Mesh =
   result.buildBuffers()
 
 
-proc initWorld*() =
+proc newWorld*(): World =
   let w = getColorTexture(vec(1.0, 1.0, 1.0, 1.0))
-  TheWorld = World(
-    listener: newListener(),
+  result = World(
+    chunks: initTable[ivec2, Chunk]()
   )
-  TheWorld.listener.listen("world")
-
-  newEntity("point")
-    .attach(newTransform(s=0.1))
-    .attach(newPointLight(ones3 * 23, radius=8, shadows=true))
-    .attach(newModel(getMesh("ball"), w, emission=w, emissionIntensity=5, emissionOnly=true))
-    .attach(CircleMovement(axis: yaxis, rvector: xaxis*15, center: vec(0, 1, 0), period: 10))
-
-
-  for i in 0..NT:
-    let
-      p = vec(random(-S, S).floor, 0, random(-S, S).floor)
-      f = vec(random(-1, 1), 0, random(-1, 1))
-      s = random(1.0, 1.5)
-    newEntity("tree")
-    .attach(newTransform(p=p, f=f, s=s))
-    .attach(newModel(
-      getMesh("tree"),
-      albedo=getColorTexture(vec(0.5, 0.25, 0.15, 1.0)),
-      roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0)),
-    ))
-
-  newEntity("sun")
-    .attach(newTransform(f=vec(3, -11, -4.4), p=vec(-3, 5, 5), u=yaxis))
-  #  .attach(newDirLight(color=vec(1, 1, 1), shadows=true))
-
-
-  newEntity("amb").attach(newAmbientCube(
-    posx=vec(0.01, 0.02, 0.01),
-    negx=vec(0.01, 0.02, 0.01),
-    posy=vec(0.03, 0.04, 0.05),
-    negy=vec(0.01, 0.0, 0.0),
-    posz=vec(0.01, 0.02, 0.1),
-    negz=vec(0.01, 0.02, 0.01),
-  ))
 
   newEntity("terrain")
     .attach(newTransform())
