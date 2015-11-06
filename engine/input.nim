@@ -9,6 +9,7 @@ import config
 import engine/vector
 import engine/messaging
 import engine/windowing
+import engine/timekeeping
 
 
 type
@@ -222,6 +223,11 @@ proc scrollCallback(win: GLFWwindow; xoffset, yoffset: cdouble) {.cdecl.} =
 proc mapInput*(input: string, event: string) =
   Input.binds[input] = event
 
+proc updateInput*() =
+  for m in Input.listener.getMessages():
+    if Input.binds.hasKey(m.name):
+      Messages.emit(Input.binds[m.name])
+
 proc initInputSystem*() =
   Input = InputSystem(
     listener: newListener(),
@@ -239,12 +245,9 @@ proc initInputSystem*() =
   for b, e in items(bindings):
     mapInput(b, e)
 
-  info("Input ok")
+  Time.schedule(updateInput, hz=60)
 
-proc updateInput*() =
-  for m in Input.listener.getMessages():
-    if Input.binds.hasKey(m.name):
-      Messages.emit(Input.binds[m.name])
+  info("Input ok")
 
 
 proc hideCursor*(i: InputSystem) =

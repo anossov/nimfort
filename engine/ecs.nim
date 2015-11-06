@@ -5,6 +5,7 @@ import strutils
 import sequtils
 
 import engine/messaging
+import engine/timekeeping
 
 
 type
@@ -31,12 +32,6 @@ type
 var Entities*: EntityManager
 var Components* = newSeq[string]()
 
-proc initEntityManager*() =
-  Entities = EntityManager(
-    entities: newSeq[Entity](),
-    listener: newListener(),
-  )
-  Entities.listener.listen("e")
 
 proc newEntity*(name: string): EntityHandle =
   Entities.entities.add(Entity(
@@ -70,7 +65,7 @@ proc listComponents*(e: EntityHandle): seq[string] =
 
 proc newComponentStore*[T](): ComponentStore[T] =
   result = ComponentStore[T](
-    typeId: Components.len + 1,
+    typeId: Components.len,
     name: name(T),
     data: newSeq[T]()
   )
@@ -131,3 +126,12 @@ proc processECSMessages*() =
       else: discard
     except ValueError:
       Messages.emit("error", getCurrentExceptionMsg())
+
+
+proc initEntityManager*() =
+  Entities = EntityManager(
+    entities: newSeq[Entity](),
+    listener: newListener(),
+  )
+  Entities.listener.listen("e")
+  Time.schedule(processECSMessages, hz=20)

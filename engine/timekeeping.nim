@@ -5,6 +5,11 @@ import engine/messaging
 
 
 type
+  TTEntry = object
+    f: proc()
+    period: float
+    nextRun: float
+
   TimeSystem* = ref object
     totalTime*: float
     delta*: float
@@ -14,12 +19,16 @@ type
     ftLastUpdate: float
     ftCounter: int
 
+    timetable: seq[TTEntry]
+
 
 var Time*: TimeSystem
 
 
 proc initTimeSystem*() =
-  Time = TimeSystem()
+  Time = TimeSystem(
+    timetable: newSeq[TTEntry]()
+  )
   info("Timers ok")
 
 proc now*(t: TimeSystem): float = glfw.getTime()
@@ -38,3 +47,12 @@ proc updateTime*() =
     t.ftCounter = 0
 
   t.ftCounter += 1
+
+  for i in mitems(t.timetable):
+    if t.totalTime > i.nextRun:
+      i.f()
+      i.nextRun = t.totalTime + i.period
+
+
+proc schedule*(t: TimeSystem, f: proc (), hz: int) =
+  t.timetable.add(TTEntry(f: f, period: 1.0 / hz.float))

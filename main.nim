@@ -27,9 +27,9 @@ when defined(profiler) or defined(memProfiler):
 proc startup*() =
   initWindow()
   initMessageSystem()
+  initTimeSystem()
   initEntityManager()
   initInputSystem()
-  initTimeSystem()
   initResources()
   initRenderSystem()
   initCamera()
@@ -46,13 +46,7 @@ proc gameloop*() =
       break
 
     updateTime()
-    processECSMessages()
-    updateInput()
-    updateGame()
     updateTransforms()
-    updateCamera()
-    updateUi()
-
     render()
 
     updateWindow()

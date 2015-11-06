@@ -76,45 +76,6 @@ proc newText(ui: var GUI, name: string, x, y: float32; text="", align=AlignLeft,
 proc addText(ui: var GUI, name: string, x, y: float32; text="", align=AlignLeft, color=textColor, scale=textScale) =
   ui.texts[name] = ui.newText(name, x, y, text, align, color, scale)
 
-proc initGUI*()=
-  UI = GUI(
-    consoleListener: newListener(),
-    font: getFont("liberationsans"),
-    texts: initTable[string, EntityHandle](),
-    consoleLines: newSeq[EntityHandle](),
-    consoleHistory: newSeq[string](),
-  )
-
-  UI.addText("cursor-pos", -paddingLeft, paddingTop, align=AlignRight)
-  UI.addText("selection", -paddingLeft, paddingTop - lineHeight, align=AlignRight)
-  UI.addText("frametime", paddingLeft, paddingTop, color=debugColor)
-  UI.addText("meshes", paddingLeft, paddingTop - lineHeight, color=debugColor)
-  UI.addText("console", consolePos.x, consolePos.y)
-
-  for i in 1..10:
-    let f = i.float
-    let e = UI.newText("console-line-" & $i, consolePos.x, consolePos.y + f * lineHeight)
-    UI.consoleLines.add(e)
-    UI.topLine = i
-
-  UI.consoleListener.listen("input.char")
-  UI.consoleListener.listen("error")
-  UI.consoleListener.listen("info")
-  UI.consoleListener.listen("console")
-  UI.consoleListener.listen("gui")
-
-  UI.cursor = newEntity("cursor")
-  UI.cursor.attach(newTransform())
-  UI.cursor.attach(Overlay(mesh: getMesh("cursor"), color: cursorColor))
-
-  UI.selection = newEntity("selection")
-  UI.selection.attach(newTransform(s=vec(1, 0.1, 1)))
-  UI.selection.attach(Overlay(mesh: getMesh("cube"), color: selectionColor))
-
-  Input.hideCursor()
-
-  info("UI ok")
-
 proc consoleAdd(ui: GUI, text: string, color=textColor) =
   let n = len(UI.consoleLines)
   UI.topLine = (UI.topLine + n - 1) mod n
@@ -132,7 +93,7 @@ proc consoleAdd(ui: GUI, text: string, color=textColor) =
     line.transform.animate(p=vec(consolePos.x, consolePos.y + h.float * lineHeight, 0.0), duration=consoleScrollDuration)
 
 
-proc updateUi*() =
+proc updateConsole*() =
   var console = UI.texts["console"]
   let t = console.label.text
 
@@ -184,6 +145,16 @@ proc updateUi*() =
 
     else: discard
 
+proc updateDebugText() =
+  if UI.debug:
+    UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
+    UI.texts["meshes"].label.update("Meshes rendered: $1".format(meshesRendered))
+  else:
+    UI.texts["frametime"].label.update("")
+    UI.texts["meshes"].label.update("")
+
+
+proc updateOverlays() =
   UI.cursor.transform.position = vec(TheGame.cursor.x.float, TheGame.cursor.y.float, TheGame.cursor.z.float)
   UI.cursor.transform.updateMatrix()
 
@@ -200,9 +171,46 @@ proc updateUi*() =
   UI.texts["cursor-pos"].label.update($TheGame.cursor)
   UI.texts["selection"].label.update("$1 × $2".format(ss.x.int, ss.z.int))
 
-  if UI.debug:
-    UI.texts["frametime"].label.update("$1 μs/frame ($2 fps)".format(Time.mksPerFrame, Time.fps.int))
-    UI.texts["meshes"].label.update("Meshes rendered: $1".format(meshesRendered))
-  else:
-    UI.texts["frametime"].label.update("")
-    UI.texts["meshes"].label.update("")
+
+proc initGUI*()=
+  UI = GUI(
+    consoleListener: newListener(),
+    font: getFont("liberationsans"),
+    texts: initTable[string, EntityHandle](),
+    consoleLines: newSeq[EntityHandle](),
+    consoleHistory: newSeq[string](),
+  )
+
+  UI.addText("cursor-pos", -paddingLeft, paddingTop, align=AlignRight)
+  UI.addText("selection", -paddingLeft, paddingTop - lineHeight, align=AlignRight)
+  UI.addText("frametime", paddingLeft, paddingTop, color=debugColor)
+  UI.addText("meshes", paddingLeft, paddingTop - lineHeight, color=debugColor)
+  UI.addText("console", consolePos.x, consolePos.y)
+
+  for i in 1..10:
+    let f = i.float
+    let e = UI.newText("console-line-" & $i, consolePos.x, consolePos.y + f * lineHeight)
+    UI.consoleLines.add(e)
+    UI.topLine = i
+
+  UI.consoleListener.listen("input.char")
+  UI.consoleListener.listen("error")
+  UI.consoleListener.listen("info")
+  UI.consoleListener.listen("console")
+  UI.consoleListener.listen("gui")
+
+  UI.cursor = newEntity("cursor")
+  UI.cursor.attach(newTransform())
+  UI.cursor.attach(Overlay(mesh: getMesh("cursor"), color: cursorColor))
+
+  UI.selection = newEntity("selection")
+  UI.selection.attach(newTransform(s=vec(1, 0.1, 1)))
+  UI.selection.attach(Overlay(mesh: getMesh("cube"), color: selectionColor))
+
+  Input.hideCursor()
+
+  Time.schedule(updateConsole, hz=60)
+  Time.schedule(updateDebugText, hz=10)
+  Time.schedule(updateOverlays, hz=60)
+
+  info("UI ok")

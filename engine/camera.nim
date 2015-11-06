@@ -7,6 +7,7 @@ import config
 import engine/vector
 import engine/input
 import engine/messaging
+import engine/timekeeping
 import engine/transform
 import engine/renderer/screen
 import engine/geometry/aabb
@@ -47,18 +48,6 @@ proc getFrustum(c: CameraSystem): array[8, vec3] =
   result[5] = c.unprojectNDC(vec( 1, -1,  1))
   result[6] = c.unprojectNDC(vec(-1,  1,  1))
   result[7] = c.unprojectNDC(vec( 1,  1,  1))
-
-
-proc initCamera*() =
-  Camera = CameraSystem(
-    zoom: 15,
-    projection: orthographic(-15 * Screen.aspectRatio, 15 * Screen.aspectRatio, -15, 15, 1, 50),
-    #projection: perspective(50.0, windowWidth / windowHeight, 3, 50),
-    transform: newTransform(p=vec(-15, 15, -8), f=vec(15, -15, 8)),
-    listener: newListener()
-  )
-  Camera.listener.listen("camera")
-
 
 proc updateCamera*() =
   for e in Camera.listener.getMessages():
@@ -140,3 +129,14 @@ proc pickGround*(c: CameraSystem, groundLevel: float32): vec3 =
 
   result = near + D * t
 
+
+proc initCamera*() =
+  Camera = CameraSystem(
+    zoom: 15,
+    projection: orthographic(-15 * Screen.aspectRatio, 15 * Screen.aspectRatio, -15, 15, 1, 50),
+    #projection: perspective(50.0, windowWidth / windowHeight, 3, 50),
+    transform: newTransform(p=vec(-15, 15, -8), f=vec(15, -15, 8)),
+    listener: newListener()
+  )
+  Camera.listener.listen("camera")
+  Time.schedule(updateCamera, hz=60)
