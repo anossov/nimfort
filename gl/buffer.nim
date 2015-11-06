@@ -55,6 +55,7 @@ proc delete*(b: VAO) =
 
 proc delete*(b: Buffer) =
   var id = b.id
+
   glDeleteBuffers(1, addr id)
 
 proc createVAO*(): VAO =
@@ -62,6 +63,7 @@ proc createVAO*(): VAO =
   glGenVertexArrays(1, addr result.id)
   glBindVertexArray(result.id)
 
+proc initialized*(o: VAO): bool = o.id != 0
 
 proc emptyBuffer*(target: BufferTarget): Buffer = Buffer(target: target)
 

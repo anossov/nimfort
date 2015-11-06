@@ -22,13 +22,13 @@ type
     vertices*: seq[Vertex]
     indices*: seq[uint32]
 
-    vao: VAO
     vbo: Buffer
     ebo: Buffer
 
 
 var meshesRendered*: int
 
+var vao: VAO
 
 proc newMesh*(): Mesh =
   result = Mesh(
@@ -89,38 +89,33 @@ proc buildBuffers*(m: var Mesh) =
     vertices.add(v.tangent)
     vertices.add(v.bitangent)
 
+  if not vao.initialized:
+    vao = createVAO()
+    glEnableVertexAttribArray(0)
+    glEnableVertexAttribArray(1)
+    glEnableVertexAttribArray(2)
+    glEnableVertexAttribArray(3)
+    glEnableVertexAttribArray(4)
 
-  m.vao = createVAO()
   m.vbo = createVBO(vertices)
   m.ebo = createEBO(m.indices)
 
-  let stride = GLsizei(14 * sizeof(float32))
-
-  glVertexAttribPointer(0, 3, cGL_FLOAT, NO, stride, nil)
-  glEnableVertexAttribArray(0)
-  glVertexAttribPointer(1, 2, cGL_FLOAT, NO, stride, cast[pointer](3 * sizeof(float32)))
-  glEnableVertexAttribArray(1)
-  glVertexAttribPointer(2, 3, cGL_FLOAT, NO, stride, cast[pointer](5 * sizeof(float32)))
-  glEnableVertexAttribArray(2)
-  glVertexAttribPointer(3, 3, cGL_FLOAT, NO, stride, cast[pointer](8 * sizeof(float32)))
-  glEnableVertexAttribArray(3)
-  glVertexAttribPointer(4, 3, cGL_FLOAT, NO, stride, cast[pointer](11 * sizeof(float32)))
-  glEnableVertexAttribArray(4)
-
 
 proc render*(m: Mesh) =
-  m.vao.use()
+  m.vbo.use()
+  let stride = GLsizei(14 * sizeof(float32))
+  glVertexAttribPointer(0, 3, cGL_FLOAT, NO, stride, nil)
+  glVertexAttribPointer(1, 2, cGL_FLOAT, NO, stride, cast[pointer](3 * sizeof(float32)))
+  glVertexAttribPointer(2, 3, cGL_FLOAT, NO, stride, cast[pointer](5 * sizeof(float32)))
+  glVertexAttribPointer(3, 3, cGL_FLOAT, NO, stride, cast[pointer](8 * sizeof(float32)))
+  glVertexAttribPointer(4, 3, cGL_FLOAT, NO, stride, cast[pointer](11 * sizeof(float32)))
+  m.ebo.use()
   glDrawElements(GL_TRIANGLES, len(m.indices).GLsizei, GL_UNSIGNED_INT, nil)
   meshesRendered.inc
 
 
 proc deleteBuffers*(m: var Mesh) =
-  m.vao.use()
-  glDisableVertexAttribArray(0)
-  glDisableVertexAttribArray(1)
-  glDisableVertexAttribArray(2)
   m.vbo.use()
   m.vbo.delete()
   m.ebo.use()
   m.ebo.delete()
-  m.vao.delete()
