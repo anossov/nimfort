@@ -32,6 +32,7 @@ template `y=`*(v: ivec2 | ivec3, i: int32) = v[1] = i
 template `z=`*(v: ivec3, i: int32) = v[2] = i
 
 template xyz*(v: vec4): vec3 = vec(v.x, v.y, v.z)
+template xz*(v: ivec3): ivec2 = ivec(v.x, v.z)
 
 proc `$`*(v: vec2): string = "($1, $2)".format(v.x, v.y)
 proc `$`*(v: vec3): string = "($1, $2, $3)".format(v.x, v.y, v.z)
@@ -87,6 +88,11 @@ proc toFloat*(v: ivec3): vec3 {.inline.} =
   result.x = v.x.float32
   result.y = v.y.float32
   result.z = v.z.float32
+
+proc toInt*(v: vec3): ivec3 =
+  result.x = v.x.int32
+  result.y = v.y.int32
+  result.z = v.z.int32
 
 proc mat*(c1, c2, c3, c4: vec4): mat4 =
   result[0] = c1[0]
@@ -154,97 +160,77 @@ proc `-`*(v: vec3): vec3 =
   result.z = -v.z
 
 
-proc `-`*(a, b: vec2): vec2 =
-  result.x = a.x - b.x
-  result.y = a.y - b.y
+template elementwise2(e: expr, t: typedesc) {.immediate.} =
+  proc `e`*(`a`, `b`: t): t {.inline.} =
+    result[0] = `e`(a[0], b[0])
+    result[1] = `e`(a[1], b[1])
 
-proc `-`*(a, b: vec3): vec3 =
-  result.x = a.x - b.x
-  result.y = a.y - b.y
-  result.z = a.z - b.z
+template elementwise3(e: expr, t: typedesc) {.immediate.} =
+  proc `e`*(`a`, `b`: t): t {.inline.} =
+    result[0] = `e`(a[0], b[0])
+    result[1] = `e`(a[1], b[1])
+    result[2] = `e`(a[2], b[2])
 
-proc `-`*(a, b: vec4): vec4 =
-  result.x = a.x - b.x
-  result.y = a.y - b.y
-  result.z = a.z - b.z
-  result.w = a.w - b.w
+template elementwise4(e: expr, t: typedesc) {.immediate.} =
+  proc `e`*(`a`, `b`: t): t {.inline.} =
+    result[0] = `e`(a[0], b[0])
+    result[1] = `e`(a[1], b[1])
+    result[2] = `e`(a[2], b[2])
+    result[3] = `e`(a[3], b[3])
 
-proc `-`*(a: vec2, b: float32): vec2 =
-  result.x = a.x - b
-  result.y = a.y - b
+template scalar2(e: expr, t: typedesc, it: typedesc=float32) {.immediate.} =
+  proc `e`*(`a`: t, `b`: it): t {.inline.} =
+    result[0] = `e`(a[0], b)
+    result[1] = `e`(a[1], b)
 
-proc `-`*(a: vec3, b: float32): vec3 =
-  result.x = a.x - b
-  result.y = a.y - b
-  result.z = a.z - b
+template scalar3(e: expr, t: typedesc, it: typedesc=float32) {.immediate.} =
+  proc `e`*(`a`: t, `b`: it): t {.inline.} =
+    result[0] = `e`(a[0], b)
+    result[1] = `e`(a[1], b)
+    result[2] = `e`(a[2], b)
 
-proc `-`*(a: vec4, b: float32): vec4 =
-  result.x = a.x - b
-  result.y = a.y - b
-  result.z = a.z - b
-  result.w = a.w - b
-
-
-proc `+`*(a, b: vec2): vec2 =
-  result.x = a.x + b.x
-  result.y = a.y + b.y
-
-proc `+`*(a, b: vec3): vec3 =
-  result.x = a.x + b.x
-  result.y = a.y + b.y
-  result.z = a.z + b.z
-
-proc `+`*(a, b: vec4): vec4 =
-  result.x = a.x + b.x
-  result.y = a.y + b.y
-  result.z = a.z + b.z
-  result.w = a.w + b.w
-
-proc `+`*(a: vec2, b: float32): vec2 =
-  result.x = a.x + b
-  result.y = a.y + b
-
-proc `+`*(a: vec3, b: float32): vec3 =
-  result.x = a.x + b
-  result.y = a.y + b
-  result.z = a.z + b
-
-proc `+`*(a: vec4, b: float32): vec4 =
-  result.x = a.x + b
-  result.y = a.y + b
-  result.z = a.z + b
-  result.w = a.w + b
+template scalar4(e: expr, t: typedesc) {.immediate.} =
+  proc `e`*(`a`: t, `b`: float32): t {.inline.} =
+    result[0] = `e`(a[0], b)
+    result[1] = `e`(a[1], b)
+    result[2] = `e`(a[2], b)
+    result[3] = `e`(a[3], b)
 
 
-proc `*`*(a, b: vec2): vec2 =
-  result.x = a.x * b.x
-  result.y = a.y * b.y
+elementwise2(`-`, vec2)
+elementwise2(`+`, vec2)
+elementwise2(`*`, vec2)
+scalar2(`-`, vec2)
+scalar2(`+`, vec2)
+scalar2(`*`, vec2)
+scalar2(`/`, vec2)
 
-proc `*`*(a, b: vec3): vec3 =
-  result.x = a.x * b.x
-  result.y = a.y * b.y
-  result.z = a.z * b.z
+elementwise2(`-`, ivec2)
+elementwise2(`+`, ivec2)
+elementwise2(`*`, ivec2)
+scalar2(`div`, ivec2, int32)
 
-proc `*`*(a, b: vec4): vec4 =
-  result.x = a.x * b.x
-  result.y = a.y * b.y
-  result.z = a.z * b.z
-  result.w = a.w * b.w
+elementwise3(`-`, ivec3)
+elementwise3(`+`, ivec3)
+elementwise3(`*`, ivec3)
+scalar3(`div`, ivec3, int32)
+scalar3(`-`, ivec3, int32)
 
-proc `*`*(a: vec2, b: float32): vec2 =
-  result.x = a.x * b
-  result.y = a.y * b
+elementwise3(`-`, vec3)
+elementwise3(`+`, vec3)
+elementwise3(`*`, vec3)
+scalar3(`-`, vec3)
+scalar3(`+`, vec3)
+scalar3(`*`, vec3)
+scalar3(`/`, vec3)
 
-proc `*`*(a: vec3, b: float32): vec3 =
-  result.x = a.x * b
-  result.y = a.y * b
-  result.z = a.z * b
-
-proc `*`*(a: vec4, b: float32): vec4 =
-  result.x = a.x * b
-  result.y = a.y * b
-  result.z = a.z * b
-  result.w = a.w * b
+elementwise4(`-`, vec4)
+elementwise4(`+`, vec4)
+elementwise4(`*`, vec4)
+scalar4(`-`, vec4)
+scalar4(`+`, vec4)
+scalar4(`*`, vec4)
+scalar4(`/`, vec4)
 
 
 proc `*`*(a: mat4, b: float32): mat4 =
@@ -264,19 +250,6 @@ proc `*`*(a: mat4, b: float32): mat4 =
   result[13] = a[13] * b
   result[14] = a[14] * b
   result[15] = a[15] * b
-
-
-proc `/`*(a: vec3, b: float32): vec3 =
-  result.x = a.x / b
-  result.y = a.y / b
-  result.z = a.z / b
-
-proc `/`*(a: vec4, b: float32): vec4 =
-  result.x = a.x / b
-  result.y = a.y / b
-  result.z = a.z / b
-  result.w = a.w / b
-
 
 proc `dot`*(a, b: vec3): float32 =
   var t = a * b
