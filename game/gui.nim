@@ -17,6 +17,7 @@ import engine/renderer/components
 import engine/renderer/screen
 
 import game/game
+import game/world
 
 
 type
@@ -168,7 +169,13 @@ proc updateOverlays() =
   UI.selection.transform.scale.z = ss.z + 0.05
   UI.selection.transform.updateMatrix()
 
-  UI.texts["cursor-pos"].label.update($TheGame.cursor)
+  let c = TheGame.world.chunkWith(TheGame.cursor.xz)
+  var o = ""
+  for i in c.objects:
+    if i.pos == TheGame.cursor.xz:
+      o = i.entity.name & " at "
+      break
+  UI.texts["cursor-pos"].label.update("$3$1, chunk $2".format(TheGame.cursor, c.pos, o))
   UI.texts["selection"].label.update("$1 × $2".format(ss.x.int, ss.z.int))
 
 

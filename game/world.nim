@@ -17,17 +17,19 @@ import engine/renderer/components
 
 const
   chunkSize = 32
-  S = 32
 
 type
   Block = object
     material: int
-    entities: seq[EntityHandle]
+
+  Object = object
+    pos*: ivec2
+    entity*: EntityHandle
 
   Chunk* = ref object
-    x: int
-    y: int
+    pos*: ivec2
     blocks: array[chunkSize * chunkSize, Block]
+    objects*: seq[Object]
     entity: EntityHandle
 
   World* = ref object
@@ -37,8 +39,8 @@ proc terrain(): Mesh =
   result = newMesh()
 
   var x = 0
-  for i in -S..S:
-    for j in -S..S:
+  for i in 0..chunkSize - 1:
+    for j in 0..chunkSize - 1:
       let
         fi = i.float() - 0.5
         fj = j.float() - 0.5
@@ -68,8 +70,18 @@ proc newWorld*(): World =
     chunks: initTable[ivec2, Chunk]()
   )
 
-  newEntity("terrain")
-    .attach(newTransform())
+  info("World ok")
+
+
+proc newChunk*(p: ivec2): Chunk =
+  var wp = ivec(p.x * chunkSize, 0, p.y * chunkSize)
+  result = Chunk(
+    objects: newSeq[Object](),
+  )
+  result.pos = p
+  result.entity = newEntity("chunk-($1 $2)".format(p.x, p.y))
+  result.entity
+    .attach(newTransform(p=wp.toFloat))
     .attach(newModel(
       terrain(),
       albedo=getTexture("grass"),
@@ -78,33 +90,34 @@ proc newWorld*(): World =
       shadows=false,
     ))
 
-  newEntity("c")
-    .attach(newTransform())
-    .attach(newModel(
-        getMesh("cube"),
-        albedo=w,
-        roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
-    ))
+  for i in randomSample(0..chunkSize*chunkSize-1, randomInt(0, chunkSize)):
+    let x = (i mod chunkSize).int32
+    let y = (i div chunkSize).int32
+    let e = newEntity("tree")
+      .attach(newTransform(p=wp.toFloat + vec(x.float, 0.0, y.float)))
+      .attach(newModel(
+        getMesh("tree"),
+        albedo=getColorTexture(vec(0.5, 0.4, 0.1, 1.0)),
+        shadows=true,
+      ))
 
-  newEntity("c2")
-    .attach(newTransform(s=4, p=vec(-5, 1.5, 5)))
-    .attach(newModel(
-        getMesh("cube"),
-        albedo=w,
-        roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
-    ))
+    result.objects.add(Object(entity: e, pos: wp.xz + ivec(x, y)))
 
-  newEntity("b")
-    .attach(newTransform(p=vec(3, 0, 3), s=0.4))
-    .attach(newModel(
-        getMesh("ball"),
-        albedo=getColorTexture(vec(1.0, 0.0, 0.0, 1.0)),
-        roughness=getColorTexture(vec(0.9, 0.9, 0.9, 1.0))
-    ))
-    .attach(Bounce(min: 0.3, max: 0.5, period: 2.0))
+  return result
 
-  info("World ok")
+proc chunkWith*(w: World, p: ivec2): Chunk = w.chunks[ivec((p.x / chunkSize).floor.int32, (p.y / chunkSize).floor.int32)]
 
+iterator grid2d(a, b: ivec2): ivec2 =
+  for x in a.x .. b.x:
+    for y in a.y .. b.y:
+      yield ivec(x, y)
 
-proc updateWorld*() =
-  discard
+proc updateWorld*(w: World) =
+  let
+    bb = Camera.boundingBox
+    minc = (bb.min.xyz.toInt div chunkSize) - 1
+    maxc = bb.max.xyz.toInt div chunkSize
+
+  for p in grid2d(minc.xz, maxc.xz):
+    if not w.chunks.hasKey(p):
+      w.chunks[p] = newChunk(p)

@@ -209,6 +209,7 @@ elementwise2(`-`, ivec2)
 elementwise2(`+`, ivec2)
 elementwise2(`*`, ivec2)
 scalar2(`div`, ivec2, int32)
+scalar2(`-`, ivec2, int32)
 
 elementwise3(`-`, ivec3)
 elementwise3(`+`, ivec3)
