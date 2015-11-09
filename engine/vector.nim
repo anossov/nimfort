@@ -141,11 +141,6 @@ proc identity*(): mat4 =
   result[15] = 1.0
 
 
-proc abs*(v: vec3): vec3 =
-  result.x = abs(v.x)
-  result.y = abs(v.y)
-  result.z = abs(v.z)
-
 proc inverse*(v: vec2): vec2 {.inline.} =
   result.x = 1.0 / v.x
   result.y = 1.0 / v.y
@@ -196,6 +191,14 @@ template scalar4(e: expr, t: typedesc) {.immediate.} =
     result[2] = `e`(a[2], b)
     result[3] = `e`(a[3], b)
 
+template map3(e: expr, t: typedesc) {.immediate.} =
+  proc `e`*(`v`: t): t {.inline.} =
+    result[0] = `e`(v[0])
+    result[1] = `e`(v[1])
+    result[2] = `e`(v[2])
+
+map3(abs, vec3)
+map3(floor, vec3)
 
 elementwise2(`-`, vec2)
 elementwise2(`+`, vec2)
@@ -210,12 +213,14 @@ elementwise2(`+`, ivec2)
 elementwise2(`*`, ivec2)
 scalar2(`div`, ivec2, int32)
 scalar2(`-`, ivec2, int32)
+scalar2(`+`, ivec2, int32)
 
 elementwise3(`-`, ivec3)
 elementwise3(`+`, ivec3)
 elementwise3(`*`, ivec3)
 scalar3(`div`, ivec3, int32)
 scalar3(`-`, ivec3, int32)
+scalar3(`+`, ivec3, int32)
 
 elementwise3(`-`, vec3)
 elementwise3(`+`, vec3)
@@ -233,6 +238,12 @@ scalar4(`+`, vec4)
 scalar4(`*`, vec4)
 scalar4(`/`, vec4)
 
+proc `<`*(a, b: ivec2): bool  = a.x <  b.x and a.y <  b.y
+proc `<=`*(a, b: ivec2): bool = a.x <= b.x and a.y <= b.y
+proc `<`*(a, b: ivec3): bool  = a.x <  b.x and a.y <  b.y and a.z <  b.z
+proc `>`*(a, b: ivec3): bool  = a.x >  b.x and a.y >  b.y and a.z >  b.z
+proc `<=`*(a, b: ivec3): bool = a.x <= b.x and a.y <= b.y and a.z <= b.z
+proc `>=`*(a, b: ivec3): bool = a.x >= b.x and a.y >= b.y and a.z >= b.z
 
 proc `*`*(a: mat4, b: float32): mat4 =
   result[0] = a[0] * b

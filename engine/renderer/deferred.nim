@@ -161,6 +161,7 @@ proc renderEmission(pass: LightingPass) =
     i.textures[0].use(0)
     i.textures[4].use(1)
     i.mesh.render()
+  glDepthFunc(GL_LESS)
 
 proc renderAmbient(pass: LightingPass) =
   pass.ambient.use()

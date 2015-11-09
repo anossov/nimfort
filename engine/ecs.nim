@@ -44,18 +44,16 @@ proc newEntity*(name: string): EntityHandle =
 proc addComponent*(em: EntityManager, e: EntityHandle, c: ComponentHandle, ctype: int) =
   em.entities[e].components[ctype] = c
 
+proc getComponentHandle(em: EntityManager, e: EntityHandle, ctype: int): ComponentHandle = em.entities[e].components[ctype]
 
-proc `[]`*(e: EntityHandle, ctype: int): ComponentHandle =
-  return Entities.entities[e].components[ctype]
 
-proc exists*(e: EntityHandle): bool =
-  return e >= 0 and e < Entities.entities.len
+proc `[]`*(e: EntityHandle, ctype: int): ComponentHandle = Entities.entities[e].components[ctype]
 
-proc has*(e: EntityHandle, ctype: int): bool =
-  return Entities.entities[e].components[ctype] != 0
+proc exists*(e: EntityHandle): bool = e >= 0 and e < Entities.entities.len
 
-proc name*(e: EntityHandle): string =
-  return Entities.entities[e].name
+proc has*(e: EntityHandle, ctype: int): bool = Entities.entities[e].components[ctype] != 0
+
+proc name*(e: EntityHandle): string = Entities.entities[e].name
 
 proc listComponents*(e: EntityHandle): seq[string] =
   result = newSeq[string]()
@@ -76,7 +74,22 @@ proc add*[T](cs: ComponentStore[T], e: EntityHandle, c: T) =
   let ch = (cs.data.len).ComponentHandle
   cs.data[ch - 1].entity = e
   Entities.addComponent(e, ch, cs.typeId)
-  debug(" $1 +$2 $3".format(e, cs.name, ch))
+
+proc remove*[T](cs: ComponentStore[T], c: T) =
+  let
+    last = cs.data[cs.data.high]
+    ch = Entities.getComponentHandle(c.entity, cs.typeId) - 1
+    e = c.entity
+    le = last.entity
+
+  if ch != cs.data.high:
+    cs.data[ch] = last
+    Entities.addComponent(le, ch + 1, cs.typeId)
+
+  Entities.addComponent(e, 0, cs.typeId)
+  discard cs.data.pop()
+
+
 
 proc `[]`*[T](cs: ComponentStore[T], e: EntityHandle): var T =
   assert e.has(cs.typeId)
@@ -97,6 +110,9 @@ template ImplementComponent*(Type: typedesc, accessor: expr) {.immediate.} =
 
   proc `Type Store`*(): ComponentStore[Type] =
     return `accessor Store`
+
+  proc detach*(c: Type) =
+    `accessor Store`.remove(c)
 
 
 proc parseEntity*(pp: var PayloadParser): EntityHandle =

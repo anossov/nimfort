@@ -101,15 +101,18 @@ proc initRenderSystem*() =
 proc renderOverlays*(r: RenderSystem, fb_out: var Framebuffer) =
   fb_out.use()
   glEnable(GL_DEPTH_TEST)
+  glDepthFunc(GL_LEQUAL)
   glEnable(GL_BLEND)
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
   r.overlay.use()
   r.overlay.getUniform("view").set(Camera.view)
   r.overlay.getUniform("projection").set(Camera.projection)
   for i in OverlayStore().data:
+    if i.color.w == 0.0: continue
     r.overlay.getUniform("model").set(i.entity.transform.matrix)
     r.overlay.getUniform("color").set(i.color)
     i.mesh.render()
+  glDepthFunc(GL_LESS)
 
 proc renderDebug*(r: RenderSystem) =
   if r.debugmode != "":

@@ -14,6 +14,7 @@ import engine/messaging
 import engine/camera
 import engine/renderer/rendering
 import engine/renderer/components
+import engine/geometry/aabb
 
 const
   chunkSize = 32
@@ -23,7 +24,7 @@ type
     material: int
 
   Object = object
-    pos*: ivec2
+    pos*: ivec3
     entity*: EntityHandle
 
   Chunk* = ref object
@@ -33,7 +34,9 @@ type
     entity: EntityHandle
 
   World* = ref object
-    chunks: Table[ivec2, Chunk]
+    chunks*: Table[ivec2, Chunk]
+
+var emptyChunk = Chunk(objects: newSeq[Object]())
 
 proc terrain(): Mesh =
   result = newMesh()
@@ -73,7 +76,7 @@ proc newWorld*(): World =
   info("World ok")
 
 
-proc newChunk*(p: ivec2): Chunk =
+proc newChunk(p: ivec2): Chunk =
   var wp = ivec(p.x * chunkSize, 0, p.y * chunkSize)
   result = Chunk(
     objects: newSeq[Object](),
@@ -98,26 +101,41 @@ proc newChunk*(p: ivec2): Chunk =
       .attach(newModel(
         getMesh("tree"),
         albedo=getColorTexture(vec(0.5, 0.4, 0.1, 1.0)),
+        roughness=getColorTexture(vec(1.0, 1.0, 1.0, 1.0)),
         shadows=true,
       ))
 
-    result.objects.add(Object(entity: e, pos: wp.xz + ivec(x, y)))
+    result.objects.add(Object(entity: e, pos: wp + ivec(x, 0, y)))
 
   return result
 
-proc chunkWith*(w: World, p: ivec2): Chunk = w.chunks[ivec((p.x / chunkSize).floor.int32, (p.y / chunkSize).floor.int32)]
+
+proc chunkCoord*(p: ivec3): ivec2 = (p.toFloat / chunkSize).floor.toInt.xz
 
 iterator grid2d(a, b: ivec2): ivec2 =
   for x in a.x .. b.x:
     for y in a.y .. b.y:
       yield ivec(x, y)
 
-proc updateWorld*(w: World) =
-  let
-    bb = Camera.boundingBox
-    minc = (bb.min.xyz.toInt div chunkSize) - 1
-    maxc = bb.max.xyz.toInt div chunkSize
 
-  for p in grid2d(minc.xz, maxc.xz):
+iterator objectsAt*(w: World, p: ivec3): Object =
+  for o in w.chunks[p.chunkCoord].objects:
+    if o.pos == p:
+      yield o
+
+iterator objectsIn*(w: World; bb: AABB): Object =
+  let
+    a = bb.min.xyz.toInt.chunkCoord
+    b = bb.max.xyz.toInt.chunkCoord
+  for p in grid2d(a, b):
+    if w.chunks.hasKey(p):
+      for o in w.chunks[p].objects:
+        if o.pos.toFloat in bb:
+          yield o
+
+proc updateWorld*(w: World) =
+  let bb = Camera.boundingBox
+
+  for p in grid2d(bb.min.xyz.toInt.chunkCoord, bb.max.xyz.toInt.chunkCoord):
     if not w.chunks.hasKey(p):
       w.chunks[p] = newChunk(p)

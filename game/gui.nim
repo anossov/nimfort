@@ -1,5 +1,6 @@
 import logging
 import strutils
+import sequtils
 import unicode
 import math
 import tables
@@ -15,6 +16,7 @@ import engine/input
 import engine/transform
 import engine/renderer/components
 import engine/renderer/screen
+import engine/geometry/aabb
 
 import game/game
 import game/world
@@ -33,6 +35,7 @@ type
     consoleHistoryP: int
     cursor: EntityHandle
     selection: EntityHandle
+    selectedObjects: seq[EntityHandle]
 
     debug: bool
 
@@ -169,14 +172,33 @@ proc updateOverlays() =
   UI.selection.transform.scale.z = ss.z + 0.05
   UI.selection.transform.updateMatrix()
 
-  let c = TheGame.world.chunkWith(TheGame.cursor.xz)
+  let c = TheGame.cursor.chunkCoord
+
+  var os = newSeq[string]()
+  for o in TheGame.world.objectsAt(TheGame.cursor):
+    os.add(o.entity.name)
   var o = ""
-  for i in c.objects:
-    if i.pos == TheGame.cursor.xz:
-      o = i.entity.name & " at "
-      break
-  UI.texts["cursor-pos"].label.update("$3$1, chunk $2".format(TheGame.cursor, c.pos, o))
+  if os.len > 0:
+    o = os.join(", ") & " at "
+
+  UI.texts["cursor-pos"].label.update("$3$1, chunk $2".format(TheGame.cursor, c, o))
   UI.texts["selection"].label.update("$1 × $2".format(ss.x.int, ss.z.int))
+
+
+  for o in UI.selectedObjects:
+    o.overlay.color.w = 0.0
+  UI.selectedObjects.setLen(0)
+
+  var sbb = newAABB()
+  sbb.add(a)
+  sbb.add(b)
+
+  for o in TheGame.world.objectsIn(sbb):
+    if not o.entity.has(COverlay):
+      o.entity.attach(Overlay(mesh: o.entity.model.mesh, color: selectionColor))
+    else:
+      o.entity.overlay.color.w = selectionColor.w
+    UI.selectedObjects.add(o.entity)
 
 
 proc initGUI*()=
@@ -186,6 +208,7 @@ proc initGUI*()=
     texts: initTable[string, EntityHandle](),
     consoleLines: newSeq[EntityHandle](),
     consoleHistory: newSeq[string](),
+    selectedObjects: newSeq[EntityHandle](),
   )
 
   UI.addText("cursor-pos", -paddingLeft, paddingTop, align=AlignRight)

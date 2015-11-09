@@ -33,6 +33,17 @@ proc contains*(a: AABB, b: AABB): bool =
     a.max.z >= b.max.z
   )
 
+
+proc contains*(a: AABB, p: vec3): bool =
+  return (
+    a.min.x <= p.x and
+    a.min.y <= p.y and
+    a.min.z <= p.z and
+    a.max.x >= p.x and
+    a.max.y >= p.y and
+    a.max.z >= p.z
+  )
+
 proc intersects*(a: AABB, b: AABB): bool =
   if a.max.x < b.min.x: return false
   if a.max.y < b.min.y: return false

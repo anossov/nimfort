@@ -1,6 +1,7 @@
 import logging
 import math
 import random
+import tables
 
 import engine/vector
 import engine/transform
@@ -10,6 +11,7 @@ import engine/camera
 import engine/timekeeping
 import engine/resources
 import engine/renderer/components
+
 
 import game/world
 
@@ -82,9 +84,8 @@ proc tick*() =
       else: dir = ivec(0, 0, 1)
 
     var move = true
-    let xz = (p + dir).xz
-    for o in TheGame.world.chunkWith(xz).objects:
-      if o.pos == xz:
+    for o in TheGame.world.objectsAt(p + dir):
+      if o.pos == p + dir:
         move = false
         break
 
